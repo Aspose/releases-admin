@@ -31,10 +31,10 @@ class SwapDatabase
             $username = "root";
             $password = "root";
 
-        } else if($host == "releases-qa.aspose.com"){
-            $database = "releases_admin_aspose_com";
-            $username = "root";
-            $password = "a2387as|k3957kh";
+        } else if($host == "releases.admin.aspose.com"){
+            $database =  env('ASPOSE_STAGE_DB_DATABASE');
+            $username =  env('ASPOSE_STAGE_DB_USERNAME');
+            $password =  env('ASPOSE_STAGE_DB_PASSWORD');
         }
 
         if(empty($database)){
