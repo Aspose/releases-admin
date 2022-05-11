@@ -26,4 +26,4 @@ jobs:
           username: ${{ secrets.USERNAME }}
           port: ${{ secrets.PORT }}
           key: ${{ secrets.SSHKEY }}
-          script: "cd /home/fahadadeel/releases.admin.aspose.com/html && ./.scripts/deploy.sh"
+          script: "cd ${{ secrets.HOME_DIR }} && ./.scripts/deploy.sh"
