@@ -28,4 +28,6 @@ php artisan optimize
 # Exit maintenance mode
 php artisan up
 
+php artisan config:clear
+
 echo "Deployment finished!"
