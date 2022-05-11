@@ -32,7 +32,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </a>
-                <a href="#" id="ctl00_lnkMain" class="brand"> {{ config('app.name', 'Dynabic.Downloads - Admin Panel - ASPOSE') }} </a>
+                <a href="#" id="ctl00_lnkMain" class="brand"> {{ config('app.name', 'Dynabic.Downloads -> Containerize.Releases') }} </a>
                 <div class="btn-group pull-right">
                     @if (Auth::guest())
                     <li><a href="{{ route('login') }}">Login</a></li>
