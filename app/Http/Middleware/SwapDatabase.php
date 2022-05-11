@@ -30,12 +30,13 @@ class SwapDatabase
             $database = "admindemo_groupdocs";
             $username = "root";
             $password = "root";
-        }else{
-            $database = str_replace('-', '_', $host);
-            $database = str_replace('.', '_', $database);
+
+        } else if($host == "releases-qa.aspose.com"){
+            $database = "releases_admin_aspose_com";
             $username = "root";
-            $password = "root";
+            $password = "a2387as|k3957kh";
         }
+
         if(empty($database)){
             dd('db not assiged check SwapDatabase middleware');
         }
