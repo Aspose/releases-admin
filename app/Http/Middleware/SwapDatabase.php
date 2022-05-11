@@ -36,9 +36,9 @@ class SwapDatabase
             $username =  env('ASPOSE_STAGE_DB_USERNAME');
             $password =  env('ASPOSE_STAGE_DB_PASSWORD');
         }
-
+        
         if(empty($database)){
-            dd('db not assiged check SwapDatabase middleware');
+            dd('db not assiged check SwapDatabase middleware -- ' . $host);
         }
 
         //connect db
