@@ -35,9 +35,9 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth
 
 
 
-Route::group(['middleware' => 'auth'], function () {
+//Route::group(['middleware' => 'auth'], function () {
     Route::get('/{family}/{product}/{folder}/{file}/{tagid}', 'Admin\UploadController@DownloadS3File');
-});
+//});
 
 //Route::get('login', 'Auth\LoginController@openidlogin');
 //Route::post('login', [ 'as' => 'login', 'uses' => 'LoginController@openidlogin']);
