@@ -59,11 +59,12 @@
         <div class="row-fluid">
             <div class="span3">
                 
-                    @includeWhen(Auth::user(), 'layouts._admin_menu')
-
             </div>
-            <div class="span9">
+            <div class="span4" style="text-align: center">
                 @yield('content')
+            </div>
+            <div class="span3">
+                
             </div>
         </div>
         <hr />

@@ -8,6 +8,9 @@ use App\Models\Release;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Aws\S3\S3Client;
+use Aws\S3\Exception\S3Exception;
+use Illuminate\Support\Facades\Storage;
 
 class ReleasesApiController extends Controller
 {
@@ -81,6 +84,51 @@ class ReleasesApiController extends Controller
             }
         }
         return $return;
+    }
+
+    public function getcountbucket(){
+        dd('21231');
+        $AWS_DEFAULT_REGION = "us-west-2";
+        $AWS_ACCESS_KEY_ID = "AKIAJ3IWQHR2VPPUU4AA";
+        $AWS_SECRET_ACCESS_KEY ="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";
+        $AWS_BUCKET = "aspose.files";
+
+
+        /*$AWS_DEFAULT_REGION = "us-east-1";
+        $AWS_ACCESS_KEY_ID = "AKIAQHFMOEYJSUVMED6D";
+        $AWS_SECRET_ACCESS_KEY ="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";
+        $AWS_BUCKET = "spacestation-invoices";*/
+
+        $s3 = new S3Client([
+            'version' => 'latest',
+            'region'  => $AWS_DEFAULT_REGION,
+            'credentials' => [
+                'key'    => $AWS_ACCESS_KEY_ID,
+                'secret' => $AWS_SECRET_ACCESS_KEY ,
+            ],
+    
+        ]);
+
+        $iterator = $s3->getIterator('ListObjects', array(
+            'Bucket' => $AWS_BUCKET
+        ));
+       $final_array = array();
+        foreach ($iterator as $object) {
+            //echo $object['Key'] . "<br>";
+            
+            $final_array[] = $object;
+            
+        }
+       
+        $json =  json_encode($final_array);
+        //echo "<pre>"; print_r($json);  echo "</pre>"; //exit;
+        Storage::put('/public/mdfiles/json/bucket.txt', $json);
+        /*$response = $s3->putObject([
+            'Bucket' => $AWS_BUCKET,
+            'Key'    => $s3filePath, //'my-object',
+            'SourceFile'   => $filetoupload,
+            'ACL'    => 'public-read',
+        ]);*/
     }
 
    

@@ -41,3 +41,6 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth
 
 //Route::get('login', 'Auth\LoginController@openidlogin');
 //Route::post('login', [ 'as' => 'login', 'uses' => 'LoginController@openidlogin']);
+
+Route::get('/register', 'HomeController@index');
+Route::post('/register', 'HomeController@index');
