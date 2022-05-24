@@ -52,7 +52,7 @@
                             <a id="ctl00_lnkGenerateDoc" class="dropdown-toggle" href="{{ url('admin/ventures/file/upload') }}">Upload File </a>
                         </li>
                         <li>
-                            <a id="ctl00_HyperLink2" class="dropdown-toggle" href="file/manage-files">View All Files </a>
+                            <a id="ctl00_HyperLink2" class="dropdown-toggle" href="{{ url('admin/ventures/file/manage-files') }}">View All Files </a>
                         </li>
                         @if (Auth::user()->is_admin)
                         <!-- <li class="nav-header"><i class="icon-wrench"></i>System Administration</li>

@@ -30,6 +30,9 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth
     Route::resource('/ventures/amazon-s3-settings', 'AmazonS3SettingController');
     Route::post('/ventures/file/upload', 'UploadController@upload')->middleware('admin');
     Route::get('/ventures/file/upload', 'UploadController@index')->middleware('admin');
+    Route::get('/ventures/file/edit/{id}', 'UploadController@edit')->middleware('admin');
+    Route::post('/ventures/file/update', 'UploadController@update')->middleware('admin');
+    Route::get('/ventures/file/manage-files', 'UploadController@managefiles')->middleware('admin');
     Route::any('/ventures/file/getchildnodes', ['as' => 'admin.getchildnodes', 'uses' => 'UploadController@getchildnodes', 'middleware' => ['admin']]);
 });
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UploadsRequest;
+use App\Http\Requests\UpdateRequest;
 use App\Models\AmazonS3Setting;
 use AWS\CRT\HTTP\Response;
 // use Facade\FlareClient\Http\Response;
@@ -35,6 +36,59 @@ class UploadController extends Controller
         return view('admin.upload.index', compact('DropDownContent', 'title'));
     }
 
+
+    public function edit($id)
+    {
+        
+        $title = "Edit Release";
+        $amazon_s3_settings = AmazonS3Setting::where('id', 1)->first();
+        $hugositeurl = $amazon_s3_settings->hugositeurl;
+        $release = Release::where('id', $id)->first();
+        if($release){
+            $release = Release::find($id);
+        }else{
+            dd("Release Not Found");
+        }
+        //dd($release->folder);
+        $DropDownContent = $this->GetDropDownContent();
+        $family_url = $hugositeurl .''.$release->family.'/';
+        $product_url = $hugositeurl .''.$release->product;
+        
+        //dd($family_url);
+        $familySelected = $this->searchSingle($DropDownContent, 'url', $family_url);
+        if(empty($familySelected)){
+            $family_url = $hugositeurl .''.$release->family;
+            $familySelected = $this->searchSingle($DropDownContent, 'url', $family_url);
+        }
+        $productSelected = $this->searchSingle($DropDownContent, 'url', $product_url);
+        
+        //$folders = array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+
+
+
+        if(!empty($product_url)){
+            $folders = $this->getchildnodeslist($product_url);
+            if(!empty($folders)){
+                if(count($folders) == 1){
+                    $folders['New Releases'] = 'new-releases';
+                }
+            }
+        }
+       
+        if(empty($folders)){
+            $url = false;
+            $folders = array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+            $selected_folder = $release->folder;
+        }else{
+            $url = true;
+            $selected_folder = $hugositeurl .''.$release->product.$release->folder.'/';
+        }
+        
+        
+        
+        return view('admin.upload.edit', compact('familySelected',  'productSelected', 'folders', 'selected_folder', 'release', 'title'));
+    }
+
     
 
 
@@ -47,6 +101,23 @@ class UploadController extends Controller
         return $data;
     }
 
+
+    function searchSingle($array, $key, $value)
+    {
+    $results = array();
+
+    if (is_array($array)) {
+        if (isset($array[$key]) && $array[$key] == $value) {
+            $results[] = $array;
+        }
+
+        foreach ($array as $subarray) {
+            $results = array_merge($results, $this->searchSingle($subarray, $key, $value));
+        }
+    }
+
+    return $results;
+    }
 
     function searcharray($array, $key, $value)
         {
@@ -74,8 +145,7 @@ class UploadController extends Controller
     public function upload(UploadsRequest $request)
     {
         if(!empty($request->all())){
-           // echo"<pre>"; print_r($request->all()); echo"</pre>";
-            $upload_info = $this->UploadImageToS3($request->all());
+            $upload_info = $this->UploadImageToS3($request->all(), 'new');
             //echo"<pre>"; print_r($upload_info); echo"</pre>";
             //exit;
             if(!empty($upload_info)){
@@ -89,12 +159,51 @@ class UploadController extends Controller
         //return redirect('/admin/ventures/file/upload');
     }
 
+    public function update(UpdateRequest $request)
+    {
+        if(!empty($request->all())){
+            
+            if($request->hasFile('filetoupload')){
+                $upload_info = $this->UploadImageToS3($request->all(), 'update');
+            }else{
+                $upload_info = $this->DontUploadFileToS3($request->all());
+            }
+            
+            if(!empty($upload_info)){
+                $mdfile =$this->generate_mdfile($request->all(), $upload_info);
+                $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name']);
+            }
+            
+           
+        }
+    }
 
     public function getchildnodes(Request $request){
         if(!empty($request->id)){
             $childtype = $request->childtype;
             $DropDownContent = $this->GetDropDownContent(1);
             $child = $this->searcharray($DropDownContent, 'url', $request->id);
+            $final_array = array();
+            if(!empty($child[0]['nodes'])){
+                $child =  $child[0]['nodes'];
+                foreach($child as $single){
+                    $final_array[$single['text']] = $single['url'];
+                }
+                return $final_array;    
+            }else{
+                if($childtype == 'folder'){
+                    return array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+                }
+            }
+            
+        }
+    }
+
+    public function getchildnodeslist($id){
+        if(!empty($id)){
+            $childtype = $id;
+            $DropDownContent = $this->GetDropDownContent(1);
+            $child = $this->searcharray($DropDownContent, 'url', $id);
             $final_array = array();
             if(!empty($child[0]['nodes'])){
                 $child =  $child[0]['nodes'];
@@ -129,12 +238,13 @@ class UploadController extends Controller
         $productfamily_path = parse_url($productfamily, PHP_URL_PATH);
         $productfamily_path = rtrim($productfamily_path, '/');
 
-
-       if ($data['filetoupload']) {
-        //echo"<pre>"; print_r($data['filetoupload']); echo"</pre>"; 
-           $filetoupload = $data['filetoupload'];
-          $pathinfo =  pathinfo($filetoupload);
-       }
+        if(isset($data['filetoupload'])){
+            if ($data['filetoupload']) {
+                //echo"<pre>"; print_r($data['filetoupload']); echo"</pre>"; 
+                $filetoupload = $data['filetoupload'];
+                $pathinfo =  pathinfo($filetoupload);
+            }
+        }
 
        $title_slug = $upload_info['title_slug'];
        $section_parent_path = $upload_info['section_parent_path'];
@@ -150,7 +260,11 @@ class UploadController extends Controller
 
        $f_family =  $upload_info['family'];
        $f_product =  $upload_info['product'];
+       //$f_product = rtrim($f_product, '/'); 
        $f_folder =  $upload_info['folder'];
+
+       $actual_file_name =  $upload_info['actual_file_name'];
+       $title =  $upload_info['title'];
 
       // echo $f_family . " === " . $f_product . " ==== ". $f_folder; exit;
 
@@ -159,38 +273,64 @@ class UploadController extends Controller
      if($Records_Count){
         $weight = $Records_Count + 1;
      }
-
+     
+     $f_family = rtrim($f_family, '/');
       
+     if($upload_info['insert_release']){
+        $release = Release::create([
+            'family'=> $f_family,
+            'product'=> $f_product,
+            'folder'=> $f_folder,
+            'filename'=>$actual_file_name,
+            'filetitle'=>$title,
+            'folder_link' => $folder_link,
+            'etag_id' => $etag_id,
+            's3_path' => $s3_path,
+            'posted_by' => 1,
+            'view_count' => 0,
+            'download_count' => 0,
+            'description' => $description,
+            'release_notes_url' => $releaseurl,
+            'filesize' => $fileSize,
+            'date_added' => date('Y-m-d H:i:s'),
+            'sha1' => '',
+            'md5' => '',
+            'is_new' => 1,
+            ]);
+            $Downloads_count = 1;
+            $Views_count = 1;
+            $down_date = date('j/n/Y');
+     }else{
+        
+        $release = Release::find($data['edit_id']);
+        $release->filetitle = $title;
+        $release->description = $description;
+        $release->release_notes_url = $releaseurl;
+        
+        if($upload_info['contains_file']){
+            $release->filename = $actual_file_name;
+            $release->filesize = $fileSize;
+            $release->s3_path = $s3_path;
+            $release->etag_id = $etag_id;
+        }
+        $release->save();
 
-       $release = Release::create([
-        'family'=> $f_family,
-        'product'=> $f_product,
-        'folder'=> $f_folder,
-        'folder_link' => $folder_link,
-        'etag_id' => $etag_id,
-        's3_path' => $s3_path,
-        'posted_by' => 1,
-        'view_count' => 0,
-        'download_count' => 0,
-        'description' => $description,
-        'release_notes_url' => $releaseurl,
-        'filesize' => $fileSize,
-        'date_added' => date('Y-m-d H:i:s'),
-        'sha1' => '',
-        'md5' => '',
-        'is_new' => 1,
-        ]);
+        $Downloads_count = $release->download_count;
+        $Views_count = $release->view_count;
+        $down_date = date('j/n/Y', strtotime($release->date_added));
+     }
+       
         
         
         $buttons = array(
             'Download' => $download_link,
-            'Support Forum' => 'https://forum.aspose.com/c/'.$productfamily_path.'',
+            'Support Forum' => 'https://forum.aspose.com/c'.$productfamily_path.'',
 
         );
 
 
-        $down_date = date('j/n/Y');
-        $download_count_text = " $down_date Downloads: 1  Views: 1 ";
+        
+        $download_count_text = " $down_date Downloads: $Downloads_count  Views: $Views_count ";
 
         $md_file_content = "";
         $md_file_content .= "---";
@@ -223,6 +363,7 @@ class UploadController extends Controller
         $md_file_content .= "intro_text: \"$description\"";
         $md_file_content .= "\n";
         
+    
         $md_file_content .= "image_link: \"$image_link\"";
         $md_file_content .= "\n";
         
@@ -250,7 +391,7 @@ class UploadController extends Controller
 
 
 
-
+      //$image_link_md = str_replace('https://downloads.aspose.com/resources/', '/resources/', $image_link);
       $md_file_content .= "{{< Releases/ReleasesWapper >}}";
       $md_file_content .= "\n";
       $md_file_content .= "  {{< Releases/ReleasesHeading H2txt=\"$title\" imagelink=\"$image_link\">}}";
@@ -276,19 +417,19 @@ class UploadController extends Controller
              // $md_file_content .= "      {{< /RelaseDetailsli >}}";
              $md_file_content .= '      {{< Common/li >}} Downloads: {{< /Common/li >}}';
              $md_file_content .= "\n";
-             $md_file_content .= '      {{< Common/li id="dwn-update-'.$etag_id.'" >}} 1 {{< /Common/li >}}';
+             $md_file_content .= '      {{< Common/li class="downloadcount" id="dwn-update-'.$etag_id.'" >}} '.$Downloads_count.' {{< /Common/li >}}';
              $md_file_content .= "\n";
              $md_file_content .= '      {{< Common/li >}} File Size: {{< /Common/li >}}';
              $md_file_content .= "\n";
              $md_file_content .= '      {{< Common/li id="size-update-'.$etag_id.'" >}} '.$fileSize.' {{< /Common/li >}}';
              $md_file_content .= "\n";
-             $md_file_content .= '      {{< Common/li >}} Posted By: {{< /Common/li >}}';
-             $md_file_content .= "\n";
-             $md_file_content .= '      {{< Common/li id="author-update-'.$etag_id.'" >}} '.$posted_by_name.' {{< /Common/li >}}';
-             $md_file_content .= "\n";
-             $md_file_content .= '      {{< Common/li >}} Views: {{< /Common/li >}}';
-             $md_file_content .= "\n";
-             $md_file_content .= '      {{< Common/li id="view-update-'.$etag_id.'" >}} 1 {{< /Common/li >}}';
+             //$md_file_content .= '      {{< Common/li >}} Posted By: {{< /Common/li >}}';
+             //$md_file_content .= "\n";
+             //$md_file_content .= '      {{< Common/li id="author-update-'.$etag_id.'" >}} '.$posted_by_name.' {{< /Common/li >}}';
+             //$md_file_content .= "\n";
+             //$md_file_content .= '      {{< Common/li >}} Views: {{< /Common/li >}}';
+             //$md_file_content .= "\n";
+             //$md_file_content .= '      {{< Common/li id="view-update-'.$etag_id.'" >}} 1 {{< /Common/li >}}';
              $md_file_content .= "\n";
              $md_file_content .= '      {{< Common/li >}} Date Added: {{< /Common/li >}}';
              $md_file_content .= "\n";
@@ -359,9 +500,13 @@ class UploadController extends Controller
 
     }
 
-    public function UploadImageToS3($data){
-        //echo "<pre>"; print_r($data);  echo "</pre>"; 
+    public function UploadImageToS3($data, $action){
         
+        $insert_release = 1;
+        if($action == 'update'){
+            $release = Release::where('id', $data['edit_id'])->first();
+            $insert_release = 0;
+        }
         //exit;
         # get file from request object
         # get s3 object make sure your key matches with
@@ -372,7 +517,7 @@ class UploadController extends Controller
         $folder_ini  = $data['folder'];
 
         $section_parent_path = "";
-       $parent_path = "";
+        $parent_path = "";
 
         if(strstr($folder_ini, '/')){
             $folder = rtrim($folder_ini, '/'); 
@@ -397,7 +542,17 @@ class UploadController extends Controller
         $title = $data['title'];
         $productfamily_path = parse_url($productfamily, PHP_URL_PATH);
         $productfamily_path = rtrim($productfamily_path, '/'); 
-        $title_slug = str_replace(' ', '-', strtolower($title));
+        if($action == 'update'){
+            /* POSSIBLE FIX TO MAINTAIN INTIAL FAIL NAME (KEEP DOWNLOAD MD FILE NAME SAME) */
+                $initial_file_name = rtrim($release->folder_link, '/');
+                $initial_file_name_array = explode("/", $initial_file_name); 
+                $initial_file_name_only = end($initial_file_name_array); 
+                $title_slug = str_replace(' ', '-', strtolower($initial_file_name_only));
+            /* /POSSIBLE FIX TO MAINTAIN INTIAL FAIL NAME  */
+        }else{
+            $title_slug = str_replace(' ', '-', strtolower($title));
+        }
+        
        
        
        $special_case = array('all','examples', 'new-releases',  'resources' );
@@ -445,12 +600,26 @@ class UploadController extends Controller
         $fileSize = "";
         $fileSizeBytes = $filetoupload->getSize();
         $fileSize =  $this->formatBytes($fileSizeBytes, 2);
-            $image_link = "https://downloads.aspose.com/resources/img/msi-icon.png";
+
+
+        // $image_link = "https://downloads.aspose.com/resources/img/msi-icon.png";
+        // if($filetoupload->getClientOriginalExtension() == 'zip'){
+        //     $image_link = "https://downloads.aspose.com/resources/img/zip-icon.png";
+        // } else if($filetoupload->getClientOriginalExtension() == 'msi'){
+        //     $image_link = "https://downloads.aspose.com/resources/img/msi-icon.png";
+        // }
+
+        $image_link = "/resources/img/random-file-icon.png";
         if($filetoupload->getClientOriginalExtension() == 'zip'){
-            $image_link = "https://downloads.aspose.com/resources/img/zip-icon.png";
+            $image_link = "/resources/img/zip-icon.png";
         } else if($filetoupload->getClientOriginalExtension() == 'msi'){
-            $image_link = "https://downloads.aspose.com/resources/img/msi-icon.png";
+            $image_link = "/resources/img/msi-icon.png";
+        } else if($filetoupload->getClientOriginalExtension() == 'pdf'){
+            $image_link = "/resources/img/pdf-icon.png";
+        } else if($filetoupload->getClientOriginalExtension() == 'doc'){
+            $image_link = "/resources/img/doc-icon.png";
         }
+
         /* ---------- type 1 ------------ */
         # finally upload your file to s3 bucket
          /*$s3 = Storage::disk('s3');
@@ -525,6 +694,8 @@ class UploadController extends Controller
                     'download_link' => $download_link . $ETag,
                     'parent_path' => ltrim($parent_path, '/'),
                     'section_parent_path' => $section_parent_path,
+                    'title' => $title,
+                    'actual_file_name' =>$file_name,
                     'title_slug' => $title_slug,
                     'title_new_tag' => $title_new_text,
                     'fileSize' => $fileSize,
@@ -532,7 +703,9 @@ class UploadController extends Controller
                     'image_link' => $image_link,
                     'family' => $productfamily_full_path,
                     'product' => $product_full_path,
-                    'folder'=> $folder_full_path
+                    'folder'=> $folder_full_path,
+                    'insert_release'=> $insert_release,
+                    'contains_file' => 1
                  );
             }else{
                 return  array();
@@ -548,6 +721,111 @@ class UploadController extends Controller
             //echo  "Error while updating lambdas file ";
             echo $e->getMessage() . "\n";
         }
+
+    }
+
+    
+    public function DontUploadFileToS3($data){
+        $release = Release::where('id', $data['edit_id'])->first();
+
+        $productfamily  = $data['productfamily'];
+        $product  = $data['product'];
+        $folder_ini  = $data['folder'];
+
+        $section_parent_path = "";
+        $parent_path = "";
+
+        if(strstr($folder_ini, '/')){
+            $folder = rtrim($folder_ini, '/'); 
+            $folder = substr(strrchr($folder, '/'), 1);
+            $parent_path = parse_url($folder_ini, PHP_URL_PATH);
+            $parent_path = rtrim($parent_path, '/');
+            $section_parent_path = parse_url($product, PHP_URL_PATH);
+            $section_parent_path = rtrim($section_parent_path, '/');
+            $section_parent_path = ltrim($section_parent_path, '/');
+        }else{
+            $folder = $folder_ini ;
+            $parent_path = parse_url($product, PHP_URL_PATH);
+            $parent_path = rtrim($parent_path, '/');
+        }
+        
+
+        $title = $data['title'];
+        $productfamily_path = parse_url($productfamily, PHP_URL_PATH);
+        $productfamily_path = rtrim($productfamily_path, '/'); 
+        
+        /* POSSIBLE FIX TO MAINTAIN INTIAL FAIL NAME (KEEP DOWNLOAD MD FILE NAME SAME) */
+        $initial_file_name = rtrim($release->folder_link, '/');
+        $initial_file_name_array = explode("/", $initial_file_name); 
+        $initial_file_name_only = end($initial_file_name_array); 
+        $title_slug = str_replace(' ', '-', strtolower($initial_file_name_only));
+        /* /POSSIBLE FIX TO MAINTAIN INTIAL FAIL NAME  */
+       
+       $special_case = array('all','examples', 'new-releases',  'resources' );
+       $title_new_ = array('all'=>'all', 'examples'=>'Examples', 'new-releases'=>'New Releases',  'resources'=>'Resources');
+       if(in_array($folder, $special_case)){
+            $title_new_text = $title_new_[$folder];
+        }else{
+            $folder = rtrim($folder, '/'); 
+            $path = explode("/", $folder); // splitting the path
+            $last = end($path); 
+            $title_new_text = ucfirst($last);
+        }
+      
+       $folder_full_path = parse_url($folder, PHP_URL_PATH);
+       $productfamily_full_path  = parse_url($productfamily, PHP_URL_PATH);
+       $product_full_path = parse_url($product, PHP_URL_PATH);
+
+       $download_link = "";
+       $folder_link = "";
+       if(!empty($section_parent_path)){
+         $folder_link = '/'.$section_parent_path. '/'.$title_slug.'/';
+         $download_link = $folder_link;
+       }else{
+         $folder_link = $parent_path."/".$folder.'/'.$title_slug . '/';
+         $download_link = $folder_link;
+       }
+
+       
+
+
+        # rename file name to random name
+        //$file_name = uniqid() .'.'. $image->getClientOriginalExtension();
+        $ext = "";
+        $ext = pathinfo($release->filename, PATHINFO_EXTENSION);
+
+        $image_link = "/resources/img/random-file-icon.png";
+        if($ext == 'zip'){
+            $image_link = "/resources/img/zip-icon.png";
+        } else if($ext == 'msi'){
+            $image_link = "/resources/img/msi-icon.png";
+        } else if($ext == 'pdf'){
+            $image_link = "/resources/img/pdf-icon.png";
+        } else if($ext == 'doc'){
+            $image_link = "/resources/img/doc-icon.png";
+        }
+        
+        return array(
+            's3_path' => $release->s3_path,
+            'folder_link' => $release->folder_link,
+            'download_link' => $release->folder_link . $release->etag_id,
+            'parent_path' => ltrim($parent_path, '/'),
+            'section_parent_path' => $section_parent_path,
+            'title' => $title,
+            'actual_file_name' =>$release->filename,
+            'title_slug' => $title_slug,
+            'title_new_tag' => $title_new_text,
+            'fileSize' => $release->filesize,
+            'etag_id' => $release->etag_id,
+            'image_link' => $image_link,
+            'family' => $productfamily_full_path,
+            'product' => $product_full_path,
+            'folder'=> $folder_full_path,
+            'insert_release'=> 0,
+            'contains_file' => 0
+         );
+        
+        
 
     }
 
@@ -615,6 +893,81 @@ class UploadController extends Controller
             'referrer'=> $referer,
             'log'=> $posted_by_name,
         ]);
+    }
+
+    public function managefiles(Request $request){
+        
+        $filter_productfamily = $request->filter_productfamily;
+        $filter_product = $request->filter_product;
+        $filter_folder = $request->filter_folder;
+        
+        $filter_productfamily = parse_url($filter_productfamily, PHP_URL_PATH);
+        $filter_productfamily = rtrim($filter_productfamily, '/');
+
+        $filter_product = parse_url($filter_product, PHP_URL_PATH);
+        $filter_product = rtrim($filter_product, '/');
+
+
+         $filter_folder = parse_url($filter_folder, PHP_URL_PATH);
+         $filter_folder = rtrim($filter_folder, '/');
+         $filter_folder = explode('/', $filter_folder);
+         $filter_folder = end($filter_folder); 
+        
+        //print_r($filter_productfamily . ' --- ' . $filter_product . ' ---- ' . $filter_folder);
+       
+        ;
+        $DropDownContent = $this->GetDropDownContent();
+        $familySelected = "";
+        $current_child_products = array();
+        
+        
+        if(isset($request->filter_productfamily)){
+            $familySelected = $request->filter_productfamily;
+            $current_child_products = $this->getchildnodeslist($request->filter_productfamily);
+            $folders = $this->getchildnodeslist($request->filter_product);
+            if(!empty($folders)){
+                if(count($folders) == 1){
+                    $folders['New Releases'] = 'new-releases';
+                }
+            }
+
+        }
+        //echo "<pre>"; print_r($request->filter_product); echo "</pre>";
+        //echo "<pre>"; print_r($folders); echo "</pre>";
+        if(empty($folders)){
+            $folders = array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+        }
+        //dd($current_child_products);
+        //$productSelected = $request->filter_product;
+        //$familySelected = $this->searchSingle($DropDownContent, 'url', $request->filter_productfamily);
+        //$productSelected = $this->searchSingle($DropDownContent, 'url', $request->filter_product);
+        $productSelected = $request->filter_product;
+        $folderSelected = $request->filter_folder;
+
+        
+        // echo "<pre>"; print_r($familySelected); echo "</pre>"; 
+        // echo "<pre>"; print_r($productSelected); echo "</pre>"; 
+        // echo "<pre>"; print_r($folderSelected); echo "</pre>"; 
+
+        
+        
+        $title = "";
+        //$releases = Release::get();
+        $releases = NULL;
+        //$releases = Release::where('family', 'like', $filter_productfamily)->where('product', 'like', $filter_product)->where('folder', 'like', $filter_folder)->orderBy('id', 'desc')->paginate(15);
+        
+        if(isset($request->filter_folder)){
+            $releases = DB::table('releases')
+            ->where('family', 'like', '%' . $filter_productfamily . '%')
+            ->where('product', 'like', '%' . $filter_product . '%')
+            ->where('folder', 'like', '%' . $filter_folder . '%')
+            ->orderBy('id', 'desc')->paginate(15);
+        }
+        //$releases = DB::table('releases')->paginate(15);
+     //dd($folders);
+        $amazon_s3_settings = AmazonS3Setting::where('id', 1)->first();
+        $hugositeurl = $amazon_s3_settings->hugositeurl;
+       return view('admin.upload.list', compact('DropDownContent', 'familySelected', 'productSelected', 'folderSelected', 'current_child_products', 'folders', 'releases', 'title', 'hugositeurl'));
     }
    
 }
