@@ -150,7 +150,7 @@ class UploadController extends Controller
             //exit;
             if(!empty($upload_info)){
                 $mdfile =$this->generate_mdfile($request->all(), $upload_info);
-                $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name']);
+                $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path']);
             }
             
            
@@ -171,7 +171,7 @@ class UploadController extends Controller
             
             if(!empty($upload_info)){
                 $mdfile =$this->generate_mdfile($request->all(), $upload_info);
-                $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name']);
+                $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'] );
             }
             
            
@@ -466,15 +466,16 @@ class UploadController extends Controller
 
 
       return array(
+            'file_path'=> $f_product.$f_folder,
             'file_name' => $title_slug,
             'data'=> $md_file_content
       );
     }
 
-    public function forceDownloadMdFile( $content, $filename) {
+    public function forceDownloadMdFile( $content, $filename, $file_path) {
         
        
-        $filename_info = $filename.".md";
+        $filename_info = $file_path.'/'.$filename.".md";
         Storage::put('/public/mdfiles/' . $filename_info, $content);
         $download_path = ( storage_path() . '/app/public/mdfiles/'.$filename_info);
         //echo $download_path;
@@ -491,7 +492,7 @@ class UploadController extends Controller
                 ob_flush();
             }
             // Exit to make sure not to output anything else.
-            unlink($download_path);
+            //unlink($download_path);
             exit;
             
         } else {
