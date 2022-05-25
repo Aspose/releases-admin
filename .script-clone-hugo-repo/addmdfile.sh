@@ -18,14 +18,14 @@ echo "file upload started ..."
 cd $local_clone_repo_path
 
 # Remove Git Folder
-rm -rf releases.aspose.com
-rm -rf newfile
+sudo rm -rf releases.aspose.com
+sudo rm -rf newfile
 
-mkdir newfile
+sudo mkdir newfile
 
 cd newfile
 
-cp $sourcepath $filename
+sudo cp $sourcepath $filename
 
 cd ..
 
@@ -38,7 +38,7 @@ git config user.email "fahadadeel@gmail.com"
 
 cd releases.aspose.com/$destinationpath
 
-cp $local_clone_repo_path/newfile/$filename $filename
+sudo cp $local_clone_repo_path/newfile/$filename $filename
 
 git add .
 
