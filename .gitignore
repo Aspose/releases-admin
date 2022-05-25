@@ -24,4 +24,3 @@ Homestead.json
 .scripts/*
 .scripts/deploy.sh
 /.scripts/*.sh
-*.sh
