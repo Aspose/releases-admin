@@ -271,14 +271,17 @@ class UploadController extends Controller
       // echo $f_family . " === " . $f_product . " ==== ". $f_folder; exit;
 
 
-     $Records_Count = Release::where('product', $f_product)->where('folder',$f_folder )->count();
-     if($Records_Count){
-        $weight = $Records_Count + 1;
-     }
+     
      
      $f_family = rtrim($f_family, '/');
       
      if($upload_info['insert_release']){
+
+        $Records_Count = Release::where('product', $f_product)->where('folder',$f_folder )->count();
+        if($Records_Count){
+            $weight = $Records_Count + 1;
+        }
+
         $release = Release::create([
             'family'=> $f_family,
             'product'=> $f_product,
@@ -298,6 +301,7 @@ class UploadController extends Controller
             'sha1' => '',
             'md5' => '',
             'is_new' => 1,
+            'weight' => $weight
             ]);
             $Downloads_count = 1;
             $Views_count = 1;
@@ -320,6 +324,7 @@ class UploadController extends Controller
         $Downloads_count = $release->download_count;
         $Views_count = $release->view_count;
         $down_date = date('j/n/Y', strtotime($release->date_added));
+        $weight = $release->weight;
      }
        
         
