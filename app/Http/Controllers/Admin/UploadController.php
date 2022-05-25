@@ -144,13 +144,14 @@ class UploadController extends Controller
      */
     public function upload(UploadsRequest $request)
     {
+        $host = $request->getHttpHost();
         if(!empty($request->all())){
             $upload_info = $this->UploadImageToS3($request->all(), 'new');
             //echo"<pre>"; print_r($upload_info); echo"</pre>";
             //exit;
             if(!empty($upload_info)){
                 $mdfile =$this->generate_mdfile($request->all(), $upload_info);
-                $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path']);
+                $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
             }
             
            
@@ -161,6 +162,7 @@ class UploadController extends Controller
 
     public function update(UpdateRequest $request)
     {
+        $host = $request->getHttpHost();
         if(!empty($request->all())){
             
             if($request->hasFile('filetoupload')){
@@ -171,7 +173,7 @@ class UploadController extends Controller
             
             if(!empty($upload_info)){
                 $mdfile =$this->generate_mdfile($request->all(), $upload_info);
-                $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'] );
+                $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
             }
             
            
@@ -472,27 +474,82 @@ class UploadController extends Controller
       );
     }
 
-    public function forceDownloadMdFile( $content, $filename, $file_path) {
+    public function forceDownloadMdFile( $content, $filename, $file_path, $host) {
         
-       
-        $filename_info = $file_path.'/'.$filename.".md";
-        Storage::put('/public/mdfiles/' . $filename_info, $content);
-        $download_path = ( storage_path() . '/app/public/mdfiles/'.$filename_info);
-        //echo $download_path;
+        $file_to_commit = $filename.".md"; 
+        $filename_info = $file_path.'/'.$file_to_commit;
+        Storage::put('/public/mdfiles/content' . $filename_info, $content);
+        $download_path = ( storage_path() . '/app/public/mdfiles/content'.$filename_info);
+        $hugo_content_path = "content" . $file_path .'/';
+        //echo $download_path; exit;
         if (file_exists($download_path)) {
             
+            
+            
+           
+            /* ===================== COMMIT FILE ============= */
+            
+           //die($public_path);
+            //$script_path = str_replace('/public', '/.scripts/', $public_path );
+            
+            $local_clone_repo_path = env('LOCAL_REPO_CLONE_PATH', '');
+            // print_r('1111');
+            // print_r($script_path);
+            // print_r('22222');
+            // die('LLLLL');
+            if(!empty($local_clone_repo_path)){
+
+                $GIT_USERNAME = env('GIT_USERNAME', '');
+                $GIT_TOKEN = env('GIT_TOKEN', '');
+                $GIT_REPO = "";
+
+                if(in_array($host, array('admindemo.aspose', 'releases.admin.aspose.com'))){ //aspose.com
+                    $GIT_REPO = env('GIT_REPO_ASPOSE_COM', '');
+                }else if(in_array($host, array('admindemo.groupdocs', 'releases.admin.groupdocs.com'))){ //groupdocs.com
+                    $GIT_REPO = env('GIT_REPO_GROUPDOCS_COM', '');
+                }
+                
+                
+                if(!empty($GIT_USERNAME) && !empty($GIT_TOKEN) && !empty($GIT_REPO) ){
+                    
+                    // current path
+                    $public_path = getcwd();
+                    $bash_script_path = str_replace('/public', '/.script-clone-hugo-repo/', $public_path );
+                    //dd($public_path . "---" . $script_path);
+                    chdir($bash_script_path);
+                    $repo_url = "https://$GIT_USERNAME:$GIT_TOKEN@github.com/$GIT_REPO";
+                    echo "<pre> public_path "; print_r($public_path);echo "</pre>"; 
+                    echo "<pre> bash script path "; print_r($bash_script_path);echo "</pre>"; 
+                    echo "<pre> local_clone_repo_path "; print_r($local_clone_repo_path);echo "</pre>"; 
+                    echo "<pre> download_path "; print_r($download_path);echo "</pre>"; 
+                    echo "<pre> hugo_content_path "; print_r($hugo_content_path);echo "</pre>"; 
+                    echo "<pre> file_to_commit "; print_r($file_to_commit);echo "</pre>"; 
+                    echo "<pre> REPO_URL "; print_r($repo_url);echo "</pre>"; 
+                    //exit;
+                    $output = shell_exec('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');
+                    echo "<pre> file_to_commit "; print_r($output);echo "</pre>"; exit;
+                    chdir($public_path);
+                }
+
+                
+            }
+            /* ===================== /COMMIT FILE ============= */
+
+
+            /* ===================== FORCE DOWNLOAD ============= */
             $maxRead = 1 * 1024 * 1024; // 1MB
             $fh = fopen($download_path, 'r');
             header('Content-Type: application/octet-stream');
             header('Content-Disposition: attachment; filename="' . $filename_info . '"');
             while (!feof($fh)) {
-                // Read and output the next chunk.
                 echo fread($fh, $maxRead);
-                // Flush the output buffer to free memory.
                 ob_flush();
             }
-            // Exit to make sure not to output anything else.
+            /* ===================== /FORCE DOWNLOAD ============= */
+
+            /* ===================== DELETE FILE ============= */
             //unlink($download_path);
+            /* ===================== DELETE FILE ============= */
             exit;
             
         } else {
