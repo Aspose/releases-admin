@@ -532,7 +532,7 @@ class UploadController extends Controller
                     echo "<pre> REPO_URL "; print_r($repo_url);echo "</pre>"; 
                     //exit;
                     echo "<pre> shell script "; print_r('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');echo "</pre>"; 
-                    $output = shell_exec('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');
+                    $output = shell_exec('/var/www/scripts/addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');
                     echo "<pre> file_to_commit "; print_r($output);echo "</pre>"; exit;
                     chdir($public_path);
                 }
