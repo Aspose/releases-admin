@@ -147,22 +147,22 @@ class UploadController extends Controller
         $host = $request->getHttpHost();
         if(!empty($request->all())){
             $upload_info = $this->UploadImageToS3($request->all(), 'new');
-            //echo"<pre>"; print_r($upload_info); echo"</pre>";
-            //exit;
             if(!empty($upload_info)){
                 $mdfile =$this->generate_mdfile($request->all(), $upload_info);
-                $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
+                $res = $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
+                flash()->overlay('Added Successfully.' .$res);
+                return redirect('/admin/ventures/file/edit/' . $mdfile['last_insert_update_id']);
+            }else{
+                flash()->overlay('File Upload Failed...');
+                return redirect('/admin/ventures/file/manage-files');
             }
-            
-           
         }
-        //flash()->overlay('File Uploaded Successfully.');
-        //return redirect('/admin/ventures/file/upload');
     }
 
     public function update(UpdateRequest $request)
     {
         $host = $request->getHttpHost();
+        $edit_id = $request->edit_id;
         if(!empty($request->all())){
             
             if($request->hasFile('filetoupload')){
@@ -173,10 +173,14 @@ class UploadController extends Controller
             
             if(!empty($upload_info)){
                 $mdfile =$this->generate_mdfile($request->all(), $upload_info);
-                $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
+                $res= $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
+                flash()->overlay('Update Successfully.' .$res);
+                return redirect('/admin/ventures/file/edit/' . $mdfile['last_insert_update_id']);
+            }else{
+                flash()->overlay('Update Failed...');
+                return redirect('/admin/ventures/file/edit/'. $edit_id);
             }
             
-           
         }
     }
 
@@ -258,6 +262,7 @@ class UploadController extends Controller
        $folder_link = $upload_info['folder_link'];
        $title_new_tag =  $upload_info['title_new_tag'];
        $etag_id =  $upload_info['etag_id'];
+       $orignal_etag_id = $upload_info['etag_id'];
        $image_link =  $upload_info['image_link'];
 
        $f_family =  $upload_info['family'];
@@ -274,7 +279,8 @@ class UploadController extends Controller
      
      
      $f_family = rtrim($f_family, '/');
-      
+     $last_insert_update_id = 0;
+     
      if($upload_info['insert_release']){
 
         $Records_Count = Release::where('product', $f_product)->where('folder',$f_folder )->count();
@@ -306,8 +312,17 @@ class UploadController extends Controller
             $Downloads_count = 1;
             $Views_count = 1;
             $down_date = date('j/n/Y');
+            $last_insert_update_id = $release->id;
+            /* ---------- Append primary key to Etag id (Etag not unique in some cases) -------*/
+            if($last_insert_update_id){
+                $release_tag_update = Release::find($last_insert_update_id);
+                $etag_id = $etag_id.'-'.$last_insert_update_id;
+                $release_tag_update->etag_id = $etag_id;
+                $release_tag_update->save();
+            }
+            /* ---------- Append primary key to Etag id (Etag not unique in some cases) -------*/
      }else{
-        
+        $last_insert_update_id = $data['edit_id'];
         $release = Release::find($data['edit_id']);
         $release->filetitle = $title;
         $release->description = $description;
@@ -317,6 +332,7 @@ class UploadController extends Controller
             $release->filename = $actual_file_name;
             $release->filesize = $fileSize;
             $release->s3_path = $s3_path;
+            $etag_id = $etag_id.'-'.$last_insert_update_id;
             $release->etag_id = $etag_id;
         }
         $release->save();
@@ -335,7 +351,8 @@ class UploadController extends Controller
 
         );
 
-
+        // replace Etag with new Generated
+        $download_link = str_replace($orignal_etag_id, $etag_id, $download_link);
         
         $download_count_text = " $down_date Downloads: $Downloads_count  Views: $Views_count ";
 
@@ -406,6 +423,8 @@ class UploadController extends Controller
       $md_file_content .= "  {{< Releases/ReleasesButtons >}}";
       $md_file_content .= "\n";
       foreach($buttons as $key=>$value){
+          // replace Etag with new Generated
+          $value = str_replace($orignal_etag_id, $etag_id, $value);
           $md_file_content .= "    {{< Releases/ReleasesSingleButtons text=\"$key\" link=\"$value\" >}}";
           $md_file_content .= "\n";
       }
@@ -473,6 +492,7 @@ class UploadController extends Controller
 
 
       return array(
+            'last_insert_update_id' => $last_insert_update_id,
             'file_path'=> $f_product.$f_folder,
             'file_name' => $title_slug,
             'data'=> $md_file_content
@@ -510,20 +530,20 @@ class UploadController extends Controller
                 if(!empty($GIT_USERNAME) && !empty($GIT_TOKEN) && !empty($GIT_REPO) ){
                     
                     $repo_url = "https://$GIT_USERNAME:$GIT_TOKEN@github.com/$GIT_REPO";
-                    echo "<pre> local_clone_repo_path "; print_r($local_clone_repo_path);echo "</pre>"; 
-                    echo "<pre> download_path "; print_r($download_path);echo "</pre>"; 
-                    echo "<pre> hugo_content_path "; print_r($hugo_content_path);echo "</pre>"; 
-                    echo "<pre> file_to_commit "; print_r($file_to_commit);echo "</pre>"; 
-                    echo "<pre> REPO_URL "; print_r($repo_url);echo "</pre>"; 
+                    //echo "<pre> local_clone_repo_path "; print_r($local_clone_repo_path);echo "</pre>"; 
+                    //echo "<pre> download_path "; print_r($download_path);echo "</pre>"; 
+                    //echo "<pre> hugo_content_path "; print_r($hugo_content_path);echo "</pre>"; 
+                    //echo "<pre> file_to_commit "; print_r($file_to_commit);echo "</pre>"; 
+                    //echo "<pre> REPO_URL "; print_r($repo_url);echo "</pre>"; 
 
                     if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
             
                         $public_path = getcwd();
                         $bash_script_path = str_replace('/public', '/.scripts/', $public_path );
                         chdir($bash_script_path);
-                        echo "<pre> public_path "; print_r($public_path);echo "</pre>"; 
-                        echo "<pre> bash script path "; print_r($bash_script_path);echo "</pre>"; 
-                        echo "<pre> shell script "; print_r('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');echo "</pre>"; 
+                        //echo "<pre> public_path "; print_r($public_path);echo "</pre>"; 
+                        //echo "<pre> bash script path "; print_r($bash_script_path);echo "</pre>"; 
+                        //echo "<pre> shell script "; print_r('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');echo "</pre>"; 
                         $output = shell_exec('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');
                         chdir($public_path);
                    
@@ -531,12 +551,12 @@ class UploadController extends Controller
                         $output = shell_exec('/var/www/scripts/addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');
                     }
                     
-                    echo "<pre> file_to_commit "; print_r($output);echo "</pre>"; exit;
+                    //echo "<pre> file_to_commit "; print_r($output);echo "</pre>"; exit;
                     
                 }
             }
             /* ===================== /COMMIT FILE ============= */
-
+            return $output;
 
             /* ===================== FORCE DOWNLOAD ============= */
             $maxRead = 1 * 1024 * 1024; // 1MB
@@ -552,10 +572,12 @@ class UploadController extends Controller
             /* ===================== DELETE FILE ============= */
             //unlink($download_path);
             /* ===================== DELETE FILE ============= */
+            return $output;
             exit;
             
         } else {
-            echo('File not found.');
+            //echo('File not found.');
+            return 'File not found.';
         }
 
     }
