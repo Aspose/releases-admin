@@ -517,7 +517,7 @@ class UploadController extends Controller
                     echo "<pre> REPO_URL "; print_r($repo_url);echo "</pre>"; 
 
                     if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
-                        //test commit
+            
                         $public_path = getcwd();
                         $bash_script_path = str_replace('/public', '/.scripts/', $public_path );
                         chdir($bash_script_path);
