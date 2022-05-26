@@ -493,15 +493,7 @@ class UploadController extends Controller
             
            
             /* ===================== COMMIT FILE ============= */
-            
-           //die($public_path);
-            //$script_path = str_replace('/public', '/.scripts/', $public_path );
-            
             $local_clone_repo_path = env('LOCAL_REPO_CLONE_PATH', '');
-            // print_r('1111');
-            // print_r($script_path);
-            // print_r('22222');
-            // die('LLLLL');
             if(!empty($local_clone_repo_path)){
 
                 $GIT_USERNAME = env('GIT_USERNAME', '');
@@ -517,27 +509,31 @@ class UploadController extends Controller
                 
                 if(!empty($GIT_USERNAME) && !empty($GIT_TOKEN) && !empty($GIT_REPO) ){
                     
-                    // current path
-                    $public_path = getcwd();
-                    $bash_script_path = str_replace('/public', '/.script-clone-hugo-repo/', $public_path );
-                    //dd($public_path . "---" . $script_path);
-                    chdir($bash_script_path);
                     $repo_url = "https://$GIT_USERNAME:$GIT_TOKEN@github.com/$GIT_REPO";
-                    echo "<pre> public_path "; print_r($public_path);echo "</pre>"; 
-                    echo "<pre> bash script path "; print_r($bash_script_path);echo "</pre>"; 
                     echo "<pre> local_clone_repo_path "; print_r($local_clone_repo_path);echo "</pre>"; 
                     echo "<pre> download_path "; print_r($download_path);echo "</pre>"; 
                     echo "<pre> hugo_content_path "; print_r($hugo_content_path);echo "</pre>"; 
                     echo "<pre> file_to_commit "; print_r($file_to_commit);echo "</pre>"; 
                     echo "<pre> REPO_URL "; print_r($repo_url);echo "</pre>"; 
-                    //exit;
-                    echo "<pre> shell script "; print_r('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');echo "</pre>"; 
-                    $output = shell_exec('/var/www/scripts/addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');
-                    echo "<pre> file_to_commit "; print_r($output);echo "</pre>"; exit;
-                    chdir($public_path);
-                }
 
-                
+                    if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
+                        
+                        $public_path = getcwd();
+                        $bash_script_path = str_replace('/public', '/.scripts/', $public_path );
+                        chdir($bash_script_path);
+                        echo "<pre> public_path "; print_r($public_path);echo "</pre>"; 
+                        echo "<pre> bash script path "; print_r($bash_script_path);echo "</pre>"; 
+                        echo "<pre> shell script "; print_r('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');echo "</pre>"; 
+                        $output = shell_exec('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');
+                        chdir($public_path);
+                   
+                    }else{ //prod/stage
+                        $output = shell_exec('/var/www/scripts/addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');
+                    }
+                    
+                    echo "<pre> file_to_commit "; print_r($output);echo "</pre>"; exit;
+                    
+                }
             }
             /* ===================== /COMMIT FILE ============= */
 
