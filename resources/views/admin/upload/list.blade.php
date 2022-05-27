@@ -78,9 +78,9 @@
                         <td><?php echo date('Y-m-d', strtotime($release->date_added)); ?></td>
                         <td>{{ $release->posted_by }}</td>
                         <td>
-                            <?php if(!empty($release->release_notes_url)){ ?>
+                           
                                 <a href="<?php echo $hugositeurl . '' . $release->folder_link ?>">View File</a>
-                            <?php } ?>
+                           
                         </td>
                         <td>
                             <?php if(!empty($release->release_notes_url)){ ?>
