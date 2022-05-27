@@ -79,7 +79,7 @@
                         <td>{{ $release->posted_by }}</td>
                         <td>
                             <?php if(!empty($release->release_notes_url)){ ?>
-                                <a href="<?php echo $hugositeurl . '/' . $release->folder_link ?>">View File</a>
+                                <a href="<?php echo $hugositeurl . '' . $release->folder_link ?>">View File</a>
                             <?php } ?>
                         </td>
                         <td>
