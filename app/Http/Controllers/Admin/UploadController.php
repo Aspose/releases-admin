@@ -18,9 +18,9 @@ use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
 use App\Models\Release;
 use App\Models\Download;
-use Aws\Exception\MultipartUploadException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Aws\Exception\AwsException;
 use Aws\S3\ObjectUploader;
 class UploadController extends Controller
 {
@@ -747,7 +747,7 @@ class UploadController extends Controller
         $AWS_DEFAULT_REGION = env('AWS_DEFAULT_REGION', 'us-west-2');
         $AWS_BUCKET = $amazon_s3_settings->bucketname;
 
-        $s3 = new S3Client([
+        $S3Client = new S3Client([
             'version' => 'latest',
             'region'  => $AWS_DEFAULT_REGION,
             'credentials' => [
@@ -758,11 +758,11 @@ class UploadController extends Controller
         ]);
 
         
-        try {
+        
 
             $s3filePath =  ltrim($s3filePath, '/');
             
-            /*$response = $s3->putObject([
+            /*$response = $S3Client->putObject([
                 'Bucket' => $AWS_BUCKET,
                 'Key'    => $s3filePath, //'my-object',
                 'SourceFile'   => $filetoupload,
@@ -775,7 +775,7 @@ class UploadController extends Controller
             $source = fopen($filetoupload->getPathname(), 'rb');
             $acl = 'public-read';
             $uploader = new ObjectUploader(
-                $s3,
+                $S3Client,
                 $AWS_BUCKET,
                 $s3filePath,
                 $source,
@@ -787,19 +787,14 @@ class UploadController extends Controller
                     $result = $uploader->upload();
                     
                     if ($result["@metadata"]["statusCode"] == '200') {
-                        // print('<p>File successfully uploaded to ' . $result["ObjectURL"] . '.</p>');
-                        // echo "<pre>"; print_r($result["@metadata"]["statusCode"]);  echo "</pre>";
-                        // echo "<pre>"; print_r($result["ETag"]);  echo "</pre>";
-                        // echo "<pre>"; print_r($result["ObjectURL"]);  echo "</pre>";
-                        //$ETag = trim($result["ETag"], '"');
-                        $ETag = $result['ObjectURL'];
+                        $ETag = $result['ETag'];
                         $ObjectURL = $result['ObjectURL'];
                        // exit;
                     }
                     
                 } catch (MultipartUploadException $e) {
                     rewind($source);
-                    $uploader = new MultipartUploadException($s3, $source, [
+                    $uploader = new MultipartUploadException($S3Client, $source, [
                         'state' => $e->getState(),
                     ]);
                 }
@@ -807,11 +802,6 @@ class UploadController extends Controller
 
             fclose($source);
            
-
-
-
-
-
             if(!empty($ETag)){
                 //($response['ETag'] & $response['ObjectURL']
                 $ETag = trim($ETag, '"');
@@ -843,11 +833,7 @@ class UploadController extends Controller
            echo "<pre> ObjectURL "; print_r($response['ETag']);  echo "<pre>";
            echo "<pre> ObjectURL "; print_r(trim($response['ETag'], '"'));  echo "<pre>";*/
     
-        } catch (S3Exception $e) {
-            //echo "There was an error uploading the file.\n";
-            //echo  "Error while updating lambdas file ";
-            echo $e->getMessage() . "\n";
-        }
+        
 
     }
 
