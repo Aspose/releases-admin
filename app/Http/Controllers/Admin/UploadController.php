@@ -744,7 +744,7 @@ class UploadController extends Controller
         
         $AWS_ACCESS_KEY_ID = $amazon_s3_settings->apikey;
         $AWS_SECRET_ACCESS_KEY = $amazon_s3_settings->apisecret;
-        $AWS_DEFAULT_REGION = env('AWS_DEFAULT_REGION', 'us-west-2');
+        $AWS_DEFAULT_REGION = env('AWS_DEFAULT_REGION', 'us-east-1');
         $AWS_BUCKET = $amazon_s3_settings->bucketname;
 
         $S3Client = new S3Client([
@@ -1023,7 +1023,7 @@ class UploadController extends Controller
         }else{
             $AWS_ACCESS_KEY_ID = $amazon_s3_settings->apikey;
             $AWS_SECRET_ACCESS_KEY = $amazon_s3_settings->apisecret;
-            $AWS_DEFAULT_REGION = env('AWS_DEFAULT_REGION', 'us-west-2');
+            $AWS_DEFAULT_REGION = env('AWS_DEFAULT_REGION', 'us-east-1');
             $AWS_BUCKET = $amazon_s3_settings->bucketname;
         }
         
