@@ -18,9 +18,10 @@ use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
 use App\Models\Release;
 use App\Models\Download;
+use Aws\Exception\MultipartUploadException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
+use Aws\S3\ObjectUploader;
 class UploadController extends Controller
 {
     /**
@@ -760,16 +761,60 @@ class UploadController extends Controller
         try {
 
             $s3filePath =  ltrim($s3filePath, '/');
-            $response = $s3->putObject([
+            
+            /*$response = $s3->putObject([
                 'Bucket' => $AWS_BUCKET,
                 'Key'    => $s3filePath, //'my-object',
                 'SourceFile'   => $filetoupload,
                 'ACL'    => 'public-read',
-            ]);
-            if(!empty($response['ETag'])){
+            ]);*/
+
+
+            // Using stream instead of file path
+           $ETag = "";
+            $source = fopen($filetoupload->getPathname(), 'rb');
+            $acl = 'public-read';
+            $uploader = new ObjectUploader(
+                $s3,
+                $AWS_BUCKET,
+                $s3filePath,
+                $source,
+                $acl
+            );
+
+            do {
+                try {
+                    $result = $uploader->upload();
+                    
+                    if ($result["@metadata"]["statusCode"] == '200') {
+                        // print('<p>File successfully uploaded to ' . $result["ObjectURL"] . '.</p>');
+                        // echo "<pre>"; print_r($result["@metadata"]["statusCode"]);  echo "</pre>";
+                        // echo "<pre>"; print_r($result["ETag"]);  echo "</pre>";
+                        // echo "<pre>"; print_r($result["ObjectURL"]);  echo "</pre>";
+                        //$ETag = trim($result["ETag"], '"');
+                        $ETag = $result['ObjectURL'];
+                        $ObjectURL = $result['ObjectURL'];
+                       // exit;
+                    }
+                    
+                } catch (MultipartUploadException $e) {
+                    rewind($source);
+                    $uploader = new MultipartUploadException($s3, $source, [
+                        'state' => $e->getState(),
+                    ]);
+                }
+            } while (!isset($result));
+
+            fclose($source);
+           
+
+
+
+
+
+            if(!empty($ETag)){
                 //($response['ETag'] & $response['ObjectURL']
-                $ETag = trim($response['ETag'], '"');
-                $ObjectURL = $response['ObjectURL'];
+                $ETag = trim($ETag, '"');
                 return array(
                     's3_path' => $ObjectURL,
                     'folder_link' => $folder_link,
