@@ -155,11 +155,9 @@ class UploadController extends Controller
                 $mdfile =$this->generate_mdfile($request->all(), $upload_info);
                 //echo "<pre>"; print_r($mdfile); echo "</pre>"; exit;
                 $res = $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
-                flash()->overlay('Added Successfully.' .$res);
-                return redirect('/admin/ventures/file/edit/' . $mdfile['last_insert_update_id']);
+                return redirect('/admin/ventures/file/edit/' . $mdfile['last_insert_update_id'])->with('success','Published Successfully.' .$res);
             }else{
-                flash()->overlay('File Upload Failed...');
-                return redirect('/admin/ventures/file/manage-files');
+                return redirect('/admin/ventures/file/manage-files')->with('error','Published Failed.');
             }
         }
     }
@@ -180,11 +178,9 @@ class UploadController extends Controller
             if(!empty($upload_info)){
                 $mdfile =$this->generate_mdfile($request->all(), $upload_info);
                 $res= $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
-                flash()->overlay('Update Successfully.' .$res);
-                return redirect('/admin/ventures/file/edit/' . $mdfile['last_insert_update_id']);
+                return redirect('/admin/ventures/file/edit/' . $mdfile['last_insert_update_id'])->with('success','Update Successfully.' .$res);
             }else{
-                flash()->overlay('Update Failed...');
-                return redirect('/admin/ventures/file/edit/'. $edit_id);
+                return redirect('/admin/ventures/file/edit/'. $edit_id)->with('success','Update Failed.');
             }
             
         }

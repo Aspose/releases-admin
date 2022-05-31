@@ -6,6 +6,16 @@
 </div>
 
 @include('flash::message')
+@if(Session::has('error'))
+    <div class="alert alert-danger">
+        {{Session::get('error')}}
+    </div>
+@endif
+@if(Session::has('success'))
+    <div class="alert alert-success">
+        {{Session::get('success')}}
+    </div>
+@endif
 
 <div class="form-horizontal">
     <input name="_token" type="hidden" value="{{ csrf_token() }}" />
