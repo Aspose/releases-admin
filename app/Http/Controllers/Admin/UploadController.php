@@ -20,8 +20,8 @@ use App\Models\Release;
 use App\Models\Download;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Aws\Exception\AwsException;
-use Aws\S3\ObjectUploader;
+use Illuminate\Support\Str;
+
 class UploadController extends Controller
 {
     /**
@@ -147,9 +147,13 @@ class UploadController extends Controller
     {
         $host = $request->getHttpHost();
         if(!empty($request->all())){
+            //echo "<pre>"; print_r($request->all()); echo "</pre>"; exit;
             $upload_info = $this->UploadImageToS3($request->all(), 'new');
+            
             if(!empty($upload_info)){
+                //echo "<pre>"; print_r($upload_info); echo "</pre>"; 
                 $mdfile =$this->generate_mdfile($request->all(), $upload_info);
+                //echo "<pre>"; print_r($mdfile); echo "</pre>"; exit;
                 $res = $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
                 flash()->overlay('Added Successfully.' .$res);
                 return redirect('/admin/ventures/file/edit/' . $mdfile['last_insert_update_id']);
@@ -164,9 +168,10 @@ class UploadController extends Controller
     {
         $host = $request->getHttpHost();
         $edit_id = $request->edit_id;
+        
         if(!empty($request->all())){
             
-            if($request->hasFile('filetoupload')){
+            if(!empty($request->file)){ // if file uploaded in edit page
                 $upload_info = $this->UploadImageToS3($request->all(), 'update');
             }else{
                 $upload_info = $this->DontUploadFileToS3($request->all());
@@ -228,8 +233,7 @@ class UploadController extends Controller
     }
 
     public function generate_mdfile($data, $upload_info){
-       //echo"<pre>"; print_r($data); echo"</pre>";
-       //exit;
+       
        $posted_by_name = Auth::user()->name ;
         $productfamily  = $data['productfamily'];
         $product  = $data['product'];
@@ -245,14 +249,7 @@ class UploadController extends Controller
         $productfamily_path = parse_url($productfamily, PHP_URL_PATH);
         $productfamily_path = rtrim($productfamily_path, '/');
 
-        if(isset($data['filetoupload'])){
-            if ($data['filetoupload']) {
-                //echo"<pre>"; print_r($data['filetoupload']); echo"</pre>"; 
-                $filetoupload = $data['filetoupload'];
-                $pathinfo =  pathinfo($filetoupload);
-            }
-        }
-
+        
        $title_slug = $upload_info['title_slug'];
        $section_parent_path = $upload_info['section_parent_path'];
        $parent_path = $upload_info['parent_path'];
@@ -594,7 +591,7 @@ class UploadController extends Controller
         # get file from request object
         # get s3 object make sure your key matches with
         # config/filesystem.php file configuration
-        $filetoupload = $data['filetoupload'];
+        $filetoupload = $data['file'];
         $productfamily  = $data['productfamily'];
         $product  = $data['product'];
         $folder_ini  = $data['folder'];
@@ -671,170 +668,52 @@ class UploadController extends Controller
        }
 
        
+       $ETag = Str::random(40);
+       $fileSizeBytes = "99877450";
+       
+       //$result = get_remote_file_info($filetoupload);
+       $filetoupload = urldecode($filetoupload);
+       $s3_file_headers = get_headers($filetoupload,1);
+       if(!empty($s3_file_headers)){
+        $ETag = trim($s3_file_headers['ETag'], '"');
+        $fileSizeBytes = $s3_file_headers['Content-Length'];
+       }
 
-
+        $s3_file_info = pathinfo($filetoupload);
         # rename file name to random name
-        //$file_name = uniqid() .'.'. $image->getClientOriginalExtension();
-        $file_name = $filetoupload->getClientOriginalName();
-        $file_name_only = pathinfo($file_name, PATHINFO_FILENAME);
-        $file_name_with_extension = $file_name_only.'.'.$filetoupload->getClientOriginalExtension();
+        $file_name = $s3_file_info['basename'];
         # define s3 target directory to upload file to
-        $s3filePath = $folder_link . $file_name_with_extension;
-        $fileSize = "";
-        $fileSizeBytes = $filetoupload->getSize();
         $fileSize =  $this->formatBytes($fileSizeBytes, 2);
 
-
-        // $image_link = "https://downloads.aspose.com/resources/img/msi-icon.png";
-        // if($filetoupload->getClientOriginalExtension() == 'zip'){
-        //     $image_link = "https://downloads.aspose.com/resources/img/zip-icon.png";
-        // } else if($filetoupload->getClientOriginalExtension() == 'msi'){
-        //     $image_link = "https://downloads.aspose.com/resources/img/msi-icon.png";
-        // }
-
         $image_link = "/resources/img/random-file-icon.png";
-        if($filetoupload->getClientOriginalExtension() == 'zip'){
+        if($s3_file_info['extension'] == 'zip'){
             $image_link = "/resources/img/zip-icon.png";
-        } else if($filetoupload->getClientOriginalExtension() == 'msi'){
+        } else if($s3_file_info['extension'] == 'msi'){
             $image_link = "/resources/img/msi-icon.png";
-        } else if($filetoupload->getClientOriginalExtension() == 'pdf'){
+        } else if($s3_file_info['extension'] == 'pdf'){
             $image_link = "/resources/img/pdf-icon.png";
-        } else if($filetoupload->getClientOriginalExtension() == 'doc'){
+        } else if($s3_file_info['extension'] == 'doc'){
             $image_link = "/resources/img/doc-icon.png";
         }
-
-        /* ---------- type 1 ------------ */
-        # finally upload your file to s3 bucket
-         /*$s3 = Storage::disk('s3');
-         $response = $s3->put($s3filePath, file_get_contents($filetoupload), 'public');
-         if ($response) {
-             return array(
-                's3_path' => $this->s3_path($s3filePath),
-                'folder_link' => $folder_link,
-                'download_link' => $download_link,
-                'parent_path' => $parent_path,
-                'section_parent_path' => $section_parent_path,
-                'title_slug' => $title_slug,
-                'title_new_tag' => $title_new_text
-             );
-         }else{
-             return  array();
-         }*/
-        /* /---------- type 1 ------------ */
-
-
-
-        // return  array(
-        //     's3_path' => "PPPP",
-        //     'folder_link' => $folder_link,
-        //     'download_link' => $download_link . "EEEEEE",
-        //     'parent_path' => ltrim($parent_path, '/'),
-        //     'section_parent_path' => $section_parent_path,
-        //     'title_slug' => $title_slug,
-        //     'title_new_tag' => $title_new_text,
-        //     'fileSize' => $fileSize,
-        //     'etag_id' => "EEEEE",
-        //     'image_link' => $image_link,
-        //     'family' => $productfamily_full_path,
-        //     'product' => $product_full_path,
-        //     'folder'=> $folder_full_path
-        //  );
-
-        $amazon_s3_settings = AmazonS3Setting::where('id', 1)->first();
-        
-        $AWS_ACCESS_KEY_ID = $amazon_s3_settings->apikey;
-        $AWS_SECRET_ACCESS_KEY = $amazon_s3_settings->apisecret;
-        $AWS_DEFAULT_REGION = env('AWS_DEFAULT_REGION', 'us-east-1');
-        $AWS_BUCKET = $amazon_s3_settings->bucketname;
-
-        $S3Client = new S3Client([
-            'version' => 'latest',
-            'region'  => $AWS_DEFAULT_REGION,
-            'credentials' => [
-                'key'    => $AWS_ACCESS_KEY_ID,
-                'secret' => $AWS_SECRET_ACCESS_KEY ,
-            ],
-    
-        ]);
-
-        
-        
-
-            $s3filePath =  ltrim($s3filePath, '/');
-            
-            /*$response = $S3Client->putObject([
-                'Bucket' => $AWS_BUCKET,
-                'Key'    => $s3filePath, //'my-object',
-                'SourceFile'   => $filetoupload,
-                'ACL'    => 'public-read',
-            ]);*/
-
-
-            // Using stream instead of file path
-           $ETag = "";
-            $source = fopen($filetoupload->getPathname(), 'rb');
-            $acl = 'public-read';
-            $uploader = new ObjectUploader(
-                $S3Client,
-                $AWS_BUCKET,
-                $s3filePath,
-                $source,
-                $acl
+        return array(
+            's3_path' => $filetoupload,
+            'folder_link' => $folder_link,
+            'download_link' => $download_link . $ETag,
+            'parent_path' => ltrim($parent_path, '/'),
+            'section_parent_path' => $section_parent_path,
+            'title' => $title,
+            'actual_file_name' =>$file_name,
+            'title_slug' => $title_slug,
+            'title_new_tag' => $title_new_text,
+            'fileSize' => $fileSize,
+            'etag_id' => $ETag,
+            'image_link' => $image_link,
+            'family' => $productfamily_full_path,
+            'product' => $product_full_path,
+            'folder'=> $folder_full_path,
+            'insert_release'=> $insert_release,
+            'contains_file' => 1
             );
-
-            do {
-                try {
-                    $result = $uploader->upload();
-                    
-                    if ($result["@metadata"]["statusCode"] == '200') {
-                        $ETag = $result['ETag'];
-                        $ObjectURL = $result['ObjectURL'];
-                       // exit;
-                    }
-                    
-                } catch (MultipartUploadException $e) {
-                    rewind($source);
-                    $uploader = new MultipartUploadException($S3Client, $source, [
-                        'state' => $e->getState(),
-                    ]);
-                }
-            } while (!isset($result));
-
-            fclose($source);
-           
-            if(!empty($ETag)){
-                //($response['ETag'] & $response['ObjectURL']
-                $ETag = trim($ETag, '"');
-                return array(
-                    's3_path' => $ObjectURL,
-                    'folder_link' => $folder_link,
-                    'download_link' => $download_link . $ETag,
-                    'parent_path' => ltrim($parent_path, '/'),
-                    'section_parent_path' => $section_parent_path,
-                    'title' => $title,
-                    'actual_file_name' =>$file_name,
-                    'title_slug' => $title_slug,
-                    'title_new_tag' => $title_new_text,
-                    'fileSize' => $fileSize,
-                    'etag_id' => $ETag,
-                    'image_link' => $image_link,
-                    'family' => $productfamily_full_path,
-                    'product' => $product_full_path,
-                    'folder'=> $folder_full_path,
-                    'insert_release'=> $insert_release,
-                    'contains_file' => 1
-                 );
-            }else{
-                return  array();
-            }
-            
-           /*echo "<pre> KKKK "; print_r($response);  echo "<pre>"; 
-           echo "<pre> ObjectURL "; print_r($response['ObjectURL']);  echo "<pre>";
-           echo "<pre> ObjectURL "; print_r($response['ETag']);  echo "<pre>";
-           echo "<pre> ObjectURL "; print_r(trim($response['ETag'], '"'));  echo "<pre>";*/
-    
-        
-
     }
 
     
@@ -942,15 +821,7 @@ class UploadController extends Controller
 
     }
 
-    public function s3_path($path)
-    {
-        return getenv('AWS_URL').''.$path;
-        //$this->s3_url.$bucket.'/'.$this->folder_name.$s3_file;
-        //s3-ap-southeast-1.amazonaws.com/frasers-marketing-banners/files/popover-01-406.png
-        //s3-ap-southeast-1.amazonaws.com/frasers-marketing-banners/files/935880fbd31b8e0f2710ff2be8fa2120-584.png
-        //s3-ap-southeast-1.amazonaws.com/
-        //ap-southeast-1.s3.amazonsws.com/files/popover-01-406.png
-    }
+    
 
     public function formatBytes($bytes, $precision = 2) {
         if ($bytes > pow(1024,3)) return round($bytes / pow(1024,3), $precision)."GB";
@@ -1023,7 +894,7 @@ class UploadController extends Controller
         }else{
             $AWS_ACCESS_KEY_ID = $amazon_s3_settings->apikey;
             $AWS_SECRET_ACCESS_KEY = $amazon_s3_settings->apisecret;
-            $AWS_DEFAULT_REGION = env('AWS_DEFAULT_REGION', 'us-east-1');
+            $AWS_DEFAULT_REGION = env('AWS_DEFAULT_REGION', 'us-west-2');
             $AWS_BUCKET = $amazon_s3_settings->bucketname;
         }
         

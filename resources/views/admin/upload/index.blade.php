@@ -76,14 +76,12 @@
     </div>
 
     <div class="control-group">
-        <span id="filetoupload-span" class="control-label">Select File: </span>
-        <div class="controls">
-            <input type="file" name="filetoupload" id="filetoupload" />
-            <span style="color:Red;visibility:hidden;">* Required</span>
-            <div><i>(File Name with Version e.g Aspose.Words_16.6.0.msi)</i></div>
-            <p  style="color:Red;"> {{ $errors->first('filetoupload') }} </p>
+        <div class="p-6">
+            <div class="flex items-center">
+                <input type="hidden" name="file" id="file" />
+                <x-input.uppy />
+            </div>
         </div>
-        
     </div>
 
     <div class="control-group alert-info">

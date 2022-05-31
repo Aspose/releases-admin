@@ -15,7 +15,7 @@
     <link href="{{ asset('css/bootstrap.css') }}" rel="stylesheet">
     <link href="{{ asset('css/site.css') }}" rel="stylesheet">
     <link href="{{ asset('css/bootstrap-responsive.css') }}" rel="stylesheet">
-
+    <script src="{{ asset('js/app.js') }}" defer></script>
     <!-- Scripts -->
     <script>
         window.Laravel = {!! json_encode([

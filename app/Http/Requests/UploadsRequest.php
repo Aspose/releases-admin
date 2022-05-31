@@ -30,7 +30,7 @@ class UploadsRequest extends FormRequest
             'title' => 'required',
             'description' => 'required',
             'releaseurl' => 'required',
-            'filetoupload' => 'required',
+            'file' => 'required',
             
         ];
     }

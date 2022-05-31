@@ -10,10 +10,10 @@
 </ul> -->
 <div class="well sidebar-nav">
 <ul class="nav nav-list">
-                        <li class="nav-header"><i class="icon-wrench"></i>Venture Administration</li>
+                        <!-- <li class="nav-header"><i class="icon-wrench"></i>Venture Administration</li>
                         <li>
                             <a id="ctl00_lnkAddVenture" class="dropdown-toggle" href="{{ url('admin/ventures/amazon-s3-settings') }}">Amazon S3 Settings </a>
-                        </li>
+                        </li> -->
                         <!-- <li>
                             <a id="ctl00_lnkAddEngine" class="dropdown-toggle" href="ventures/manage-ui">UI Management</a>
                         </li>
