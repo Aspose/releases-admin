@@ -22,18 +22,18 @@
                         </li> -->
 
 
-                        <!-- <li class="nav-header"><i class="icon-wrench"></i>Product's Administration</li>
+                        <li class="nav-header"><i class="icon-wrench"></i>Product's Administration</li>
                         <li>
-                            <a id="ctl00_lnkAddSection" class="dropdown-toggle" href="products/manage-families">Manage Product Families</a>
+                            <a id="ctl00_lnkAddSection" class="dropdown-toggle" href="{{ url('admin/products/manage-families') }}">Manage Product Families</a>
                         </li>
                         <li>
-                            <a id="ctl00_lnkAddProduct" class="dropdown-toggle" href="products/manage-allproducts">Manage Products</a>
+                            <a id="ctl00_lnkAddProduct" class="dropdown-toggle" href="{{ url('admin/products/manage-allproducts') }}">Manage Products</a>
                         </li>
                         <li>
-                            <a id="ctl00_HyperLink1" class="dropdown-toggle" href="products/manage-folders">Manage Folders</a>
+                            <a id="ctl00_HyperLink1" class="dropdown-toggle" href="{{ url('admin/products/manage-folders') }}">Manage Folders</a>
                         </li>
 
-
+                        <!--
                         <li class="nav-header"><i class="icon-wrench"></i>SEO Management</li>
                         <li>
                             <a id="ctl00_lnkApiHomePage" class="dropdown-toggle" href="seo-management/homepage">Home Page- SEO</a>

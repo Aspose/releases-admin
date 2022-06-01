@@ -34,6 +34,10 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth
     Route::post('/ventures/file/update', 'UploadController@update')->middleware('admin');
     Route::get('/ventures/file/manage-files', 'UploadController@managefiles')->middleware('admin');
     Route::any('/ventures/file/getchildnodes', ['as' => 'admin.getchildnodes', 'uses' => 'UploadController@getchildnodes', 'middleware' => ['admin']]);
+
+
+    //Manage Product Families
+   // Route::get('/products/manage-families', 'ManageProductFamilies@index')->middleware('admin');
 });
 
 
