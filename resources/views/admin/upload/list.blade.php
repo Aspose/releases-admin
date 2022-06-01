@@ -101,7 +101,8 @@
                         </td>
                         <td><a href="edit/{{ $release->id }}">Edit</a></td>
                         <td>
-                            <a  target="_blank" href="{{ $release->folder_link }}{{ $release->etag_id }}">Download</a> | 
+                            <?php $folder_link = ltrim($release->folder_link, '/'); ?>
+                            <a  target="_blank" href="/{{ $folder_link }}{{ $release->etag_id }}">Download</a> | 
                             <a  target="_blank" href="{{ $release->s3_path }}">Direct Download</a>
                         </td>
                     </tr>

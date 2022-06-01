@@ -867,6 +867,7 @@ class UploadController extends Controller
                         $signedurl =  $this->getPreSignedUrl($file_url_new, $Release->is_new);
                    }
                    if($signedurl){
+                        //gecho  $signedurl;  exit;
                         header('Content-Type: application/octet-stream');
                         header("Content-Transfer-Encoding: Binary"); 
                         header("Content-disposition: attachment; filename=\"".$file_name."\""); 
