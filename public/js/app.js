@@ -31676,8 +31676,6 @@ var __webpack_exports__ = {};
 __webpack_require__(/*! ./bootstrap */ "./resources/assets/js/bootstrap.js");
 
 __webpack_require__(/*! alpinejs */ "./node_modules/alpinejs/dist/alpine.js");
-
-$('#flash-overlay-modal').modal();
 })();
 
 /******/ })()

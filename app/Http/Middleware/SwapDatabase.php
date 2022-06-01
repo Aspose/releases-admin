@@ -17,7 +17,7 @@ class SwapDatabase
      */
     public function handle(Request $request, Closure $next)
     {
-        //dd($request->getHttpHost());
+        /*
         $host = $request->getHttpHost();
 
         $database = "";
@@ -46,7 +46,7 @@ class SwapDatabase
         Config::set('database.connections.mysql.database', $database);
         Config::set('database.connections.mysql.username', $username);
         Config::set('database.connections.mysql.password', $password);
-        DB::reconnect();
+        DB::reconnect();*/
 
         return $next($request);
     }

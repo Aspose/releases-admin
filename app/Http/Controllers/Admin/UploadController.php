@@ -514,12 +514,13 @@ class UploadController extends Controller
                 $GIT_TOKEN = env('GIT_TOKEN', '');
                 $GIT_REPO = "";
 
-                if(in_array($host, array('admindemo.aspose', 'releases.admin.aspose.com'))){ //aspose.com
-                    $GIT_REPO = env('GIT_REPO_ASPOSE_COM', '');
+                /*if(in_array($host, array('admindemo.aspose', 'releases.admin.aspose.com'))){ //aspose.com
+                    $GIT_REPO = env('GIT_REPO', '');
                 }else if(in_array($host, array('admindemo.groupdocs', 'releases.admin.groupdocs.com'))){ //groupdocs.com
-                    $GIT_REPO = env('GIT_REPO_GROUPDOCS_COM', '');
-                }
+                    $GIT_REPO = env('GIT_REPO', '');
+                }*/
                 
+                $GIT_REPO = env('GIT_REPO', '');
                 
                 if(!empty($GIT_USERNAME) && !empty($GIT_TOKEN) && !empty($GIT_REPO) ){
                     

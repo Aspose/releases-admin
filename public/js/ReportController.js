@@ -1,8 +1,8 @@
 ﻿$(document).ready(function () {
-    DrawTotalChart();
-    DrawDetailedChart();
-    DrawFamilyPieChart();
-    DrawPopularFilesChart();
+    //DrawTotalChart();
+    //DrawDetailedChart();
+    //DrawFamilyPieChart();
+    //DrawPopularFilesChart();
 });
 
 function GetBasePath() {
