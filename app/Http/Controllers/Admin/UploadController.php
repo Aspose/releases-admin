@@ -38,9 +38,8 @@ class UploadController extends Controller
     }
 
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
-        
         $title = "Edit Release";
         $amazon_s3_settings = AmazonS3Setting::where('id', 1)->first();
         $hugositeurl = $amazon_s3_settings->hugositeurl;
@@ -85,9 +84,13 @@ class UploadController extends Controller
             $selected_folder = $hugositeurl .''.$release->product.$release->folder.'/';
         }
         
+        if(isset($request->action) && $request->action == 'manual' ){
+            return view('admin.upload.editmanual', compact('familySelected',  'productSelected', 'folders', 'selected_folder', 'release', 'title'));
+        }else{
+            return view('admin.upload.edit', compact('familySelected',  'productSelected', 'folders', 'selected_folder', 'release', 'title'));
+        }
         
         
-        return view('admin.upload.edit', compact('familySelected',  'productSelected', 'folders', 'selected_folder', 'release', 'title'));
     }
 
     
@@ -184,6 +187,22 @@ class UploadController extends Controller
             }
             
         }
+    }
+
+    public function updatemaual(Request $request)
+    {
+        $edit_id = $request->edit_id;
+        $release = Release::find($edit_id);
+        // $release->filetitle = trim($request->filetitle);
+        // $release->description = trim($request->description);
+        // $release->release_notes_url = trim($request->release_notes_url);
+        $release->s3_path = trim($request->s3_path);
+        // $release->etag_id = trim($request->etag_id);
+        // $release->family = trim($request->family);
+        // $release->product = trim($request->product);
+        // $release->folder = trim($request->folder);
+        $release->save();
+        return redirect('/admin/ventures/file/edit/'. $edit_id.'?action=manual')->with('success','Update s3 link.');
     }
 
     public function getchildnodes(Request $request){

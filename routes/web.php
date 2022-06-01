@@ -32,6 +32,7 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth
     Route::get('/ventures/file/upload', 'UploadController@index')->middleware('admin');
     Route::get('/ventures/file/edit/{id}', 'UploadController@edit')->middleware('admin');
     Route::post('/ventures/file/update', 'UploadController@update')->middleware('admin');
+    Route::post('/ventures/file/updatemaual', 'UploadController@updatemaual')->middleware('admin');
     Route::get('/ventures/file/manage-files', 'UploadController@managefiles')->middleware('admin');
     Route::any('/ventures/file/getchildnodes', ['as' => 'admin.getchildnodes', 'uses' => 'UploadController@getchildnodes', 'middleware' => ['admin']]);
 
