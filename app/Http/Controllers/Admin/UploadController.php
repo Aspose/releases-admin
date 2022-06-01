@@ -858,25 +858,31 @@ class UploadController extends Controller
                 if($Release->s3_path != 's3_path' ){
                     
                     $file_url = $Release->s3_path;
+
                    if($Release->is_new){
-                        $folder_link = ltrim($Release->folder_link, '/');
-                        $file_url_new = $folder_link.''.$file_name;
+                        $file_url_new = str_replace('https://s3.us-west-2.amazonaws.com/releases-qa.aspose.com/', '', $file_url);
                         $signedurl =  $this->getPreSignedUrl($file_url_new, $Release->is_new);
                    }else{
-                    $file_url_new = str_replace('https://s3-us-west-2.amazonaws.com/aspose.files/', '', $file_url);
-                    $signedurl =  $this->getPreSignedUrl($file_url_new, $Release->is_new);
+                        $file_url_new = str_replace('https://s3-us-west-2.amazonaws.com/aspose.files/', '', $file_url);
+                        $signedurl =  $this->getPreSignedUrl($file_url_new, $Release->is_new);
                    }
                    if($signedurl){
-                       // echo $new_file_url;
-                        
+                        header('Content-Type: application/octet-stream');
+                        header("Content-Transfer-Encoding: Binary"); 
+                        header("Content-disposition: attachment; filename=\"".$file_name."\""); 
+                        readfile($signedurl);
+                        $this->UpdateDownloadCount($Release->id);
+                        $this->DownloadHistoryEntry($tagid, $ip_address, $referer);  
+                   }else{
+                        header('Content-Type: application/octet-stream');
+                        header("Content-Transfer-Encoding: Binary"); 
+                        header("Content-disposition: attachment; filename=\"".$file_name."\""); 
+                        readfile($file_url);
+                        $this->UpdateDownloadCount($Release->id);
+                        $this->DownloadHistoryEntry($tagid, $ip_address, $referer);  
                    }
 
-                    header('Content-Type: application/octet-stream');
-                    header("Content-Transfer-Encoding: Binary"); 
-                    header("Content-disposition: attachment; filename=\"".$file_name."\""); 
-                    readfile($file_url);
-                    $this->UpdateDownloadCount($Release->id);
-                    $this->DownloadHistoryEntry($tagid, $ip_address, $referer);  
+                    
                    
                   
                 }else{ // 
@@ -900,20 +906,17 @@ class UploadController extends Controller
     public function getPreSignedUrl($key, $is_new){
 
         $expiryInMinutes = 60;
-        $amazon_s3_settings = AmazonS3Setting::where('id', 1)->first();
-
         if(!$is_new){
             $AWS_ACCESS_KEY_ID = 'AKIAJ3IWQHR2VPPUU4AA';
             $AWS_SECRET_ACCESS_KEY = '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';
             $AWS_DEFAULT_REGION = 'us-west-2';
             $AWS_BUCKET = 'aspose.files';
         }else{
-            $AWS_ACCESS_KEY_ID = $amazon_s3_settings->apikey;
-            $AWS_SECRET_ACCESS_KEY = $amazon_s3_settings->apisecret;
-            $AWS_DEFAULT_REGION = env('AWS_DEFAULT_REGION', 'us-west-2');
-            $AWS_BUCKET = $amazon_s3_settings->bucketname;
+            $AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID');
+            $AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY');
+            $AWS_DEFAULT_REGION = env('AWS_DEFAULT_REGION');
+            $AWS_BUCKET = env('AWS_BUCKET');
         }
-        
         
      
          try {
@@ -931,6 +934,7 @@ class UploadController extends Controller
              $request = $s3Client->createPresignedRequest($cmd, '+' . $expiryInMinutes . ' minutes');
              return (string) $request->getUri();
          } catch (\Exception $e) {
+            return false;
             echo $e->getMessage() . "\n";
              return false;
          }

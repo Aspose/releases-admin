@@ -100,7 +100,10 @@
                             <?php } ?>
                         </td>
                         <td><a href="edit/{{ $release->id }}">Edit</a></td>
-                        <td><a href="{{ $release->s3_path }}">Download</a></td>
+                        <td>
+                            <a  target="_blank" href="{{ $release->folder_link }}{{ $release->etag_id }}">Download</a> | 
+                            <a  target="_blank" href="{{ $release->s3_path }}">Direct Download</a>
+                        </td>
                     </tr>
                 @endforeach
                 
