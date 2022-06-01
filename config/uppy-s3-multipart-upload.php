@@ -6,7 +6,7 @@ return [
             /*
              * Folder on bucket to save the file
              */
-            'folder' => 'stage/files',
+            'folder' => date('Y/m/d'),
         ],
         'presigned_url' => [
             /*
