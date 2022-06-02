@@ -549,7 +549,7 @@ class UploadController extends Controller
                     //echo "<pre> hugo_content_path "; print_r($hugo_content_path);echo "</pre>"; 
                     //echo "<pre> file_to_commit "; print_r($file_to_commit);echo "</pre>"; 
                     //echo "<pre> REPO_URL "; print_r($repo_url);echo "</pre>"; 
-
+                    $commit_msg = "'new Release added'";
                     if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
             
                         $public_path = getcwd();
@@ -558,11 +558,11 @@ class UploadController extends Controller
                         //echo "<pre> public_path "; print_r($public_path);echo "</pre>"; 
                         //echo "<pre> bash script path "; print_r($bash_script_path);echo "</pre>"; 
                         //echo "<pre> shell script "; print_r('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');echo "</pre>"; 
-                        $output = shell_exec('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');
+                        $output = shell_exec('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' '.$commit_msg.' ');
                         chdir($public_path);
                    
                     }else{ //prod/stage
-                        $output = shell_exec('/var/www/scripts/addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');
+                        $output = shell_exec('/var/www/scripts/addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' '.$commit_msg.' ');
                     }
                     
                     //echo "<pre> file_to_commit "; print_r($output);echo "</pre>"; exit;
@@ -947,7 +947,11 @@ class UploadController extends Controller
         $Release->save();
     }
     public function DownloadHistoryEntry($tagid, $ip_address, $referer){
-        $posted_by_name = Auth::user()->name ;
+        if (Auth::check()) {
+            $posted_by_name = Auth::user()->name ;
+        }else{
+            $posted_by_name = $ip_address ;
+        }
         $Download = Download::create([
             'ip_address'=> $ip_address,
             'referrer'=> $referer,

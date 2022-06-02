@@ -131,5 +131,16 @@ class ReleasesApiController extends Controller
         ]);*/
     }
 
-   
+    public function GetGeneralStatus(Request $request){
+
+        $date = $request->date;
+        
+        $final_array = array(
+            'TotalDownloads'=>5241,
+            'DownloadByCustomers'=>5241,
+            'DownloadByAsposeStaffMember'=>0
+        );
+        $json =  json_encode($final_array);
+        return $json;
+    }
 }

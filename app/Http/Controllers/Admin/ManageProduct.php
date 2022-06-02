@@ -263,6 +263,7 @@ You can easily use Aspose.3D for Java directly from a {{< Common/link href="http
                 if(!empty($GIT_USERNAME) && !empty($GIT_TOKEN) && !empty($GIT_REPO) ){
                     
                     $repo_url = "https://$GIT_USERNAME:$GIT_TOKEN@github.com/$GIT_REPO";
+                    $commit_msg = "'new Product added'";
                     if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
             
                         $public_path = getcwd();
@@ -275,11 +276,11 @@ You can easily use Aspose.3D for Java directly from a {{< Common/link href="http
                         // echo "<pre> bash script path "; print_r($bash_script_path);echo "</pre>"; 
                         // echo "<pre> shell script "; print_r('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');echo "</pre>"; 
                         // //exit;
-                        $output = shell_exec('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');
+                        $output = shell_exec('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' '.$commit_msg.' ');
                         chdir($public_path);
                    
                     }else{ //prod/stage
-                        $output = shell_exec('/var/www/scripts/addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');
+                        $output = shell_exec('/var/www/scripts/addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' '.$commit_msg.' ');
                     }
                     return $output;
                     //echo "<pre> file_to_commit "; print_r($output);echo "</pre>"; exit;
