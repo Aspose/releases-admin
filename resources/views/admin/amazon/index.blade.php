@@ -7,9 +7,11 @@
  <!-- {!! Form::open(['url' => '/admin/ventures/amazon-s3-settings', 'name' => 'aspnetForm', 'class' => 'form-horizontal', 'id' => 'aspnetForm', 'role' => 'form']) !!} -->
  @include('flash::message')
  <form name="aspnetForm" method="post" action="/admin/ventures/amazon-s3-settings"  id="aspnetForm" class="form-horizontal"> 
-    <div class="control-group">
+    
     <input name="_token" type="hidden" value="{{ csrf_token() }}"/>
     <input name="edit_id" type="hidden" value="{{ isset($settings->id ) ? $settings->id  : '' }}"/>
+
+    <div class="control-group" style="display: none;">
         <span id="bucketname" class="control-label">Bucket Name</span>
         <div class="controls">
             <input name="bucketname" type="text" value="{{ isset($settings->bucketname ) ? $settings->bucketname  : '' }}" maxlength="50" id="bucketname" class="input-xlarge" require />
@@ -17,7 +19,7 @@
             <p style="color:Red;"> {{ $errors->first('bucketname') }} </p>
         </div>
     </div>
-    <div class="control-group">
+    <div class="control-group" style="display: none;">
         <span id="apikey" class="control-label">API Key</span>
         <div class="controls">
             <input name="apikey" type="text" value="{{ isset($settings->apikey ) ? $settings->apikey  : '' }}" maxlength="200" id="apikey" class="input-xlarge" style="width:400px;" require />
@@ -26,7 +28,7 @@
         </div>
     </div>
 
-    <div class="control-group">
+    <div class="control-group" style="display: none;">
         <span id="apisecret" class="control-label">API Secret</span>
         <div class="controls">
             <input name="apisecret" type="text" value="{{ isset($settings->apisecret ) ? $settings->apisecret  : '' }}" maxlength="200" id="apikey" class="input-xlarge" style="width:400px;" require />
@@ -49,7 +51,7 @@
     </div>
     <div class="form-actions">
         <input type="submit" name="savesettings" value="Save Settings"  id="savesettings" class="btn btn-success btn-large" />
-        <input type="button" name="verifysettings" value="Verify Settings" id="verifysettings" class="btn btn-success btn-large" />
+        <!-- <input type="button" name="verifysettings" value="Verify Settings" id="verifysettings" class="btn btn-success btn-large" /> -->
     </div>
     <!-- {!! Form::close() !!} -->
 </form> 

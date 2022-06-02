@@ -51,7 +51,7 @@
     <div class="control-group">
         <span id="title-span" class="control-label">Title </span>
         <div class="controls">
-            <input name="title" type="text" maxlength="100" id="title" value="New Release Title" style="width:450px;" />
+            <input name="title" type="text" maxlength="100" id="title" value="{{ Request::old('title') }}"  style="width:450px;" />
             <span  style="color:Red;visibility:hidden;">* Required</span>
             <p  style="color:Red;"> {{ $errors->first('title') }} </p>
         </div>
@@ -60,7 +60,7 @@
     <div class="control-group">
         <span id="description-span" class="control-label">Short Description </span>
         <div class="controls">
-            <input name="description" type="text" maxlength="500" id="description" value="Short Description Short Description" style="width:450px;" />
+            <input name="description" type="text" maxlength="500" id="description" value="{{ Request::old('description') }}" style="width:450px;" />
             <p  style="color:Red;"> {{ $errors->first('description') }} </span>
         </div>
        
@@ -69,7 +69,7 @@
     <div class="control-group">
         <span id="releaseurl-span" class="control-label">Release Notes Url: (Public Wiki) </span>
         <div class="controls">
-            <input name="releaseurl" type="text" maxlength="200" id="releaseurl" value="ptc.coms" style="width:450px;" />
+            <input name="releaseurl" type="text" maxlength="200" id="releaseurl" value="{{ Request::old('releaseurl') }}" style="width:450px;" />
             <p  style="color:Red;"> {{ $errors->first('releaseurl') }} </span>
         </div>
         

@@ -17,7 +17,7 @@ class AmazonS3SettingController extends Controller
      */
     public function index()
     {
-        $title = "Amazon S3 Configuration";
+        $title = "Hugo SiteUrl";
         $settings = AmazonS3Setting::first();
         return view('admin.amazon.index', compact('settings', 'title'));
     }

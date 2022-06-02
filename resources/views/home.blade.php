@@ -23,7 +23,19 @@
                 <div class="row">
 
                    
+                <div class="tab-content"  >
+                <div id="home" style="height:2000px;" class="tab-pane fade in active">
+                
+
                     
+                    <div id="chartContainer" style="height: 300px; width: 100%;"></div>
+                    <div id="chartContainerFamily" style="height: 500px; width: 100%;"></div>
+                    <div id="chartContainerColumn" style="height:500px;width:100%;"></div>
+                    <div id="chartContainerPopular" style="height:500px;width:100%;"></div>
+                </div>
+ 
+ 
+                </div>
                     
 
                    

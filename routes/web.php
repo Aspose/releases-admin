@@ -38,7 +38,12 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth
 
 
     //Manage Product Families
-   // Route::get('/products/manage-families', 'ManageProductFamilies@index')->middleware('admin');
+    Route::post('/products/manage-families', 'ManageProductFamilies@addnew')->middleware('admin');
+    Route::get('/products/manage-families', 'ManageProductFamilies@index')->middleware('admin');
+    //Manage Product
+    Route::post('/products/manage-allproducts', 'ManageProduct@addnew')->middleware('admin');
+    Route::get('/products/manage-allproducts', 'ManageProduct@index')->middleware('admin');
+  
 });
 
 
