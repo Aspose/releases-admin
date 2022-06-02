@@ -44,6 +44,9 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth
     Route::post('/products/manage-allproducts', 'ManageProduct@addnew')->middleware('admin');
     Route::get('/products/manage-allproducts', 'ManageProduct@index')->middleware('admin');
   
+    //reset pwd
+    Route::post('/resetpassword', 'UserController@resetpassword')->middleware('admin');
+    Route::get('/resetpwd', 'UserController@index')->middleware('admin');
 });
 
 
