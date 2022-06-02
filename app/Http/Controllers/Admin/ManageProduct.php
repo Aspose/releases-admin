@@ -179,7 +179,7 @@ You can easily use Aspose.3D for Java directly from a {{< Common/link href="http
         $md_file_content .= "\n";
         $md_file_content .= "weight: " . "$weight";
         $md_file_content .= "\n";
-        $md_file_content .= "draft: true";
+        //$md_file_content .= "draft: true";
         $md_file_content .= "\n";
 
         $md_file_content .= "---";
