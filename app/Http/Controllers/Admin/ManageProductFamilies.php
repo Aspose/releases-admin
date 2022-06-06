@@ -205,7 +205,8 @@ class ManageProductFamilies extends Controller
     {
         $amazon_s3_settings = AmazonS3Setting::where('id', 1)->first();
         $hugositeurl = $amazon_s3_settings->hugositeurl;
-        $hugositeurl =  $hugositeurl . '/index.json';
+        //$hugositeurl =  $hugositeurl . '/index.json';
+        $hugositeurl =  $hugositeurl. '/index.json?Return_content='.time();
         //"https://releases-qa.aspose.com/index.json"
         $data = json_decode(file_get_contents($hugositeurl), true);
         return $data;
