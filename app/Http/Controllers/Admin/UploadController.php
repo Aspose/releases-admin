@@ -859,9 +859,10 @@ class UploadController extends Controller
                     $file_url = $Release->s3_path;
 
                    if($Release->is_new){
-                        $file_url_new = str_replace('https://s3.us-west-2.amazonaws.com/releases-qa.aspose.com/', '', $file_url);
-                        $file_url_new = str_replace('https://s3-us-west-2.amazonaws.com/aspose.files/', '', $file_url_new);
-                        $signedurl =  $this->getPreSignedUrl($file_url_new, $Release->is_new);
+                        //$file_url_new = str_replace('https://s3.us-west-2.amazonaws.com/releases-qa.aspose.com/', '', $file_url);
+                        //$file_url_new = str_replace('https://s3-us-west-2.amazonaws.com/aspose.files/', '', $file_url_new);
+                        //$signedurl =  $this->getPreSignedUrl($file_url_new, $Release->is_new);
+                        $signedurl = $file_url;
                    }else{
                         $file_url_new = str_replace('https://s3-us-west-2.amazonaws.com/aspose.files/', '', $file_url);
                         $signedurl =  $this->getPreSignedUrl($file_url_new, $Release->is_new);
