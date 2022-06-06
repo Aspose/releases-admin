@@ -860,6 +860,7 @@ class UploadController extends Controller
 
                    if($Release->is_new){
                         $file_url_new = str_replace('https://s3.us-west-2.amazonaws.com/releases-qa.aspose.com/', '', $file_url);
+                        $file_url_new = str_replace('https://s3-us-west-2.amazonaws.com/aspose.files/', '', $file_url_new);
                         $signedurl =  $this->getPreSignedUrl($file_url_new, $Release->is_new);
                    }else{
                         $file_url_new = str_replace('https://s3-us-west-2.amazonaws.com/aspose.files/', '', $file_url);
