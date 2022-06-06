@@ -22,25 +22,23 @@ function DrawTotalChart() {
         dataType: "json",
         data: serve,
         success: function (msg) {
-            console.log(msg);
+            //console.log(msg);
             //var data = jQuery.parseJSON(msg.d);
-            var data = msg;
-            $("#TotalDownloads").html(data.TotalDownloads);
-            //$("#TotalDownloadsByCustomers").html(data.DownloadByCustomers);
-            $("#TotalDownloadsByStaff").html(data.DownloadByAsposeStaffMember);
-            dp = [];
+            // var data = msg;
+            // $("#TotalDownloads").html(data.TotalDownloads);
+            // $("#TotalDownloadsByCustomers").html(data.DownloadByCustomers);
+            // $("#TotalDownloadsByStaff").html(data.DownloadByAsposeStaffMember);
+            // dp = [];
 
-            //var Total = data.DownloadByAsposeStaffMember + data.DownloadByCustomers;
+            // var Total = data.DownloadByAsposeStaffMember + data.DownloadByCustomers;
 
-            var Total = data.TotalDownloads;
+            // var Total = data.TotalDownloads;
 
-            dp.push({ y: data.DownloadByCustomers, indexLabel: "Customers - " + data.DownloadByCustomers });
-           // dp.push({ y: data.DownloadByAsposeStaffMember, indexLabel: "Staff Members - " + data.DownloadByAsposeStaffMember });
-            RenderChartPie("Total Files Downloaded - " + Total, dp, "chartContainer");
+            // dp.push({ y: data.DownloadByCustomers, indexLabel: "Customers - " + data.DownloadByCustomers });
+            // dp.push({ y: data.DownloadByAsposeStaffMember, indexLabel: "Staff Members - " + data.DownloadByAsposeStaffMember });
+            // RenderChartPie("Total Files Downloaded - " + Total, dp, "chartContainer");
 
-        }
 
-    });
             /*var TotalDownloads = 5241
             var DownloadByCustomers = 5060
             var DownloadByAsposeStaffMember = 181
@@ -58,6 +56,10 @@ function DrawTotalChart() {
             dp.push({ y: DownloadByAsposeStaffMember, indexLabel: "Staff Members - " + DownloadByAsposeStaffMember });
 
             RenderChartPie("Total Files Downloaded - " + Total, dp, "chartContainer");*/
+        }
+
+    });
+            
 }
 
 function DrawDetailedChart() {

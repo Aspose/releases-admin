@@ -8,7 +8,7 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Dynabic.Downloads - Administration') }}</title>
+    <title>{{ config('app.name', 'Containerize.Releases Backend') }}</title>
 
     <!-- Styles -->
     <!-- <link href="{{ asset('css/app.css') }}" rel="stylesheet"> -->
@@ -32,7 +32,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </a>
-                <a href="#" id="ctl00_lnkMain" class="brand"> {{ config('app.name', 'Dynabic.Downloads -> Containerize.Releases') }} </a>
+                <a href="#" id="ctl00_lnkMain" class="brand"> {{ config('app.name', 'Containerize.Releases Backend') }} </a>
                 <div class="btn-group pull-right">
                     @if (Auth::guest())
                     
@@ -68,7 +68,7 @@
             </div>
         </div>
         <hr />
-        <footer class="well">&copy; Dynabic.Downloads - 2016 </footer>
+        <footer class="well">&copy; Containerize.Releases Backend - 2016 </footer>
     </div>
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}"></script>

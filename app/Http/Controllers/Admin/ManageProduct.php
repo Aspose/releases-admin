@@ -24,7 +24,7 @@ class ManageProduct extends Controller
      */
     public function index()
     {
-        $title = "Manage Products";
+        $title = "Add New Product";
         $DropDownContent = $this->GetDropDownContent();
         return view('admin.products.index', compact('DropDownContent', 'title'));
     }

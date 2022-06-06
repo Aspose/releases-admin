@@ -24,7 +24,7 @@ class ManageProductFamilies extends Controller
      */
     public function index()
     {
-        $title = "Manage Product Families";
+        $title = "Add New Product Family";
         $DropDownContent = $this->GetDropDownContent();
         return view('admin.productfamilies.index', compact('DropDownContent', 'title'));
     }

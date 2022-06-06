@@ -8,12 +8,17 @@
         <li><a href="{{ url('admin/users') }}">Users</a></li>
     @endif
 </ul> -->
+<style>
+    .custom-padding {
+        padding-left: 25px;
+    }
+</style>
 <div class="well sidebar-nav">
 <ul class="nav nav-list">
-                         <li class="nav-header"><i class="icon-wrench"></i>Venture Administration</li>
+                         <!--<li class="nav-header"><i class="icon-wrench"></i>Venture Administration</li>
                         <li>
                             <a id="ctl00_lnkAddVenture" class="dropdown-toggle" href="{{ url('admin/ventures/amazon-s3-settings') }}">Hugo SiteUrl </a>
-                        </li>
+                        </li>-->
                         <!-- <li>
                             <a id="ctl00_lnkAddEngine" class="dropdown-toggle" href="ventures/manage-ui">UI Management</a>
                         </li>
@@ -22,12 +27,12 @@
                         </li> -->
 
 
-                        <li class="nav-header"><i class="icon-wrench"></i>Product's Administration</li>
-                        <li>
-                            <a id="ctl00_lnkAddSection" class="dropdown-toggle" href="{{ url('admin/products/manage-families') }}">Manage Product Families</a>
+                        <li class="nav-header"><i class="icon-wrench"></i>Product’s Administration</li>
+                        <li class="custom-padding">
+                            <a id="ctl00_lnkAddSection" class="dropdown-toggle" href="{{ url('admin/products/manage-families') }}">Add New Product Family</a>
                         </li>
-                        <li>
-                            <a id="ctl00_lnkAddProduct" class="dropdown-toggle" href="{{ url('admin/products/manage-allproducts') }}">Manage Products</a>
+                        <li class="custom-padding">
+                            <a id="ctl00_lnkAddProduct" class="dropdown-toggle" href="{{ url('admin/products/manage-allproducts') }}">Add New Product</a>
                         </li>
                         <!-- <li>
                             <a id="ctl00_HyperLink1" class="dropdown-toggle" href="{{ url('admin/products/manage-folders') }}">Manage Folders</a>
@@ -47,12 +52,12 @@
 
 
 
-                        <li class="nav-header"><i class="icon-wrench"></i>File Administration</li>
-                        <li>
-                            <a id="ctl00_lnkGenerateDoc" class="dropdown-toggle" href="{{ url('admin/ventures/file/upload') }}">Upload File </a>
+                        <li class="nav-header"><i class="icon-wrench"></i>File/Release Adminstration</li>
+                        <li class="custom-padding">
+                            <a id="ctl00_lnkGenerateDoc" class="dropdown-toggle" href="{{ url('admin/ventures/file/upload') }}">Upload New Release/File </a>
                         </li>
-                        <li>
-                            <a id="ctl00_HyperLink2" class="dropdown-toggle" href="{{ url('admin/ventures/file/manage-files') }}">View All Files </a>
+                        <li class="custom-padding">
+                            <a id="ctl00_HyperLink2" class="dropdown-toggle" href="{{ url('admin/ventures/file/manage-files') }}">View All Releases/Files </a>
                         </li>
                         @if (Auth::user()->is_admin)
                         <!-- <li class="nav-header"><i class="icon-wrench"></i>System Administration</li>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
+use App\Models\Download;
 use App\Models\Release;
 use App\User;
 use Illuminate\Http\Request;
@@ -132,13 +133,19 @@ class ReleasesApiController extends Controller
     }
 
     public function GetGeneralStatus(Request $request){
+        $days = $request->date;
+        //$date = \Carbon\Carbon::today()->subDays($days);
+        //$users = Member::where('created_at', '>=', date($date))->get();
+        // $counts = Download::where('created_at', '>=', date($date))
+         //->orderBy('total', 'asc')
+        // ->selectRaw('agent_id, count(*) as total')
+       // ->groupBy('agent_id')
+        // ->pluck('total','agent_id')->all();
 
-        $date = $request->date;
-        
         $final_array = array(
-            'TotalDownloads'=>5241,
-            'DownloadByCustomers'=>5241,
-            'DownloadByAsposeStaffMember'=>0
+            'TotalDownloads'=>5242,
+            'DownloadByCustomers'=>5061,
+            'DownloadByAsposeStaffMember'=>182
         );
         $json =  json_encode($final_array);
         return $json;

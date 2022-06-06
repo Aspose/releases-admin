@@ -31,7 +31,7 @@ class UploadController extends Controller
      */
     public function index()
     {
-        $title = "Publish New Release";
+        $title = "Upload New Release/File";
         $settings = "";
         $DropDownContent = $this->GetDropDownContent();
         return view('admin.upload.index', compact('DropDownContent', 'title'));
@@ -40,7 +40,7 @@ class UploadController extends Controller
 
     public function edit(Request $request, $id)
     {
-        $title = "Edit Release";
+        $title = "Edit Release/File";
         $amazon_s3_settings = AmazonS3Setting::where('id', 1)->first();
         $hugositeurl = $amazon_s3_settings->hugositeurl;
         $release = Release::where('id', $id)->first();
