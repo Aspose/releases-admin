@@ -10,7 +10,7 @@
         <li class="active"><a data-toggle="tab" href="#home">Download Stats - Last 30 Days</a></li>
     </ul>
 
-    <div class="tab-content">
+    <div class="tab-content" style="    min-height: 600px;">
         <div id="home" style="height:400px;" class="tab-pane fade in active">
 
 
