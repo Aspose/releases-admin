@@ -309,7 +309,7 @@ class UploadController extends Controller
             'folder_link' => $folder_link,
             'etag_id' => $etag_id,
             's3_path' => $s3_path,
-            'posted_by' => 1,
+            'posted_by' => $posted_by_name,
             'view_count' => 0,
             'download_count' => 0,
             'description' => $description,
@@ -548,7 +548,8 @@ class UploadController extends Controller
                     //echo "<pre> hugo_content_path "; print_r($hugo_content_path);echo "</pre>"; 
                     //echo "<pre> file_to_commit "; print_r($file_to_commit);echo "</pre>"; 
                     //echo "<pre> REPO_URL "; print_r($repo_url);echo "</pre>"; 
-                    $commit_msg = "'new Release added'";
+                    $posted_by_email = Auth::user()->email ;
+                    $commit_msg = "'new Release added by $posted_by_email '";
                     if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
             
                         $public_path = getcwd();
@@ -869,31 +870,24 @@ class UploadController extends Controller
                    }
                    if($signedurl){
                         //gecho  $signedurl;  exit;
+                        $this->UpdateDownloadCount($Release->id);
+                        $this->DownloadHistoryEntry($Release, $ip_address, $referer); 
                         header('Content-Type: application/octet-stream');
                         header("Content-Transfer-Encoding: Binary"); 
                         header("Content-disposition: attachment; filename=\"".$file_name."\""); 
                         readfile($signedurl);
-                        $this->UpdateDownloadCount($Release->id);
-                        $this->DownloadHistoryEntry($tagid, $ip_address, $referer);  
+                         
                    }else{
+                        $this->UpdateDownloadCount($Release->id);
+                        $this->DownloadHistoryEntry($Release, $ip_address, $referer);  
                         header('Content-Type: application/octet-stream');
                         header("Content-Transfer-Encoding: Binary"); 
                         header("Content-disposition: attachment; filename=\"".$file_name."\""); 
                         readfile($file_url);
-                        $this->UpdateDownloadCount($Release->id);
-                        $this->DownloadHistoryEntry($tagid, $ip_address, $referer);  
+                        
                    }
 
-                    
-                   
-                  
                 }else{ // 
-                    /*$DATA = DB::table('releases')
-                    ->join('folders', 'releases.FolderId', '=', 'folders.FolderId')
-                    ->join('products', 'products.ProductId', '=', 'orders.ProductId')
-                    ->join('productfamily', 'productfamily.ProductFamilyId', '=', 'products.ProductFamilyId')
-                    ->select('releases.folder', 'productfamily.ProductFamilyName', 'products.ProductName','products.UniqueIdentifier', 'folders.FolderName' )
-                    ->get();*/
                     $file_url = $Release->s3_path;
                     echo "Failed to Download Try Again....";
                 }
@@ -947,17 +941,34 @@ class UploadController extends Controller
         $Release->download_count = $Release->download_count + 1;
         $Release->save();
     }
-    public function DownloadHistoryEntry($tagid, $ip_address, $referer){
+    public function DownloadHistoryEntry($Release, $ip_address, $referer){
+           
         if (Auth::check()) {
             $posted_by_name = Auth::user()->name ;
+            $Email =  Auth::user()->email ;
+            $IsCustomer = 0;
         }else{
             $posted_by_name = $ip_address ;
+            $Email = NULL;
+            $IsCustomer = 1;
         }
+        
         $Download = Download::create([
-            'ip_address'=> $ip_address,
-            'referrer'=> $referer,
-            'log'=> $posted_by_name,
+            'FileID' => $Release->id,
+            'LOGID' => $Release->id,
+            'Email' => $Email,
+            'family' => $Release->family,
+            'product' => $Release->product,
+            'folder' => $Release->folder,
+            'etag_id' => $Release->etag_id,
+            'IsCustomer' =>$IsCustomer,
+            'IPAddress'=> $ip_address,
+            'UrlReferrer'=> $referer,
+            'UserName'=> $posted_by_name,
+            'TimeStamp'=> date('Y-m-d H:i:s'),
+
         ]);
+        
     }
 
     public function managefiles(Request $request){

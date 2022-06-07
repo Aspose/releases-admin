@@ -28,25 +28,29 @@ Route::get('/admin', 'HomeController@index');
 
 Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth'], function () {
     Route::resource('/ventures/amazon-s3-settings', 'AmazonS3SettingController');
-    Route::post('/ventures/file/upload', 'UploadController@upload')->middleware('admin');
-    Route::get('/ventures/file/upload', 'UploadController@index')->middleware('admin');
-    Route::get('/ventures/file/edit/{id}', 'UploadController@edit')->middleware('admin');
-    Route::post('/ventures/file/update', 'UploadController@update')->middleware('admin');
-    Route::post('/ventures/file/updatemaual', 'UploadController@updatemaual')->middleware('admin');
-    Route::get('/ventures/file/manage-files', 'UploadController@managefiles')->middleware('admin');
-    Route::any('/ventures/file/getchildnodes', ['as' => 'admin.getchildnodes', 'uses' => 'UploadController@getchildnodes', 'middleware' => ['admin']]);
+    Route::post('/ventures/file/upload', 'UploadController@upload');
+    Route::get('/ventures/file/upload', 'UploadController@index');
+    Route::get('/ventures/file/edit/{id}', 'UploadController@edit');
+    Route::post('/ventures/file/update', 'UploadController@update');
+    Route::post('/ventures/file/updatemaual', 'UploadController@updatemaual');
+    Route::get('/ventures/file/manage-files', 'UploadController@managefiles');
+    Route::any('/ventures/file/getchildnodes', ['as' => 'admin.getchildnodes', 'uses' => 'UploadController@getchildnodes']);
 
 
     //Manage Product Families
-    Route::post('/products/manage-families', 'ManageProductFamilies@addnew')->middleware('admin');
-    Route::get('/products/manage-families', 'ManageProductFamilies@index')->middleware('admin');
+    Route::post('/products/manage-families', 'ManageProductFamilies@addnew');
+    Route::get('/products/manage-families', 'ManageProductFamilies@index');
     //Manage Product
-    Route::post('/products/manage-allproducts', 'ManageProduct@addnew')->middleware('admin');
-    Route::get('/products/manage-allproducts', 'ManageProduct@index')->middleware('admin');
+    Route::post('/products/manage-allproducts', 'ManageProduct@addnew');
+    Route::get('/products/manage-allproducts', 'ManageProduct@index');
   
     //reset pwd
-    Route::post('/resetpassword', 'UserController@resetpassword')->middleware('admin');
-    Route::get('/resetpwd', 'UserController@index')->middleware('admin');
+    Route::post('/resetpassword', 'UserController@resetpassword');
+    Route::get('/resetpwd', 'UserController@index');
+
+    //Manage Users
+    Route::post('/addnewuser', 'UserController@addnewuser')->middleware('admin');
+    Route::get('/manage-users', 'UserController@createuser')->middleware('admin');
 });
 
 

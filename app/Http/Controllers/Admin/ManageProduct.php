@@ -263,7 +263,8 @@ You can easily use Aspose.3D for Java directly from a {{< Common/link href="http
                 if(!empty($GIT_USERNAME) && !empty($GIT_TOKEN) && !empty($GIT_REPO) ){
                     
                     $repo_url = "https://$GIT_USERNAME:$GIT_TOKEN@github.com/$GIT_REPO";
-                    $commit_msg = "'new Product added'";
+                    $posted_by_email = Auth::user()->email ;
+                    $commit_msg = "'new Product added by $posted_by_email'";
                     if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
             
                         $public_path = getcwd();

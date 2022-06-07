@@ -134,20 +134,105 @@ class ReleasesApiController extends Controller
 
     public function GetGeneralStatus(Request $request){
         $days = $request->date;
-        //$date = \Carbon\Carbon::today()->subDays($days);
+        $date = \Carbon\Carbon::today()->subDays($days);
         //$users = Member::where('created_at', '>=', date($date))->get();
-        // $counts = Download::where('created_at', '>=', date($date))
-         //->orderBy('total', 'asc')
-        // ->selectRaw('agent_id, count(*) as total')
-       // ->groupBy('agent_id')
-        // ->pluck('total','agent_id')->all();
+        $totalcount = Download::where('TimeStamp', '>=', date($date))->get();
+        $allcount = $totalcount->count();
+
+         $spec_counts = Download::where('TimeStamp', '>=', date($date))
+         ->selectRaw('IsCustomer, count(*) as total')
+        ->groupBy('IsCustomer')
+         ->pluck('total','IsCustomer')->all();
+        
 
         $final_array = array(
-            'TotalDownloads'=>5242,
-            'DownloadByCustomers'=>5061,
-            'DownloadByAsposeStaffMember'=>182
+            'TotalDownloads'=>$allcount,
+            'DownloadByCustomers'=>$spec_counts[1],
+            'DownloadByAsposeStaffMember'=>$spec_counts[0]
         );
         $json =  json_encode($final_array);
         return $json;
+    }
+
+    public function GetDetailedReport(Request $request){
+        $days = $request->date;
+        $date = \Carbon\Carbon::today()->subDays($days);
+        $spec_counts = Download::where('TimeStamp', '>=', date($date))
+        ->orderBy('total', 'desc')
+        ->selectRaw('product, count(*) as total')
+       ->groupBy('product')
+        ->pluck('total','product')->all();
+        
+        $final_array = array();
+        foreach($spec_counts as $product=>$count){
+           // echo "<pre>"; print_r($product . " === " . $count);echo "</pre>";  
+           $product = rtrim($product, '/'); 
+           $product = ltrim($product, '/'); 
+           $product =  str_replace('corporate/', '', $product);
+           $product =  str_replace('/', '', $product);
+            $final_array[] = array(
+                'EntityName'=> $product,
+                'EntityCount'=> $count,
+            );
+        }
+        $final_array = array_slice($final_array, 0, 10);
+        $json =  json_encode($final_array);
+        return $json;
+    }
+    public function GetFamilyPIEChart(Request $request){
+        $days = $request->date;
+        $date = \Carbon\Carbon::today()->subDays($days);
+        $spec_counts = Download::where('TimeStamp', '>=', date($date))
+        ->orderBy('total', 'desc')
+        ->selectRaw('family, count(*) as total')
+       ->groupBy('family')
+        ->pluck('total','family')->all();
+        
+        $final_array = array();
+        foreach($spec_counts as $product=>$count){
+           $product = rtrim($product, '/'); 
+           $product = ltrim($product, '/'); 
+            $final_array[] = array(
+                'EntityName'=> $product,
+                'EntityCount'=> $count,
+            );
+        }
+        $final_array = array_slice($final_array, 0, 10);
+        $json =  json_encode($final_array);
+        return $json;
+
+    }
+
+    public function GetPopularFiles(Request $request){
+        $days = $request->date;
+        $date = \Carbon\Carbon::today()->subDays($days);
+        $spec_counts = Download::where('TimeStamp', '>=', date($date))
+        ->orderBy('total', 'desc')
+        ->selectRaw('etag_id, count(*) as total')
+       ->groupBy('etag_id')
+        ->pluck('total','etag_id')->all();
+        
+        $final_array = array();
+     //print_r($spec_counts);
+        $spec_counts = array_slice($spec_counts, 0, 10);
+        $spec_counts = array_reverse($spec_counts);
+        foreach($spec_counts as $product=>$count){
+            $final_array[] = array(
+                'EntityName'=> $this->getfilenamebyetag($product),
+                'EntityCount'=> $count,
+            );
+        }
+        
+        $json =  json_encode($final_array);
+        return $json;
+    }
+
+    public function getfilenamebyetag($tagid){
+        if ( Release::where('etag_id', $tagid)->exists()) {
+            $Release = Release::where('etag_id', $tagid)->first();
+            return $Release->filename;
+        }else{
+            return $tagid;
+        }
     }
 }

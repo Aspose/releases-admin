@@ -22,7 +22,7 @@
     <div class="control-group">
         <span id="usernameID" class="control-label">Username</span>
         <div class="controls">
-            <input name="username" type="text" style="width:550px;" id="username" class="input-xlarge" value="{{ $user->name }}">
+            <input name="username" type="text" style="width:550px;" id="username" class="input-xlarge" value="{{ $user->name }}" readonly>
             <span id="ValidatetxtUsername" style="color:Red;visibility:hidden;">* Required</span>
             <p style="color:Red;"> {{ $errors->first('username') }} </p>
         </div>

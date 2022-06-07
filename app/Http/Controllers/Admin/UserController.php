@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
+use App\Http\Requests\CreateUser;
 use App\Http\Requests\ResetPassword;
 use App\Http\Controllers\Controller;
 use App\User;
@@ -24,6 +25,43 @@ class UserController extends Controller
         $user  = User::find($user_id);
         $title = "Update Password";
         return view('admin.users.resetpwd', compact('title', 'user'));
+    }
+
+    public function createuser(){
+        $users  = User::all();
+        $title = "Create User";
+        return view('admin.users.addnewuser', compact('title', 'users'));
+    }
+
+    public function addnewuser(CreateUser $request){
+        if (!empty($request->all())) {
+            if(!empty($request->password) && !empty($request->confpassword)){ // both set 
+                if($request->password == $request->confpassword ){ // both equal
+                    
+                    $is_admin = 0;
+                    $userrole = trim($request->userrole);
+                    if($userrole == 'admin'){
+                        $is_admin = 1;
+                    }
+                    $username = trim($request->username);
+                    $useremail = trim($request->email);
+                    $pwd = Hash::make(trim($request->password));
+                    $user = User::create([
+                        'name'=> $username,
+                        'email'=> $useremail,
+                        'password'=> $pwd,
+                        'is_admin'=> $is_admin,
+                    ]);
+                    
+                    return redirect('/admin/manage-users')->with('success', 'Updated...');
+                }else{
+                    return redirect('/admin/manage-users')->with('alert', ' Password & Con. Password Didnt match');
+                }
+            }else{
+                return redirect('/admin/manage-users')->with('alert', 'Both Password & Con. Password Fileds are Required');
+            }
+        
+        }
     }
 
     public function resetpassword(ResetPassword $request)

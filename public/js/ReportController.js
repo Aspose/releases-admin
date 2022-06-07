@@ -1,8 +1,8 @@
 ﻿$(document).ready(function () {
     DrawTotalChart();
-    //DrawDetailedChart();
-    //DrawFamilyPieChart();
-    //DrawPopularFilesChart();
+    DrawDetailedChart();
+    DrawFamilyPieChart();
+    DrawPopularFilesChart();
 });
 
 function GetBasePath() {
@@ -24,38 +24,19 @@ function DrawTotalChart() {
         success: function (msg) {
             //console.log(msg);
             //var data = jQuery.parseJSON(msg.d);
-            // var data = msg;
-            // $("#TotalDownloads").html(data.TotalDownloads);
-            // $("#TotalDownloadsByCustomers").html(data.DownloadByCustomers);
-            // $("#TotalDownloadsByStaff").html(data.DownloadByAsposeStaffMember);
-            // dp = [];
-
-            // var Total = data.DownloadByAsposeStaffMember + data.DownloadByCustomers;
-
-            // var Total = data.TotalDownloads;
-
-            // dp.push({ y: data.DownloadByCustomers, indexLabel: "Customers - " + data.DownloadByCustomers });
-            // dp.push({ y: data.DownloadByAsposeStaffMember, indexLabel: "Staff Members - " + data.DownloadByAsposeStaffMember });
-            // RenderChartPie("Total Files Downloaded - " + Total, dp, "chartContainer");
-
-
-            /*var TotalDownloads = 5241
-            var DownloadByCustomers = 5060
-            var DownloadByAsposeStaffMember = 181
-            var Total = DownloadByCustomers + DownloadByAsposeStaffMember;
-
-            $("#TotalDownloads").html(TotalDownloads);
-            $("#TotalDownloadsByCustomers").html(DownloadByCustomers);
-            $("#TotalDownloadsByStaff").html(DownloadByAsposeStaffMember);
+            var data = msg;
+            $("#TotalDownloads").html(data.TotalDownloads);
+            $("#TotalDownloadsByCustomers").html(data.DownloadByCustomers);
+            $("#TotalDownloadsByStaff").html(data.DownloadByAsposeStaffMember);
             dp = [];
 
-            var Total = DownloadByAsposeStaffMember + DownloadByCustomers;
+            var Total = data.DownloadByAsposeStaffMember + data.DownloadByCustomers;
 
+            var Total = data.TotalDownloads;
 
-            dp.push({ y: DownloadByCustomers, indexLabel: "Customers - " + DownloadByCustomers });
-            dp.push({ y: DownloadByAsposeStaffMember, indexLabel: "Staff Members - " + DownloadByAsposeStaffMember });
-
-            RenderChartPie("Total Files Downloaded - " + Total, dp, "chartContainer");*/
+            dp.push({ y: data.DownloadByCustomers, indexLabel: "Customers - " + data.DownloadByCustomers });
+            dp.push({ y: data.DownloadByAsposeStaffMember, indexLabel: "Staff Members - " + data.DownloadByAsposeStaffMember });
+            RenderChartPie("Total Files Downloaded - " + Total, dp, "chartContainer");
         }
 
     });
@@ -69,15 +50,13 @@ function DrawDetailedChart() {
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
-        url: GetBasePath() + "AjaxDataService.asmx/GetDetailedReport",
+        url: 'api/GetDetailedReport',
         dataType: "json",
         data: serve,
         success: function (msg) {
             dp = [];
-
-
-            var data = jQuery.parseJSON(msg.d);
-
+            //var data = jQuery.parseJSON(msg.d);
+            var data = msg;
             for (var i = 0; i < data.length; i++) {
                 dp.push({ y: parseInt(data[i].EntityCount), label: data[i].EntityName });
             }
@@ -102,16 +81,16 @@ function DrawFamilyPieChart() {
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
-        url: GetBasePath() + "AjaxDataService.asmx/GetFamilyPIEChart",
+        url: 'api/GetFamilyPIEChart',
         dataType: "json",
         data: serve,
         success: function (msg) {
-            var data = jQuery.parseJSON(msg.d);
+            //var data = jQuery.parseJSON(msg.d);
 
             console.log(msg.d);
             dp = [];
-
-
+            var data = msg;
+            console.log(data);
             for (var i = 0; i < data.length; i++) {
                 dp.push({ y: parseInt(data[i].EntityCount), indexLabel: data[i].EntityName });
             }
@@ -132,16 +111,16 @@ function DrawPopularFilesChart() {
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
-        url: GetBasePath() + "AjaxDataService.asmx/GetPopularFiles",
+        url: 'api/GetPopularFiles',
         dataType: "json",
         data: serve,
         success: function (msg) {
-            var data = jQuery.parseJSON(msg.d);
+            //Svar data = jQuery.parseJSON(msg.d);
 
 
             dp = [];
 
-
+            var data = msg;
             for (var i = 0; i < data.length; i++) {
                 dp.push({ y: parseInt(data[i].EntityCount), label: data[i].EntityName });
             }

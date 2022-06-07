@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Download extends Model
 {
-    protected $fillable = ['ip_address', 'referrer', 'log'];
+    protected $fillable = ['FileID', 'LOGID', 'Email','family','product','folder','etag_id','IsCustomer','IPAddress','UrlReferrer','UserName','TimeStamp'];
 
     
 }

@@ -10,4 +10,8 @@ Route::group(['middleware' => ['api'], 'namespace' => 'Api'], function () {
 
     //charts
     Route::post('/GetGeneralStatus', 'ReleasesApiController@GetGeneralStatus');
+    Route::post('/GetDetailedReport', 'ReleasesApiController@GetDetailedReport');
+    Route::post('/GetFamilyPIEChart', 'ReleasesApiController@GetFamilyPIEChart');
+    Route::post('/GetPopularFiles', 'ReleasesApiController@GetPopularFiles');
+    
 });
