@@ -76,6 +76,6 @@ Route::get('send-mail', function () {
     ];
    
    $res =  Mail::to('amjad.ali@goldevelopers.com')->send(new \App\Mail\MyTestMail($details));
-   
+   $res =  Mail::to('fahadadeel@gmail.com')->send(new \App\Mail\MyTestMail($details));
     dd("Email is Sent." . $res . " --- ");
 });
