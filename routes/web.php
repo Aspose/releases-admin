@@ -51,8 +51,11 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth
     Route::get('/resetpwd', 'UserController@index');
 
     //Manage Users
-    Route::post('/addnewuser', 'UserController@addnewuser')->middleware('admin');
-    Route::get('/manage-users', 'UserController@createuser')->middleware('admin');
+    Route::post('/addnewuser', 'UserController@addnewuser')->middleware('canmanageusers');
+    Route::get('/manage-users', 'UserController@createuser')->middleware('canmanageusers');
+
+    Route::post('/updateuser', 'UserController@updateuser')->middleware('canmanageusers');
+    Route::get('/edituser/{id}', 'UserController@edituser')->middleware('canmanageusers');
 });
 
 

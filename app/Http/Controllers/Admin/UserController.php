@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 use App\Http\Requests\CreateUser;
+use App\Http\Requests\UpdateUser;
 use App\Http\Requests\ResetPassword;
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Notifications\WelcomeEmailNotification;
 use App\User;
 use Illuminate\Http\Request;
@@ -32,17 +34,20 @@ class UserController extends Controller
     public function createuser(){
         $users  = User::all();
         $title = "Create User";
-        return view('admin.users.addnewuser', compact('title', 'users'));
+        if(Auth::user()->is_admin == 1){ // superadmin
+            $roles = Role::all();
+        }else{ //admin
+            $roles = Role::where('name', '!=', 'superadmin')->where('name', '!=', 'admin')->get();
+        }
+        
+        return view('admin.users.addnewuser', compact('title', 'users', 'roles'));
     }
 
     public function addnewuser(CreateUser $request){
         if (!empty($request->all())) {
             
-            $is_admin = 0;
-            $userrole = trim($request->userrole);
-            if($userrole == 'admin'){
-                $is_admin = 1;
-            }
+            //$is_admin = 0;
+            $userrole = $request->userrole;
             $username = trim($request->username);
             $useremail = trim($request->email);
             $password_string = str_random(8);
@@ -51,7 +56,7 @@ class UserController extends Controller
                 'name'=> $username,
                 'email'=> $useremail,
                 'password'=> $hashed_random_password,
-                'is_admin'=> $is_admin,
+                'is_admin'=> $userrole,
             ]);
 
             if($user){
@@ -67,6 +72,54 @@ class UserController extends Controller
             }
             
                 
+            
+        
+        }
+    }
+
+    public function edituser(Request $request, $id){
+        $user = User::find($id);
+        $title = "Edit User";
+        if(Auth::user()->is_admin == 1){ // superadmin
+            $roles = Role::all();
+        }else{ //admin
+            $roles = Role::where('name', '!=', 'superadmin')->where('name', '!=', 'admin')->get();
+        }
+        
+        return view('admin.users.edituser', compact('title', 'user', 'roles'));
+    }
+
+    public function updateuser(Request $request){
+        
+        if (!empty($request->all())) {
+            if ( User::where('id', $request->user_id)->exists()) {
+
+            $userrole = $request->userrole;
+            $username = trim($request->username);
+            $useremail = trim($request->email);
+
+            $user = User::find($request->user_id);
+
+            $request->validate([
+                'email' => 'required|email|unique:users,email,'.$user->id,
+                'username' => 'required',
+            ]);
+            $user->name = trim($username);
+            $user->email = trim($useremail);
+            $user->is_admin = trim($userrole);
+            $user->is_active = $request->is_active;
+            $updated = $user->save();
+
+            if($updated){
+                
+                return redirect('/admin/manage-users')->with('success', 'New Updated Successfully...');
+            }else{
+                return redirect('/admin/manage-users')->with('success', 'Error while Updating User ...');
+            }
+            
+        }else{
+            return redirect('/admin/manage-users')->with('success', 'User Not Exists ...');
+        }
             
         
         }

@@ -40,9 +40,10 @@
         <span id="userroleD" class="control-label">Role:</span>
         <div class="controls">
             <select name="userrole" id="userrole">
-                <option value=''>Select</option>
-                <option value='user'>User</option>
-                <option value='admin'>Admin</option>
+                 <option value=''>Select</option>
+                @foreach($roles as $role)
+                <option value="{{ $role->id }} ">{{ $role->name }}</option>
+                @endforeach
             </select>
             <span id="Validateuserrole" style="color:Red;visibility:hidden;">* Required</span>
             <p style="color:Red;"> {{ $errors->first('userrole') }} </p>
@@ -62,15 +63,43 @@
                 <th scope="col">Email</th>
                 <th scope="col">Role</th>
                 <th align="center" scope="col" style="width:150px;">Modified On</th>
-               
+                <th scope="col">Status</th>
+                <th scope="col">Action</th>
             </tr>
             @foreach($users as $user)
             <tr>
                 <td>{{ $user->name }}</td>
                 <td>{{ $user->email }}</td>
-                <td align="center">{{  $user->is_admin  === 1 ? "Admin" : "User" }} </td>
+                <td align="center">
+                    
+                <?php 
+                if($user->is_admin  == 1 ){
+                      echo "superadmin";
+                } else  if($user->is_admin  == 2 ){
+                     echo "admin";
+                }else  if($user->is_admin  == 3 ){
+                     echo "user";
+                }else{
+                    echo "N/A" . $user->is_admin;
+                 }
+
+                ?>
+                </td>
+                <td align="center">
+                    
+                <?php 
+                if($user->is_active  == 1 ){
+                      echo "Active";
+                } else  if($user->is_active  == 0 ){
+                     echo "Not Active";
+                }else{
+                    echo "N/A" . $user->is_active;
+                 }
+
+                ?>
+                </td>
                 <td align="center">{{ $user->updated_at }}</td>
-               
+                <td><a href="edituser/{{ $user->id }}">Edit</a></td>
             </tr>
             @endforeach
         </tbody>

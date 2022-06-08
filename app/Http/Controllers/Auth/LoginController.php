@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\User;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+//use Illuminate\Http\Client\Request;
+use Illuminate\Http\Request; 
 use Illuminate\Support\Facades\Auth;
 use Jumbojett\OpenIDConnectClient;
 
@@ -41,6 +43,19 @@ class LoginController extends Controller
         $this->middleware('guest', ['except' => 'logout']);
     }
 
+    /**
+     * Custom credentials to validate the status of user. is_active
+     */
+    public function credentials(Request $request)
+    {
+        return [
+            'email'     => $request->email,
+            'password'  => $request->password,
+            'is_active' => '1'
+        ];
+    }
+
+
     public function openidlogin(){
 
         $oidc = new OpenIDConnectClient('https://id.containerize.com',
@@ -63,3 +78,4 @@ class LoginController extends Controller
         }
     }
 }
+//ALTER TABLE `users` ADD `is_active` TINYINT(1) NULL DEFAULT '1' AFTER `reset_key`;

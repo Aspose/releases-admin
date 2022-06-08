@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Support\Facades\Auth;
 
-class AdminMiddleware
+class SuperAdminMiddleware
 {
     /**
      * Handle an incoming request.
@@ -16,12 +16,12 @@ class AdminMiddleware
      */
     public function handle($request, Closure $next)
     {
-        if (Auth::user()->is_admin != 2) { // 1 = superadmin 2 =admin 3== user
+        if (Auth::user()->is_admin != 1) { // 1 = superadmin 2 =admin 3== user
             if ($request->expectsJson()) {
-                return response()->json(['error' => 'Unauthenticated. You are not an admin.'], 401);
+                return response()->json(['error' => 'Unauthenticated. You are not super admin.'], 401);
             }
 
-            abort(403, "permission denied -- " . Auth::user()->is_admin);
+            abort(403, "permission denied -- " .Auth::user()->is_admin );
         }
 
         return $next($request);
