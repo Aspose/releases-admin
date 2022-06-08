@@ -62,8 +62,9 @@
                 <th scope="col" style="width:250px;">UserName</th>
                 <th scope="col">Email</th>
                 <th scope="col">Role</th>
-                <th align="center" scope="col" style="width:150px;">Modified On</th>
+                
                 <th scope="col">Status</th>
+                <th align="center" scope="col" style="width:150px;">Modified On</th>
                 <th scope="col">Action</th>
             </tr>
             @foreach($users as $user)
