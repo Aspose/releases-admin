@@ -50,7 +50,7 @@
     </div>
 
     <div class="control-group">
-        <span id="is_activeD" class="control-label">Role:</span>
+        <span id="is_activeD" class="control-label">Status:</span>
         <div class="controls">
             <select name="is_active" id="is_active">
                 <option value="1" {{ ( '1' == $user->is_active) ? 'selected' : '' }} >Active</option>
