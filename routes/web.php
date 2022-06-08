@@ -1,4 +1,6 @@
 <?php
+
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 /*
@@ -64,3 +66,16 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth
 
 Route::get('/register', 'HomeController@index');
 Route::post('/register', 'HomeController@index');
+
+
+Route::get('send-mail', function () {
+   
+    $details = [
+        'title' => 'Mail from test page',
+        'body' => 'This is for testing email using smtp'
+    ];
+   
+   $res =  Mail::to('amjad.ali@goldevelopers.com')->send(new \App\Mail\MyTestMail($details));
+   
+    dd("Email is Sent." . $res . " --- ");
+});
