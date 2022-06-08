@@ -27,8 +27,6 @@ class CreateUser extends FormRequest
             'email' => 'required|email|unique:users,email',
             'username' => 'required',
             'userrole' => 'required',
-            // 'password' => 'required',
-            // 'confpassword' => 'required',
         ];
     }
 }

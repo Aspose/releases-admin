@@ -48,24 +48,10 @@
             <p style="color:Red;"> {{ $errors->first('userrole') }} </p>
         </div>
     </div>
-    <div class="control-group">
-        <span id="passwordID" class="control-label">Password:</span>
-        <div class="controls">
-            <input name="password" type="text" style="width:550px;" id="password" class="input-xlarge" value="">
-            <span id="Validatepassword" style="color:Red;visibility:hidden;">* Required</span>
-        </div>
-    </div>
-    <div class="control-group">
-        <span id="confpasswordID" class="control-label">Conf. Password:</span>
-        <div class="controls">
-            <input name="confpassword" type="text" style="width:550px;" id="confpassword" class="input-xlarge" value="">
-            <span id="Validateconfpassword" style="color:Red;visibility:hidden;">* Required</span>
-        </div>
-    </div>
+    
+    
     <div class="form-actions">
         <input type="submit" name="addnewpf" value="Add New User" id="addnewuser" class="btn btn-success btn-large">
-
-
     </div>
 </form>
 <div>
