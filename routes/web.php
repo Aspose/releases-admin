@@ -75,7 +75,7 @@ Route::get('send-mail', function () {
         'body' => 'This is for testing email using smtp'
     ];
    
-   $res =  Mail::to('amjad.ali@goldevelopers.com')->send(new \App\Mail\MyTestMail($details));
-   $res =  Mail::to('fahadadeel@gmail.com')->send(new \App\Mail\MyTestMail($details));
+   Mail::alwaysFrom('release@aspose.com');
+   $res =  Mail::to('fahad.adeel@aspose.com')->send(new \App\Mail\MyTestMail($details));
     dd("Email is Sent." . $res . " --- ");
 });
