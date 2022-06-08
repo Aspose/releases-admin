@@ -44,6 +44,7 @@ class WelcomeEmailNotification extends Notification
     {
         
                 return (new MailMessage)
+                ->subject('User Registered at Containerize.Releases Backend')
                 ->greeting('Hello, '.$this->user->name)
                 ->line('Welcome to Containerize.Releases Backend')
                 ->line('Login Credentials ')
