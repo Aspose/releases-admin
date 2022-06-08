@@ -31,7 +31,7 @@
     <div class="control-group">
         <span id="emailID" class="control-label">Email:</span>
         <div class="controls">
-            <input name="email" type="text" style="width:550px;" id="email" class="input-xlarge" value="{{  $user->email  }}">
+            <input name="email" type="text" style="width:550px;" id="email" class="input-xlarge" value="{{  $user->email  }}" readonly>
             <span id="Validateemail" style="color:Red;visibility:hidden;">* Required</span>
             <p style="color:Red;"> {{ $errors->first('email') }} </p>
         </div>

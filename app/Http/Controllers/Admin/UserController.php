@@ -135,8 +135,8 @@ class UserController extends Controller
                 if(!empty($request->password) && !empty($request->confpassword)){ // both set 
                     if($request->password == $request->confpassword ){ // both equal
                         $user = User::find($request->user_id);
-                        $user->name = trim($request->username);
-                        $user->email = trim($request->email);
+                        //$user->name = trim($request->username);
+                        //$user->email = trim($request->email);
                         $pwd = Hash::make(trim($request->password));
                         $user->password = $pwd;
                         $user->save();
@@ -152,7 +152,7 @@ class UserController extends Controller
                 $user->name = trim($request->username);
                 $user->email = trim($request->email);
                 $user->save();
-                return redirect('/admin/resetpwd')->with('success', 'Updated...');
+                return redirect('/admin/resetpwd')->with('success', 'Both Password & Con. Password Fileds are Required');
             }
         }
 
