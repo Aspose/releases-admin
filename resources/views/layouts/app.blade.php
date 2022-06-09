@@ -67,7 +67,7 @@
             </div>
         </div>
         <hr />
-        <footer class="well">&copy; Containerize.Releases Backend - 2016 </footer>
+        <footer class="well">&copy; Containerize.Releases Backend - 2022 </footer>
     </div>
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}"></script>
