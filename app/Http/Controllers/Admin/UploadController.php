@@ -295,11 +295,10 @@ class UploadController extends Controller
      
      if($upload_info['insert_release']){
 
-        $Records_Count = Release::where('product', $f_product)->where('folder',$f_folder )->count();
-        if($Records_Count){
-            $weight = $Records_Count + 1;
+        $MaxWeightCount = Release::where('product', $f_product)->where('folder',$f_folder )->max('weight');
+        if($MaxWeightCount){
+            $weight = $MaxWeightCount + 1;
         }
-
         $release = Release::create([
             'family'=> $f_family,
             'product'=> $f_product,
@@ -1037,7 +1036,7 @@ class UploadController extends Controller
             ->where('family', 'like', '%' . $filter_productfamily . '%')
             ->where('product', 'like', '%' . $filter_product . '%')
             ->where('folder', 'like', '%' . $filter_folder . '%')
-            ->orderBy('id', 'desc')->paginate(15);
+            ->orderBy('date_added', 'desc')->paginate(15);
         }
         //$releases = DB::table('releases')->paginate(15);
      //dd($folders);
