@@ -112,7 +112,7 @@
     <div class="control-group">
          <span id="releaseurl-span" class="control-label">S3 Url</span>
         <div class="controls">
-        <input name="s3_path" type="text" maxlength="500" id="s3_path" value="{{ $release->s3_path }}" style="width:750px;" />
+        <input readonly name="s3_path" type="text" maxlength="500" id="s3_path" value="{{ $release->s3_path }}" style="width:750px;" />
         </div>
     </div>
 
@@ -154,7 +154,7 @@
     <div class="control-group">
         <span id="releaseurl-span" class="control-label">weight</span>
         <div class="controls">
-        <input readonly name="weight" type="text" maxlength="500" id="weight" value="{{ $release->weight }}" style="width:750px;" />
+        <input  name="weight" type="text" maxlength="500" id="weight" value="{{ $release->weight }}" style="width:750px;" />
         </div>
     </div>
     
