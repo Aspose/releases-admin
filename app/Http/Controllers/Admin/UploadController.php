@@ -550,6 +550,9 @@ class UploadController extends Controller
                     //echo "<pre> REPO_URL "; print_r($repo_url);echo "</pre>"; 
                     $posted_by_email = Auth::user()->email ;
                     $commit_msg = "'new Release added by $posted_by_email '";
+                    $download_path = "'$download_path'";
+                    $hugo_content_path = "'$hugo_content_path'";
+                    $file_to_commit = "'$file_to_commit'";
                     if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
             
                         $public_path = getcwd();
