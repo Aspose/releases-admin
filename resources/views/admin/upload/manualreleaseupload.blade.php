@@ -86,6 +86,24 @@
     </div>
 
     <div class="control-group">
+        <span id="etag_id-span" class="control-label">Etag</span>
+        <div class="controls">
+            <input name="etag_id" type="text" maxlength="200" id="etag_id" value="{{ Request::old('etag_id') }}" style="width:450px;" required />
+            <p  style="color:Red;"> {{ $errors->first('etag_id') }} </span>
+        </div>
+        
+    </div>
+
+    <div class="control-group">
+        <span id="content_length-span" class="control-label">FileSize</span>
+        <div class="controls">
+            <input name="content_length" type="text" maxlength="200" id="content_length" value="{{ Request::old('content_length') }}" style="width:450px;" required />
+            <p  style="color:Red;"> {{ $errors->first('content_length') }} </span>
+        </div>
+        
+    </div>
+    
+    <div class="control-group">
         <span id="view_count-span" class="control-label">View Count</span>
         <div class="controls">
             <input name="view_count" type="text" maxlength="200" id="view_count" value="{{ Request::old('view_count') }}" style="width:450px;" required />
@@ -114,6 +132,9 @@
         </div>
         
     </div>
+
+
+   
 
 
   

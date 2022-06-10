@@ -229,15 +229,31 @@ class UploadController extends Controller
             $DropDownContent = $this->GetDropDownContent(1);
             $child = $this->searcharray($DropDownContent, 'url', $request->id);
             $final_array = array();
-            if(!empty($child[0]['nodes'])){
-                $child =  $child[0]['nodes'];
-                foreach($child as $single){
-                    $final_array[$single['text']] = $single['url'];
-                }
-                return $final_array;    
-            }else{
-                if($childtype == 'folder'){
+            if($childtype == 'folder'){ // if folder
+                if(str_contains($request->id, '/corporate/')){ //folder and corporate get child from json
+                    if(!empty($child[0]['nodes'])){
+                        $child =  $child[0]['nodes'];
+                        foreach($child as $single){
+                            $final_array[$single['text']] = $single['url'];
+                        }
+                        return $final_array;    
+                    }else{
+                        
+                        return array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+                    }
+                }else{ // fix for ocr folders
                     return array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+                }
+
+            }else{
+                if(!empty($child[0]['nodes'])){
+                    $child =  $child[0]['nodes'];
+                    foreach($child as $single){
+                        $final_array[$single['text']] = $single['url'];
+                    }
+                    return $final_array;    
+                }else{
+                    return array();    
                 }
             }
             
@@ -1104,7 +1120,7 @@ class UploadController extends Controller
     public function manualreleaseupload(Request $request){
         $host = $request->getHttpHost();
         if(!empty($request->all())){
-            $upload_info = $this->UploadImageToS3($request->all(), 'new');
+            $upload_info = $this->UploadImageToS3MissingReleases($request->all(), 'new');
             //SET MANUALLY
 
             $upload_info['view_count'] = $request['view_count'];
@@ -1120,6 +1136,148 @@ class UploadController extends Controller
                 return redirect('/admin/ventures/file/manage-files')->with('error','Published Failed.');
             }
         }
+    }
+
+    public function UploadImageToS3MissingReleases($data, $action){
+        
+        $insert_release = 1;
+        if($action == 'update'){
+            $release = Release::where('id', $data['edit_id'])->first();
+            $insert_release = 0;
+        }
+        //exit;
+        # get file from request object
+        # get s3 object make sure your key matches with
+        # config/filesystem.php file configuration
+        $filetoupload = $data['file'];
+        $productfamily  = $data['productfamily'];
+        $product  = $data['product'];
+        $folder_ini  = $data['folder'];
+
+        $section_parent_path = "";
+        $parent_path = "";
+
+        if(strstr($folder_ini, '/')){
+            $folder = rtrim($folder_ini, '/'); 
+            //echo " 11111111111 ".$folder . " 11111111111 <BR>";
+            //echo " 222222222222 ".$folder . " 222222222222 <BR>";
+            $folder = substr(strrchr($folder, '/'), 1);
+            //echo " 33333333333 ". $pppppp . " 33333333333 <BR>";
+            $parent_path = parse_url($folder_ini, PHP_URL_PATH);
+            $parent_path = rtrim($parent_path, '/');
+
+            $section_parent_path = parse_url($product, PHP_URL_PATH);
+            $section_parent_path = rtrim($section_parent_path, '/');
+            $section_parent_path = ltrim($section_parent_path, '/');
+        }else{
+           // echo " BBBBBBBBBBB ".$folder . " BBBBBBBBBBB <BR>";
+            $folder = $folder_ini ;
+            $parent_path = parse_url($product, PHP_URL_PATH);
+            $parent_path = rtrim($parent_path, '/');
+        }
+        
+
+        $title = $data['title'];
+        $productfamily_path = parse_url($productfamily, PHP_URL_PATH);
+        $productfamily_path = rtrim($productfamily_path, '/'); 
+        if($action == 'update'){
+            /* POSSIBLE FIX TO MAINTAIN INTIAL FAIL NAME (KEEP DOWNLOAD MD FILE NAME SAME) */
+                $initial_file_name = rtrim($release->folder_link, '/');
+                $initial_file_name_array = explode("/", $initial_file_name); 
+                $initial_file_name_only = end($initial_file_name_array); 
+                $title_slug = str_replace(' ', '-', strtolower($initial_file_name_only));
+            /* /POSSIBLE FIX TO MAINTAIN INTIAL FAIL NAME  */
+        }else{
+            $title_slug = str_replace(' ', '-', strtolower($title));
+        }
+        
+       
+       
+       $special_case = array('all','examples', 'new-releases',  'resources' );
+       $title_new_ = array('all'=>'all', 'examples'=>'Examples', 'new-releases'=>'New Releases',  'resources'=>'Resources');
+       //echo $folder . ' ---------- folder ---  ';
+       if(in_array($folder, $special_case)){
+            $title_new_text = $title_new_[$folder];
+        }else{
+            $folder = rtrim($folder, '/'); 
+            $path = explode("/", $folder); // splitting the path
+            $last = end($path); 
+            $title_new_text = ucfirst($last);
+        }
+      
+       
+      
+       
+
+       //echo "<pre> section_parent_path: "; print_r($section_parent_path); echo "</pre>"; 
+       //echo "<pre> parent_path: "; print_r($parent_path); echo "</pre>"; 
+       $folder_full_path = parse_url($folder, PHP_URL_PATH);
+       $productfamily_full_path  = parse_url($productfamily, PHP_URL_PATH);
+       $product_full_path = parse_url($product, PHP_URL_PATH);
+
+       $download_link = "";
+       $folder_link = "";
+       if(!empty($section_parent_path)){
+         $folder_link = '/'.$section_parent_path. '/'.$title_slug.'/';
+         $download_link = $folder_link;
+       }else{
+         $folder_link = $parent_path."/".$folder.'/'.$title_slug . '/';
+         $download_link = $folder_link;
+       }
+
+       
+       /*$ETag = Str::random(40);
+       $fileSizeBytes = "99877450";
+       
+       //$result = get_remote_file_info($filetoupload);
+       $filetoupload = urldecode($filetoupload);
+       $s3_file_headers = get_headers($filetoupload,1);
+       if(!empty($s3_file_headers)){
+        $ETag = trim($s3_file_headers['ETag'], '"');
+        $fileSizeBytes = $s3_file_headers['Content-Length'];
+       }*/
+
+       $ETag = $data['etag_id'];
+       $fileSize =  $data['content_length'];
+
+        $s3_file_info = pathinfo($filetoupload);
+        # rename file name to random name
+        $file_name = $s3_file_info['basename'];
+        # define s3 target directory to upload file to
+        //$fileSize =  $this->formatBytes($fileSizeBytes, 2);
+
+        $image_link = "/resources/img/random-file-icon.png";
+        if($s3_file_info['extension'] == 'zip'){
+            $image_link = "/resources/img/zip-icon.png";
+        } else if($s3_file_info['extension'] == 'msi'){
+            $image_link = "/resources/img/msi-icon.png";
+        } else if($s3_file_info['extension'] == 'pdf'){
+            $image_link = "/resources/img/pdf-icon.png";
+        } else if($s3_file_info['extension'] == 'doc'){
+            $image_link = "/resources/img/doc-icon.png";
+        }
+        return array(
+            's3_path' => $filetoupload,
+            'folder_link' => $folder_link,
+            'download_link' => $download_link . $ETag,
+            'parent_path' => ltrim($parent_path, '/'),
+            'section_parent_path' => $section_parent_path,
+            'title' => $title,
+            'actual_file_name' =>$file_name,
+            'title_slug' => $title_slug,
+            'title_new_tag' => $title_new_text,
+            'fileSize' => $fileSize,
+            'etag_id' => $ETag,
+            'image_link' => $image_link,
+            'family' => $productfamily_full_path,
+            'product' => $product_full_path,
+            'folder'=> $folder_full_path,
+            'insert_release'=> $insert_release,
+            'view_count'=>'',
+            'download_count'=>'',
+            'weight'=>'',
+            'contains_file' => 1
+            );
     }
 }
 //Examples
