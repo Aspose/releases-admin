@@ -36,7 +36,13 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth
     Route::post('/ventures/file/update', 'UploadController@update');
     Route::post('/ventures/file/updatemaual', 'UploadController@updatemaual');
     Route::get('/ventures/file/manage-files', 'UploadController@managefiles');
+    Route::get('/ventures/file/viewlogs/{id}', 'UploadController@viewlogs');
     Route::any('/ventures/file/getchildnodes', ['as' => 'admin.getchildnodes', 'uses' => 'UploadController@getchildnodes']);
+
+
+    //manual upload missing releases
+    Route::post('/ventures/file/manualreleaseupload', 'UploadController@manualreleaseupload');
+    Route::get('/ventures/file/manualreleaseupload', 'UploadController@manualreleaseuploadform');
 
 
     //Manage Product Families

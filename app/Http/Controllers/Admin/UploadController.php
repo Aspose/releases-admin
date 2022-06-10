@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UploadsRequest;
 use App\Http\Requests\UpdateRequest;
 use App\Models\AmazonS3Setting;
+use App\Models\CommitLog;
 use AWS\CRT\HTTP\Response;
 // use Facade\FlareClient\Http\Response;
 use Illuminate\Http\Request;
@@ -157,6 +158,7 @@ class UploadController extends Controller
                 $mdfile =$this->generate_mdfile($request->all(), $upload_info);
                 //echo "<pre>"; print_r($mdfile); echo "</pre>"; exit;
                 $res = $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
+                $this->addlogentry($mdfile['last_insert_update_id'], $res);
                 return redirect('/admin/ventures/file/edit/' . $mdfile['last_insert_update_id'])->with('success','Published Successfully.' .$res);
             }else{
                 return redirect('/admin/ventures/file/manage-files')->with('error','Published Failed.');
@@ -180,6 +182,7 @@ class UploadController extends Controller
             if(!empty($upload_info)){
                 $mdfile =$this->generate_mdfile($request->all(), $upload_info);
                 $res= $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
+                $this->addlogentry($mdfile['last_insert_update_id'], $res);
                 return redirect('/admin/ventures/file/edit/' . $mdfile['last_insert_update_id'])->with('success','Update Successfully.' .$res);
             }else{
                 return redirect('/admin/ventures/file/edit/'. $edit_id)->with('success','Update Failed.');
@@ -187,6 +190,21 @@ class UploadController extends Controller
             
         }
     }
+
+    public function addlogentry($id, $log){
+        $log = CommitLog::create([
+            'release_id' => $id,
+            'log' => $log,
+        ]);
+    }
+
+    public function viewlogs(Request $request, $id){
+        $title = "Release Commit Logs";
+        $logs = CommitLog::where('release_id', $id)->orderBy('created_at', 'desc')->get();
+        //dd($logs);
+        return view('admin.upload.commitlogs', compact('logs','title'));
+    }
+
 
     public function updatemaual(Request $request)
     {
@@ -287,8 +305,18 @@ class UploadController extends Controller
        $title =  $upload_info['title'];
 
       // echo $f_family . " === " . $f_product . " ==== ". $f_folder; exit;
+     $view_count_intial = 1;
+      if(!empty($upload_info['view_count'])){
+            $view_count_intial = $upload_info['view_count'];
+      }
 
+      $download_count_intial = 1;
+      if(!empty($upload_info['download_count'])){
+        $download_count_intial = $upload_info['download_count'];
+      }
 
+      
+      
      
      
      $f_family = rtrim($f_family, '/');
@@ -300,6 +328,11 @@ class UploadController extends Controller
         if($MaxWeightCount){
             $weight = $MaxWeightCount + 1;
         }
+
+        if(!empty($upload_info['weight'])){ // IF SET MANULLY
+            $weight = $upload_info['weight'];
+        }
+
         $release = Release::create([
             'family'=> $f_family,
             'product'=> $f_product,
@@ -310,8 +343,8 @@ class UploadController extends Controller
             'etag_id' => $etag_id,
             's3_path' => $s3_path,
             'posted_by' => $posted_by_name,
-            'view_count' => 0,
-            'download_count' => 0,
+            'view_count' => $view_count_intial,
+            'download_count' => $download_count_intial,
             'description' => $description,
             'release_notes_url' => $releaseurl,
             'filesize' => $fileSize,
@@ -321,8 +354,8 @@ class UploadController extends Controller
             'is_new' => 1,
             'weight' => $weight
             ]);
-            $Downloads_count = 1;
-            $Views_count = 1;
+            $Downloads_count = $download_count_intial;
+            $Views_count = $view_count_intial;
             $down_date = date('j/n/Y');
             $last_insert_update_id = $release->id;
             /* ---------- Append primary key to Etag id (Etag not unique in some cases) -------*/
@@ -415,8 +448,14 @@ class UploadController extends Controller
         if(!empty($section_parent_path)){
             $md_file_content .= "section_parent_path: \"$section_parent_path\"";
             $md_file_content .= "\n";
+        }else{
+            $md_file_content .= "section_parent_path: \"$parent_path\"";
+            $md_file_content .= "\n";
         }
         
+        $md_file_content .= "\n";
+        $md_file_content .= "release_notes_url: \"$releaseurl\"";
+        $md_file_content .= "\n";
         $md_file_content .= "weight: " ."$weight";
         $md_file_content .= "\n";
         $md_file_content .= "\n";
@@ -731,6 +770,9 @@ class UploadController extends Controller
             'product' => $product_full_path,
             'folder'=> $folder_full_path,
             'insert_release'=> $insert_release,
+            'view_count'=>'',
+            'download_count'=>'',
+            'weight'=>'',
             'contains_file' => 1
             );
     }
@@ -832,6 +874,9 @@ class UploadController extends Controller
             'family' => $productfamily_full_path,
             'product' => $product_full_path,
             'folder'=> $folder_full_path,
+            'view_count'=>'',
+            'download_count'=>'',
+            'weight'=>'',
             'insert_release'=> 0,
             'contains_file' => 0
          );
@@ -1048,7 +1093,34 @@ class UploadController extends Controller
         $hugositeurl = $amazon_s3_settings->hugositeurl;
        return view('admin.upload.list', compact('DropDownContent', 'familySelected', 'productSelected', 'folderSelected', 'current_child_products', 'folders', 'releases', 'title', 'hugositeurl'));
     }
+
+
+    public function manualreleaseuploadform(){
+        $title = "Upload New Release/File Maunully";
+        $DropDownContent = $this->GetDropDownContent();
+        return view('admin.upload.manualreleaseupload', compact('DropDownContent', 'title'));
+    }
    
+    public function manualreleaseupload(Request $request){
+        $host = $request->getHttpHost();
+        if(!empty($request->all())){
+            $upload_info = $this->UploadImageToS3($request->all(), 'new');
+            //SET MANUALLY
+
+            $upload_info['view_count'] = $request['view_count'];
+            $upload_info['weight'] = $request['weight'];
+            $upload_info['download_count'] = $request['download_count'];
+
+            if(!empty($upload_info)){
+                $mdfile =$this->generate_mdfile($request->all(), $upload_info);
+                $res = $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
+                $this->addlogentry($mdfile['last_insert_update_id'], $res);
+                return redirect('/admin/ventures/file/edit/' . $mdfile['last_insert_update_id'])->with('success','Published Successfully.' .$res);
+            }else{
+                return redirect('/admin/ventures/file/manage-files')->with('error','Published Failed.');
+            }
+        }
+    }
 }
 //Examples
 //New Releases

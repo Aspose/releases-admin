@@ -105,7 +105,7 @@
                             <a  target="_blank" href="/{{ $folder_link }}{{ $release->etag_id }}">Download</a> | 
                             <a  target="_blank" href="{{ $release->s3_path }}">Direct Download</a>
                         </td>
-                        <td>{{ $release->is_new }}</td>
+                        <td>{{ $release->is_new }} ({{ $release->weight }}) </td>
                     </tr>
                 @endforeach
                 
