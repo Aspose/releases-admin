@@ -47,6 +47,7 @@ class ReleasesApiController extends Controller
                 }else if(!empty($res_bbb)){
                     $Release = Release::where('product', '=', '/corporate/brochures/')->get();
                 }else{
+                    $family_product = str_replace('resources/', '', $family_product);
                     $Release = Release::where('product', '=', $family_product)->get();
                 }
                 
