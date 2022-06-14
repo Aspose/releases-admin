@@ -23,7 +23,7 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.J_HOST }}
-          username: ${{ secrets.USERNAME }}
+          username: ${{ secrets.J_USERNAME }}
           port: ${{ secrets.PORT }}
-          key: ${{ secrets.SSHKEY }}
+          key: ${{ secrets.J_SSHKEY }}
           script: "cd ${{ secrets.HOME_DIR }} && ./.scripts/deploy.sh"
