@@ -25,7 +25,6 @@ class ReleasesApiController extends Controller
         
         //print_r($family_product);
         $jsonresponse = array();
-        dd($request->path);
         if(isset($request->path)){
             if(isset($request->single) && $request->single == 1){
                 $etag_id = $request->path;
