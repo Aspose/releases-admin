@@ -90,7 +90,8 @@ class ReleasesApiController extends Controller
     }
 
     public function getcountbucket(){
-
+        dd('nothing to do');
+        exit;
         $json = '[
             {
                "Key":"2022\/06\/06\/asposewordssharepoint_219_047841300_1654509526.zip",
