@@ -216,7 +216,7 @@ class UploadController extends Controller
            $release->s3_path = trim($request->s3_path);
            $release->filesize = trim($request->filesize);
            $release->filename = trim($request->filename);
-        // $release->etag_id = trim($request->etag_id);
+           $release->folder_link = trim($request->folder_link);
         // $release->family = trim($request->family);
         // $release->product = trim($request->product);
         // $release->folder = trim($request->folder);
