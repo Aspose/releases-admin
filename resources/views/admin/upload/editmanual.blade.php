@@ -112,7 +112,7 @@
     <div class="control-group">
          <span id="releaseurl-span" class="control-label">S3 Url</span>
         <div class="controls">
-        <input readonly name="s3_path" type="text" maxlength="500" id="s3_path" value="{{ $release->s3_path }}" style="width:750px;" />
+        <input  name="s3_path" type="text" maxlength="500" id="s3_path" value="{{ $release->s3_path }}" style="width:750px;" />
         </div>
     </div>
 
@@ -140,14 +140,14 @@
     <div class="control-group">
         <span id="releaseurl-span" class="control-label">filesize</span>
         <div class="controls">
-        <input readonly name="filesize" type="text" maxlength="500" id="filesize" value="{{ $release->filesize }}" style="width:750px;" />
+        <input  name="filesize" type="text" maxlength="500" id="filesize" value="{{ $release->filesize }}" style="width:750px;" />
         </div>
     </div>
 
     <div class="control-group">
         <span id="releaseurl-span" class="control-label">filename</span>
         <div class="controls">
-        <input readonly name="filename" type="text" maxlength="500" id="filename" value="{{ $release->filename }}" style="width:750px;" />
+        <input  name="filename" type="text" maxlength="500" id="filename" value="{{ $release->filename }}" style="width:750px;" />
         </div>
     </div>
 
