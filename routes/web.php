@@ -62,6 +62,13 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth
 
     Route::post('/updateuser', 'UserController@updateuser')->middleware('canmanageusers');
     Route::get('/edituser/{id}', 'UserController@edituser')->middleware('canmanageusers');
+
+    //Manage Total.Net Release
+    Route::get('/manage-total-net-release', 'ManageTotalNetReleasesController@index')->middleware('canmanageusers');
+    Route::post('/downloadandcompress', 'ManageTotalNetReleasesController@downloadandcompress');
+    Route::post('/compressfiles', 'ManageTotalNetReleasesController@compressfiles');
+    Route::post('/progressdownload', 'ManageTotalNetReleasesController@progressdownload');
+    Route::post('/uploadziptos3', 'ManageTotalNetReleasesController@uploadziptos3');
 });
 
 
@@ -88,3 +95,4 @@ Route::get('send-mail', function () {
    $res =  Mail::to('fahad.adeel@aspose.com')->send(new \App\Mail\MyTestMail($details));
     dd("Email is Sent." . $res . " --- ");
 });
+

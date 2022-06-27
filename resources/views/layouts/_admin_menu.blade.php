@@ -68,5 +68,11 @@
                             <a id="ctl00_HyperLink5" class="dropdown-toggle" href="{{ url('admin/manage-users') }}">Manage Users</a>
                         </li>
                         @endif
+                        @if (Auth::user()->is_admin == 1)
+                         <li class="nav-header"><i class="icon-wrench"></i>Manage Total.Net Release </li>
+                        <li class="custom-padding">
+                            <a id="ctl00_HyperLink5" class="dropdown-toggle" href="{{ url('admin/manage-total-net-release') }}">Manage Total.Net</a>
+                        </li>
+                        @endif
                     </ul>
 </div>
