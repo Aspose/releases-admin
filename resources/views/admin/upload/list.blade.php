@@ -72,7 +72,7 @@
                     <th scope="col">Size</th>
                     <th scope="col">Date Uploaded</th>
                     <th scope="col">Author</th>
-                    <th scope="col">&nbsp;</th>
+                    <th scope="col">Tags</th>
                     <th scope="col">&nbsp;</th>
                     <th scope="col">&nbsp;</th>
                     <th scope="col">&nbsp;</th>
@@ -88,11 +88,13 @@
                         <td><?php echo date('Y-m-d', strtotime($release->date_added)); ?></td>
                         <td>{{ $release->posted_by }}</td>
                         <td>
-                                <?php if (str_starts_with($release->folder_link, '/')) { ?>
+                                <!-- <?php if (str_starts_with($release->folder_link, '/')) { ?>
                                     <a target="_blank" href="<?php echo $hugositeurl . '' . $release->folder_link ?>">View File</a>
                                 <?php }else{ ?>    
                                     <a target="_blank" href="<?php echo $hugositeurl . '/' . $release->folder_link ?>">View File</a>
-                                <?php } ?>  
+                                <?php } ?>   -->
+
+                                {{ $release->tags }}
                         </td>
                         <td>
                             <?php if(!empty($release->release_notes_url)){ ?>

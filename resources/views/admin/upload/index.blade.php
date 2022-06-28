@@ -67,6 +67,16 @@
     </div>
 
     <div class="control-group">
+        <span id="tags-span" class="control-label">Tags </span>
+        <div class="controls">
+            <input name="tags" type="text" maxlength="500" id="tags" value="{{ Request::old('tags') }}" style="width:450px;" />
+            <p  style="color:Red;"> {{ $errors->first('tags') }} </span>
+        </div>
+       
+    </div>
+
+
+    <div class="control-group">
         <span id="releaseurl-span" class="control-label">Release Notes Url: (Public Wiki) </span>
         <div class="controls">
             <input name="releaseurl" type="text" maxlength="200" id="releaseurl" value="{{ Request::old('releaseurl') }}" style="width:450px;" />

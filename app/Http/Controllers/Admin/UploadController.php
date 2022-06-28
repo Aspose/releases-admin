@@ -218,6 +218,7 @@ class UploadController extends Controller
         // $release->filetitle = trim($request->filetitle);
         // $release->description = trim($request->description);
         // $release->release_notes_url = trim($request->release_notes_url);
+           $release->date_added = trim($request->date_added);
            $release->s3_path = trim($request->s3_path);
            $release->filesize = trim($request->filesize);
            $release->filename = trim($request->filename);
@@ -289,18 +290,18 @@ class UploadController extends Controller
     }
 
     public function generate_mdfile($data, $upload_info){
-       
+        
        $posted_by_name = Auth::user()->name ;
         $productfamily  = $data['productfamily'];
         $product  = $data['product'];
         $folder  = $data['folder'];
         $title = $data['title'];
-        
+        $tags = $data['tags'];
         $description = $data['description'];
         $releaseurl = $data['releaseurl'];
         $weight = 1;
         
-
+        
 
         $productfamily_path = parse_url($productfamily, PHP_URL_PATH);
         $productfamily_path = rtrim($productfamily_path, '/');
@@ -375,7 +376,8 @@ class UploadController extends Controller
             'sha1' => '',
             'md5' => '',
             'is_new' => 1,
-            'weight' => $weight
+            'weight' => $weight,
+            'tags' => $tags
             ]);
             $Downloads_count = $download_count_intial;
             $Views_count = $view_count_intial;
@@ -395,6 +397,7 @@ class UploadController extends Controller
         $release->filetitle = $title;
         $release->description = $description;
         $release->release_notes_url = $releaseurl;
+        $release->tags = $tags;
         
         if($upload_info['contains_file']){
             $release->filename = $actual_file_name;
@@ -475,7 +478,8 @@ class UploadController extends Controller
             $md_file_content .= "section_parent_path: \"$parent_path\"";
             $md_file_content .= "\n";
         }
-        
+        $md_file_content .= "\n";
+        $md_file_content .= "tags: \"$tags\"";
         $md_file_content .= "\n";
         $md_file_content .= "release_notes_url: \"$releaseurl\"";
         $md_file_content .= "\n";

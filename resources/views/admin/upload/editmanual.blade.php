@@ -24,7 +24,7 @@
     <div class="control-group">
         <span id="productfamily-span" class="control-label">date_added</span>
         <div class="controls">
-            <input readonly name="date_added" type="text" maxlength="500" id="date_added" value="{{ $release->date_added }}" style="width:750px;" />
+            <input  name="date_added" type="text" maxlength="500" id="date_added" value="{{ $release->date_added }}" style="width:750px;" />
         </div>
     </div>
 
@@ -96,6 +96,15 @@
         <div class="controls">
             <input readonly name="description" type="text" maxlength="500" id="description" value="{{ $release->description }}" style="width:450px;" />
             <p  style="color:Red;"> {{ $errors->first('description') }} </span>
+        </div>
+       
+    </div>
+
+    <div class="control-group">
+        <span id="tags-span" class="control-label">Tags </span>
+        <div class="controls">
+            <input readonly name="tags" type="text" maxlength="500" id="tags" value="{{ $release->tags }}" style="width:450px;" />
+            <p  style="color:Red;"> {{ $errors->first('tags') }} </span>
         </div>
        
     </div>
