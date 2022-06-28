@@ -150,7 +150,12 @@ class UploadController extends Controller
     {
         $host = $request->getHttpHost();
         if(!empty($request->all())){
-            //echo "<pre>"; print_r($request->all()); echo "</pre>"; exit;
+            
+            $filter_family = $request->productfamily;
+            $filter_product = $request->product;
+            $filter_folder = $request->folder;
+            $reload_filter = "?filter_productfamily=".$filter_family."&filter_product=".$filter_product."&filter_folder=".$filter_folder;
+            
             $upload_info = $this->UploadImageToS3($request->all(), 'new');
             
             if(!empty($upload_info)){
@@ -159,7 +164,7 @@ class UploadController extends Controller
                 //echo "<pre>"; print_r($mdfile); echo "</pre>"; exit;
                 $res = $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
                 $this->addlogentry($mdfile['last_insert_update_id'], $res);
-                return redirect('/admin/ventures/file/edit/' . $mdfile['last_insert_update_id'])->with('success','Published Successfully.' .$res);
+                return redirect('/admin/ventures/file/manage-files/' . $reload_filter)->with('success','Published Successfully.');
             }else{
                 return redirect('/admin/ventures/file/manage-files')->with('error','Published Failed.');
             }
