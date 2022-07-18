@@ -223,7 +223,7 @@ class UploadController extends Controller
            $release->filesize = trim($request->filesize);
            $release->filename = trim($request->filename);
            $release->folder_link = trim($request->folder_link);
-        // $release->family = trim($request->family);
+           $release->is_new = trim($request->is_new);
         // $release->product = trim($request->product);
         // $release->folder = trim($request->folder);
         $release->weight = trim($request->weight);

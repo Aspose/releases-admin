@@ -45,7 +45,7 @@
     <div class="control-group">
         <span id="productfamily-span" class="control-label">is_new</span>
         <div class="controls">
-            <input readonly name="is_new" type="text" maxlength="500" id="is_new" value="{{ $release->is_new }}" style="width:750px;" />
+            <input  name="is_new" type="text" maxlength="500" id="is_new" value="{{ $release->is_new }}" style="width:750px;" />
         </div>
     </div>
 
