@@ -35,7 +35,7 @@ class ManageTotalNetReleasesController extends Controller
         $zipfolderpath_fullpath = ( storage_path() . '/app/public'. $zipfolderpath);
 
         //Remove all files in folder prevent duplicate
-        array_map( 'unlink', array_filter((array) glob($zipfolderpath_fullpath."/*") ) );
+       // array_map( 'unlink', array_filter((array) glob($zipfolderpath_fullpath."/*") ) );
 
         $netrelease  = Release::where('product' , 'LIKE', '%/net/%')
         //->where('s3_path' , 'LIKE', '%.msi%')
@@ -288,7 +288,7 @@ class ManageTotalNetReleasesController extends Controller
 
            
             //remove all files in folder prevent dupicate
-            array_map( 'unlink', array_filter((array) glob($zipfolderpath_fullpath."/*") ) );
+           // array_map( 'unlink', array_filter((array) glob($zipfolderpath_fullpath."/*") ) );
 
             $final_array = array(
                 's3_file_link'=> "Copy Url : https://s3.us-west-2.amazonaws.com/$AWS_BUCKET/$s3filepath_ini",
