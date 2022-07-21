@@ -1290,6 +1290,26 @@ class UploadController extends Controller
             'contains_file' => 1
             );
     }
+    public function destroy($id){
+       // print_r($id);
+       $res = Release::find($id)->delete($id);
+       if($res){
+
+        $posted_by_email = Auth::user()->email ;
+        $log_msg = "Delete by " . $posted_by_email;
+        $this->addlogentry($id, $log_msg);
+
+        return response()->json([
+            'success' => 1,
+            'msg' => 'Release deleted successfully!'
+        ]);
+       }else{
+        return response()->json([
+            'success' => 0,
+            'msg' => 'Failed to deleted Release! Try again later'
+        ]);
+       }
+    }
 }
 //Examples
 //New Releases

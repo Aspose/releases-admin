@@ -39,6 +39,7 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth
     Route::get('/ventures/file/viewlogs/{id}', 'UploadController@viewlogs');
     Route::any('/ventures/file/getchildnodes', ['as' => 'admin.getchildnodes', 'uses' => 'UploadController@getchildnodes']);
 
+    Route::delete('ventures/file/{id}', 'UploadController@destroy')->name('upload.destroy');
 
     //manual upload missing releases
     Route::post('/ventures/file/manualreleaseupload', 'UploadController@manualreleaseupload');

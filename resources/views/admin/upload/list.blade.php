@@ -80,7 +80,7 @@
                 </tr>
                 @if(!empty($releases))
                     @foreach($releases as $release)
-                    <tr>
+                    <tr id="rrow-{{ $release->id }}">
 
                         <td>{{ $release->filetitle }}</td>
                         <td>{{ $folderSelected }}</td>
@@ -101,13 +101,18 @@
                                 <a href="<?php echo $release->release_notes_url ?>">View Release Notes</a>
                             <?php } ?>
                         </td>
-                        <td><a href="edit/{{ $release->id }}">Edit</a></td>
+                        <td><a href="edit/{{ $release->id }}">Edit</a> </td>
                         <td>
                             <?php $folder_link = ltrim($release->folder_link, '/'); ?>
                             <a  target="_blank" href="/{{ $folder_link }}{{ $release->etag_id }}">Download</a> | 
                             <a  target="_blank" href="{{ $release->s3_path }}">Direct Download</a>
                         </td>
-                        <td>{{ $release->is_new }} ({{ $release->weight }}) </td>
+                        <td>{{ $release->is_new }} ({{ $release->weight }}) 
+
+                        @if (Auth::user()->is_admin == 1)
+                        | <a style="color:red; cursor:pointer;" class="deleteRecord" onclick="deleterecord({{ $release->id }})" data-id="" >Delete</a> 
+                        @endif
+                        </td>
                     </tr>
                 @endforeach
                 
@@ -184,6 +189,33 @@
 
         console.log(location)
         location = url;
+    }
+
+    function deleterecord(id){
+       // var id = $(this).data("id");
+        var token = $("meta[name='csrf-token']").attr("content");
+        var result = confirm("Are you sure you want to delete ?");
+        if (result==true) {
+            $.ajax({
+                    url: "/admin/ventures/file/"+id,
+                    type: 'DELETE',
+                    data: {
+                        "id": id,
+                        "_token": token,
+                    },
+                    success: function (res){
+                        alert(res.msg);
+                        if(res.success){
+                            $("#rrow-"+id).remove()
+                            window.location.reload()
+                        }
+                        
+                    }
+            });
+        } else {
+        return false;
+        }
+        
     }
 </script>
 </div>
