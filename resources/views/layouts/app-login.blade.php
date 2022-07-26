@@ -12,10 +12,10 @@
 
     <!-- Styles -->
     <!-- <link href="{{ asset('css/app.css') }}" rel="stylesheet"> -->
-    <link href="{{ asset('css/bootstrap.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/site.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/bootstrap-responsive.css') }}" rel="stylesheet">
-    <script src="{{ asset('js/app.js') }}" defer></script>
+    <link href="{{ env('APP_URL') }}/css/bootstrap.css" rel="stylesheet">
+    <link href="{{ env('APP_URL') }}/css/site.css" rel="stylesheet">
+    <link href="{{ env('APP_URL') }}/css/bootstrap-responsive.css" rel="stylesheet">
+    <script src="{{ env('APP_URL') }}/js/app.js" defer></script>
     <!-- Scripts -->
     <script>
         window.Laravel = {!! json_encode([
@@ -70,12 +70,12 @@
         <footer class="well">&copy; Containerize.Releases Backend - 2022 </footer>
     </div>
     <!-- Scripts -->
-    <script src="{{ asset('js/app.js') }}"></script>
-    <script src="{{ asset('js/jquery.js') }}"></script>
-    <script src="{{ asset('js/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('js/bootstrap-wysiwyg.js') }}"></script>
-    <script src="{{ asset('js/canvasjs.min.js') }}"></script>
-    <script src="{{ asset('js/ChartHelper.js') }}"></script>
-    <script src="{{ asset('js/ReportController.js') }}"></script>
+    <script src="{{ env('APP_URL') }}/js/app.js"></script>
+    <script src="{{ env('APP_URL') }}/js/jquery.js"></script>
+    <script src="{{ env('APP_URL') }}/js/bootstrap.min.js"></script>
+    <script src="{{ env('APP_URL') }}/js/bootstrap-wysiwyg.js"></script>
+    <script src="{{ env('APP_URL') }}/js/canvasjs.min.js"></script>
+    <script src="{{ env('APP_URL') }}/js/ChartHelper.js"></script>
+    <script src="{{ env('APP_URL') }}/js/ReportController.js"></script>
 </body>
 </html>
