@@ -11,10 +11,10 @@
     <title>{{ config('app.name', 'Containerize.Releases Backend') }}</title>
 
     <!-- Styles -->
-    <!-- <link href="{{ asset('css/app.css') }}" rel="stylesheet"> -->
-    <link href="{{ asset('css/bootstrap.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/site.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/bootstrap-responsive.css') }}" rel="stylesheet">
+    <!-- <link href="{{ secure_asset('css/app.css') }}" rel="stylesheet"> -->
+    <link href="{{ secure_asset('css/bootstrap.css') }}" rel="stylesheet">
+    <link href="{{ secure_asset('css/site.css') }}" rel="stylesheet">
+    <link href="{{ secure_asset('css/bootstrap-responsive.css') }}" rel="stylesheet">
 
     <!-- Scripts -->
     <script>
@@ -70,12 +70,12 @@
         <footer class="well">&copy; Containerize.Releases Backend - 2022 </footer>
     </div>
     <!-- Scripts -->
-    <script src="{{ asset('js/app.js') }}"></script>
-    <script src="{{ asset('js/jquery.js') }}"></script>
-    <script src="{{ asset('js/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('js/bootstrap-wysiwyg.js') }}"></script>
-    <script src="{{ asset('js/canvasjs.min.js') }}"></script>
-    <script src="{{ asset('js/ChartHelper.js') }}"></script>
-    <script src="{{ asset('js/ReportController.js') }}"></script>
+    <script src="{{ secure_asset('js/app.js') }}"></script>
+    <script src="{{ secure_asset('js/jquery.js') }}"></script>
+    <script src="{{ secure_asset('js/bootstrap.min.js') }}"></script>
+    <script src="{{ secure_asset('js/bootstrap-wysiwyg.js') }}"></script>
+    <script src="{{ secure_asset('js/canvasjs.min.js') }}"></script>
+    <script src="{{ secure_asset('js/ChartHelper.js') }}"></script>
+    <script src="{{ secure_asset('js/ReportController.js') }}"></script>
 </body>
 </html>
