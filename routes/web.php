@@ -76,6 +76,7 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth
 
 //Route::group(['middleware' => 'auth'], function () {
     Route::get('/{family}/{product}/{folder}/{file}/{tagid}', 'Admin\UploadController@DownloadS3File');
+    Route::post('/download-release', 'Admin\DownloadFile@DownloadRelease');
 //});
 
 //Route::get('login', 'Auth\LoginController@openidlogin');
