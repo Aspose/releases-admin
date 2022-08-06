@@ -73,6 +73,14 @@
                         <li class="custom-padding">
                             <a id="ctl00_HyperLink5" class="dropdown-toggle" href="{{ url('admin/manage-total-net-release') }}">Manage Total.Net</a>
                         </li>
+                        <li class="nav-header"><i class="icon-wrench"></i>Hugo SiteUrl</li>
+                        <li class="custom-padding">
+                            <a id="ctl00_lnkAddVenture" class="dropdown-toggle" href="{{ url('admin/ventures/amazon-s3-settings') }}">Hugo SiteUrl </a>
+                        </li>
+                        <li class="nav-header"><i class="icon-wrench"></i>Env Info</li>
+                        <li class="custom-padding"><small> DB:  <?php echo env('DB_DATABASE')?></small></li>
+                        <li class="custom-padding"><small> Repo:  <?php echo env('GIT_REPO')?></small></li>
+                        <li class="custom-padding"><small> Branch:  <?php echo env('GIT_BRANCH')?></small></li>
                         @endif
                     </ul>
 </div>
