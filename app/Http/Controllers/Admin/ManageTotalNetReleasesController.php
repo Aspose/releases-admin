@@ -29,17 +29,35 @@ class ManageTotalNetReleasesController extends Controller
     public function index(Request $request)
     {
         
-        
+        $family_name = "net";
+        if(!empty($request->get('family'))){
+            $family_name = $request->get('family');
+
+        }
         //DB::enableQueryLog();
-        $zipfolderpath = "/zipfiles/total-net/" .date('y-m-d');
+        $zipfolderpath = "/zipfiles/total-$family_name/" .date('y-m-d');
         $zipfolderpath_fullpath = ( storage_path() . '/app/public'. $zipfolderpath);
 
         //Remove all files in folder prevent duplicate
        // array_map( 'unlink', array_filter((array) glob($zipfolderpath_fullpath."/*") ) );
 
-        $netrelease  = Release::where('product' , 'LIKE', '%/net/%')
+       if($family_name == 'java'){
+        $netrelease  = Release::where('product' , 'LIKE', '%/'.$family_name.'/%')
+        ->where('product' , '!=', '/total/'.$family_name.'/') // exclude total
+        ->where(function($query) {
+            $query->where('filetitle' , 'LIKE', '%jar%')
+                ->orWhere('filetitle', 'LIKE', '%JAR%')
+                ->orWhere('filetitle', 'LIKE', '%zip%')
+                ->orWhere('filename', 'LIKE', '%zip%')
+                ->orWhere('folder_link', 'LIKE', '%jar%');
+        })
+        ->groupBy('product')
+        ->orderBy('weight', 'desc')->get();
+       // $quries = DB::getQueryLog();
+       }else{
+        $netrelease  = Release::where('product' , 'LIKE', '%/'.$family_name.'/%')
         //->where('s3_path' , 'LIKE', '%.msi%')
-        ->where('product' , '!=', '/total/net/') // exclude total
+        ->where('product' , '!=', '/total/'.$family_name.'/') // exclude total
         ->where(function($query) {
             $query->where('filetitle' , 'LIKE', '%dll%')
                 ->orWhere('filetitle', 'LIKE', '%DLL%')
@@ -48,6 +66,8 @@ class ManageTotalNetReleasesController extends Controller
         ->groupBy('product')
         ->orderBy('weight', 'desc')->get();
        // $quries = DB::getQueryLog();
+       }
+        
   
        // dd($quries);
       
@@ -73,11 +93,58 @@ class ManageTotalNetReleasesController extends Controller
         //Storage::disk('public')->put($zipfolderpath.'/amjadtest-001.txt', Storage::disk('s3')->get('2022/06/24/test-am-file.txt'));
 
        }*/
-
-        $title = "Manage Total.Net Release";
+       $family_name = ucfirst($family_name);
+        $title = "Manage Total.$family_name Release";
         return view('admin.totalnetrelease.index', compact('title', 'netrelease', 'progress' , 'zipfolderpath_fullpath', 'zipfolderpath'));
     }
 
+
+    public function uploadfileform(Request $request){
+        //dd($request->all());
+        if(!empty($request->get('path'))){
+            $path = $request->get('path');
+            $title = "Upload File to .$path ";
+            $existing_files_full_path = storage_path('app/public'.$path);
+            $files = scandir($existing_files_full_path);
+            return view('admin.totalnetrelease.uploadform', compact('title', 'path', 'files'));
+        }else{
+            dd('path missing');
+        }
+    }
+    public function removefilesinpath(Request $request){
+        if(!empty($request->get('path'))){
+            $path = $request->post('path');
+           
+            $existing_files_full_path = storage_path('app/public'.$path);
+            $files = scandir($existing_files_full_path);
+           // dd($files);
+            foreach($files as $file){
+                if($file != "." && $file != ".." ) {
+                    unlink($existing_files_full_path .'/'. $file);
+                    echo $existing_files_full_path .'/'. $file .' Deleted <br>';
+                }
+                
+            }
+            return back()
+            ->with('success','Files deleted.')
+            ->with('file',"");
+            
+        }else{
+            dd('path missing');
+        }
+    }
+    public function fileUploadPost(Request $request){
+        $request->validate([
+            'file' => 'required',
+        ]);
+        $fileName = $request->file->getClientOriginalName();  
+        $path = $request->path;
+         $uploadpath = storage_path('app/public'.$path);
+        $request->file->move($uploadpath, $fileName);
+        return back()
+            ->with('success','You have successfully upload file.')
+            ->with('file',$fileName);
+    }
 
     /*public function createzip($zipfolderpath)
     {
@@ -248,10 +315,14 @@ class ManageTotalNetReleasesController extends Controller
         if(!empty($request->srcfile) ){
             $zipfolderpath_fullpath = $request->zipfolderpath_fullpath;
             if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
-                $AWS_ACCESS_KEY_ID = "AKIATVR5O2PZLLT7UT6B";
-                $AWS_SECRET_ACCESS_KEY = "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";
-                $AWS_DEFAULT_REGION = "us-west-2";
-                $AWS_BUCKET = "releases-qa.aspose.com";
+                // $AWS_ACCESS_KEY_ID = "AKIATVR5O2PZLLT7UT6B";
+                // $AWS_SECRET_ACCESS_KEY = "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";
+                // $AWS_DEFAULT_REGION = "us-west-2";
+                // $AWS_BUCKET = "releases-qa.aspose.com";
+                $AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID');
+                $AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY');
+                $AWS_DEFAULT_REGION = env('AWS_DEFAULT_REGION');
+                $AWS_BUCKET = env('AWS_BUCKET');
             }else{
                 $AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID');
                 $AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY');
