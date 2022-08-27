@@ -17,6 +17,7 @@
                         <input type="hidden" id="zipfolderpath" value="{{ $zipfolderpath }}">
 
                         <input type="text" style="margin-bottom: 0;" name="new_zip_file_name" id="new_zip_file_name" placeholder="Zip File Name"> <button href="?generate=true" class="btn" id="getallnetdll" onclick='getMessage()'> Generate Zip File</button>
+                        <a style="float:right;" href="/admin/manage-total-net-release/uploadfilemanual?path=<?php echo $zipfolderpath; ?>" class="btn"> Upload Missing Files</a>
                     </div>
 
                     @endif

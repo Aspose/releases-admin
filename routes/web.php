@@ -70,6 +70,9 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth
     Route::post('/compressfiles', 'ManageTotalNetReleasesController@compressfiles');
     Route::post('/progressdownload', 'ManageTotalNetReleasesController@progressdownload');
     Route::post('/uploadziptos3', 'ManageTotalNetReleasesController@uploadziptos3');
+    Route::get('/manage-total-net-release/uploadfilemanual', 'ManageTotalNetReleasesController@uploadfileform')->middleware('canmanageusers');
+    Route::post('/manage-total-net-release/fileUploadPost', 'ManageTotalNetReleasesController@fileUploadPost')->name('file.upload.post');
+    Route::post('/manage-total-net-release/removefilesinpath', 'ManageTotalNetReleasesController@removefilesinpath')->name('file.remove.post')->middleware('canmanageusers');
 });
 
 

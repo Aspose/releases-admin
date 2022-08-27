@@ -73,6 +73,9 @@
                         <li class="custom-padding">
                             <a id="ctl00_HyperLink5" class="dropdown-toggle" href="{{ url('admin/manage-total-net-release') }}">Manage Total.Net</a>
                         </li>
+                        <li class="custom-padding">
+                            <a id="ctl00_HyperLink5" class="dropdown-toggle" href="{{ url('admin/manage-total-net-release?family=java') }}">Manage Total.Java</a>
+                        </li>
                         <li class="nav-header"><i class="icon-wrench"></i>Hugo SiteUrl</li>
                         <li class="custom-padding">
                             <a id="ctl00_lnkAddVenture" class="dropdown-toggle" href="{{ url('admin/ventures/amazon-s3-settings') }}">Hugo SiteUrl </a>
