@@ -45,11 +45,9 @@ class ManageTotalNetReleasesController extends Controller
         $netrelease  = Release::where('product' , 'LIKE', '%/'.$family_name.'/%')
         ->where('product' , '!=', '/total/'.$family_name.'/') // exclude total
         ->where(function($query) {
-            $query->where('filetitle' , 'LIKE', '%jar%')
-                ->orWhere('filetitle', 'LIKE', '%JAR%')
-                ->orWhere('filetitle', 'LIKE', '%zip%')
-                ->orWhere('filename', 'LIKE', '%zip%')
-                ->orWhere('folder_link', 'LIKE', '%jar%');
+            $query->where('s3_path' , 'LIKE', '%zip%')
+               // ->orWhere('filename', 'LIKE', '%zip%')
+                ->orWhere('filename', 'LIKE', '%zip%');
         })
         ->groupBy('product')
         ->orderBy('weight', 'desc')->get();
