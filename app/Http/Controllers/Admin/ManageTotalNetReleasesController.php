@@ -49,7 +49,7 @@ class ManageTotalNetReleasesController extends Controller
                // ->orWhere('filename', 'LIKE', '%zip%')
                 ->orWhere('filename', 'LIKE', '%zip%');
         })
-        ->groupBy('product')
+        ->groupBy('id', 'product')
         ->orderBy('weight', 'desc')->get();
        // $quries = DB::getQueryLog();
        }else{
