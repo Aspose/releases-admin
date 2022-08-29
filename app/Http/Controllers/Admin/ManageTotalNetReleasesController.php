@@ -204,14 +204,19 @@ class ManageTotalNetReleasesController extends Controller
             
             $zipfolderpath = $request->zipfolderpath;
             $zipfolderpath_fullpath = $request->zipfolderpath_fullpath;
-            $s3_links = Release::select('s3_path')->whereIn('id', $ids)->get(); 
+            $s3_links = Release::select('is_new','s3_path')->whereIn('id', $ids)->get(); 
            // print_r($s3_links);
             if($s3_links){
                 foreach($s3_links as $release){
                     // download 
                     //echo $release->s3_path;
-                    $s3filename = str_replace('https://s3-us-west-2.amazonaws.com/aspose.files/', '', $release->s3_path);
-                    $s3filename = str_replace('https://s3.us-west-2.amazonaws.com/aspose.files/', '', $release->s3_path);
+                    if($release->is_new){
+                        $s3filename = str_replace('https://s3.us-west-2.amazonaws.com/aspose.files/', '', $release->s3_path);
+                    }else{
+                        $s3filename = str_replace('https://s3-us-west-2.amazonaws.com/aspose.files/', '', $release->s3_path);
+                    }
+                   
+                    
                     $s3_file_info = pathinfo($release->s3_path);
                     $local_file_name = $s3_file_info['basename'];
                     $res = Storage::disk('public')->put($zipfolderpath.'/'.$local_file_name , Storage::disk('s3')->get($s3filename));
