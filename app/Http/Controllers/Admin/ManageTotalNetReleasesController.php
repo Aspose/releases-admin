@@ -211,6 +211,7 @@ class ManageTotalNetReleasesController extends Controller
                     // download 
                     //echo $release->s3_path;
                     $s3filename = str_replace('https://s3-us-west-2.amazonaws.com/aspose.files/', '', $release->s3_path);
+                    $s3filename = str_replace('https://s3.us-west-2.amazonaws.com/aspose.files/', '', $release->s3_path);
                     $s3_file_info = pathinfo($release->s3_path);
                     $local_file_name = $s3_file_info['basename'];
                     $res = Storage::disk('public')->put($zipfolderpath.'/'.$local_file_name , Storage::disk('s3')->get($s3filename));
