@@ -42,16 +42,10 @@ class ManageTotalNetReleasesController extends Controller
        // array_map( 'unlink', array_filter((array) glob($zipfolderpath_fullpath."/*") ) );
 
        if($family_name == 'java'){
-        $netrelease  = Release::where('product' , 'LIKE', '%/'.$family_name.'/%')
-        ->where('product' , '!=', '/total/'.$family_name.'/') // exclude total
-        ->where(function($query) {
-            $query->where('s3_path' , 'LIKE', '%zip%')
-               // ->orWhere('filename', 'LIKE', '%zip%')
-                ->orWhere('filename', 'LIKE', '%zip%');
-        })
-        ->groupBy('product')
-        ->orderBy('weight', 'desc')->get();
-       // $quries = DB::getQueryLog();
+        $netrelease = Release::select(DB::raw('t.*'))
+            ->from(DB::raw("(SELECT * FROM releases WHERE `product` LIKE '%/java/%' AND product != '/total/java/' AND filename LIKE '%zip%' ORDER BY weight DESC) t"))
+            ->groupBy('t.product')
+            ->get();
        }else{
         $netrelease  = Release::where('product' , 'LIKE', '%/'.$family_name.'/%')
         //->where('s3_path' , 'LIKE', '%.msi%')
