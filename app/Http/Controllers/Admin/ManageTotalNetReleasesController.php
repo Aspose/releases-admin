@@ -52,7 +52,7 @@ class ManageTotalNetReleasesController extends Controller
             //      DB::raw("( select * from releases  WHERE `product` LIKE '%/java/%' AND product != '/total/java/' AND filename LIKE '%zip%'  ORDER BY id DESC LIMIT 0,1) as last") 
             // );
 
-            $netrelease = DB::select( DB::raw("SELECT * FROM releases WHERE id IN (SELECT MAX(weight) FROM releases WHERE `product` LIKE '%/java/%' AND product != '/total/java/' AND filename LIKE '%zip%' GROUP BY product  ORDER BY weight DESC)") );
+            $netrelease = DB::select( DB::raw("SELECT * FROM releases WHERE id IN (SELECT MAX(id) FROM releases WHERE `product` LIKE '%/java/%' AND product != '/total/java/' AND filename LIKE '%zip%' GROUP BY product  ORDER BY weight DESC)") );
        }else{
         $netrelease  = Release::where('product' , 'LIKE', '%/'.$family_name.'/%')
         //->where('s3_path' , 'LIKE', '%.msi%')
