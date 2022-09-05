@@ -940,7 +940,8 @@ class UploadController extends Controller
                         //$signedurl =  $this->getPreSignedUrl($file_url_new, $Release->is_new);
                         $signedurl = $file_url;
                    }else{
-                        $file_url_new = str_replace('https://s3-us-west-2.amazonaws.com/aspose.files/', '', $file_url);
+                        $AWS_BUCKET = env('AWS_BUCKET');
+                        $file_url_new = str_replace('https://s3-us-west-2.amazonaws.com/'.$AWS_BUCKET.'/', '', $file_url);
                         $signedurl =  $this->getPreSignedUrl($file_url_new, $Release->is_new);
                    }
                    if($signedurl){
@@ -981,7 +982,8 @@ class UploadController extends Controller
             $AWS_ACCESS_KEY_ID = 'AKIAJ3IWQHR2VPPUU4AA';
             $AWS_SECRET_ACCESS_KEY = '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';
             $AWS_DEFAULT_REGION = 'us-west-2';
-            $AWS_BUCKET = 'aspose.files';
+           // $AWS_BUCKET = 'aspose.files';
+            $AWS_BUCKET = env('AWS_BUCKET');
         }else{
             $AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID');
             $AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY');
