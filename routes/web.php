@@ -96,8 +96,8 @@ Route::get('send-mail', function () {
         'body' => 'This is for testing email using smtp'
     ];
    
-   Mail::alwaysFrom('release@aspose.com');
-   $res =  Mail::to('fahad.adeel@aspose.com')->send(new \App\Mail\MyTestMail($details));
-    dd("Email is Sent." . $res . " --- ");
+   $res1 =  Mail::to('amjad.ali@goldevelopers.com')->send(new \App\Mail\MyTestMail($details));
+   $res2 =  Mail::to('fahad.adeel@aspose.com')->send(new \App\Mail\MyTestMail($details));
+    dd("Email is Sent res1 --- " . $res1 . " --- res2 " .$res2 . ' --- ');
 });
 
