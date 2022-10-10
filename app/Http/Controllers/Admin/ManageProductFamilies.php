@@ -131,7 +131,14 @@ class ManageProductFamilies extends Controller
         $filename_info = $file_path.'/'.$file_to_commit;
         Storage::put('/public/newproductfamily/content' . $filename_info, $content);
         $download_path = ( storage_path() . '/app/public/newproductfamily/content'.$filename_info);
-        $hugo_content_path = "content" . $file_path;
+
+        $MULTILINGUAL = env('MULTILINGUAL', false);
+        if($MULTILINGUAL){
+            $hugo_content_path = "content/en" . $file_path;
+        }else{
+            $hugo_content_path = "content" . $file_path;
+        }
+        
         //echo $hugo_content_path; exit;
         if (file_exists($download_path)) {
             
