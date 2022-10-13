@@ -59,7 +59,7 @@
     <div class="control-group">
         <span id="product-span" class="control-label">Product:</span>
         <div class="controls">
-            <input readonly name="product" type="text" maxlength="500" id="product" value="{{ $release->product }}" style="width:750px;" />
+            <input name="product" type="text" maxlength="500" id="product" value="{{ $release->product }}" style="width:750px;" />
         </div>
     </div>
 
