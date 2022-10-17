@@ -43,9 +43,17 @@ class ManageTotalNetReleasesController extends Controller
 
        if($family_name == 'java'){
             $netrelease = DB::select( DB::raw("SELECT n.* FROM releases n INNER JOIN ( SELECT product, MAX(date_added) AS date_added FROM releases WHERE `product` LIKE '%/java/%' AND product != '/total/java/' AND filename LIKE '%zip%' GROUP BY product ) AS max USING (product, date_added)") );
-       }else{
-        $netrelease  = Release::where('product' , 'LIKE', '%/'.$family_name.'/%')
-        //->where('s3_path' , 'LIKE', '%.msi%')
+       }else if($family_name == 'net'){
+        $netrelease_ini = DB::select( DB::raw("SELECT n.* FROM releases n 
+                    INNER JOIN ( SELECT product, MAX(date_added) 
+                    AS date_added FROM releases WHERE `product` LIKE '%/net/%' AND product != '/total/net/' AND ( filetitle LIKE '%dll%'  OR filetitle LIKE '%DLL%'  OR folder_link LIKE '%dll%' ) GROUP BY product ) 
+                    AS max USING (product, date_added)") 
+        );
+        foreach($netrelease_ini as $single){
+            $netrelease[$single->product] = $single;
+        }
+
+        /*$netrelease  = Release::where('product' , 'LIKE', '%/'.$family_name.'/%')
         ->where('product' , '!=', '/total/'.$family_name.'/') // exclude total
         ->where(function($query) {
             $query->where('filetitle' , 'LIKE', '%dll%')
@@ -53,8 +61,10 @@ class ManageTotalNetReleasesController extends Controller
                 ->orWhere('folder_link', 'LIKE', '%dll%');
         })
         ->groupBy('product')
-        ->orderBy('weight', 'desc')->get();
+        ->orderBy('weight', 'desc')->get();*/
        // $quries = DB::getQueryLog();
+       }else{
+        dd('add new block and query');
        }
         
   
