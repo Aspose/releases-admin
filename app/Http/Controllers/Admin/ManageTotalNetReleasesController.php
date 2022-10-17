@@ -221,9 +221,9 @@ class ManageTotalNetReleasesController extends Controller
                     // download 
                     //echo $release->s3_path;
                     if($release->is_new){
-                        $s3filename = str_replace('https://s3.us-west-2.amazonaws.com/aspose.files/', '', $release->s3_path);
+                        $s3filename = str_replace('https://s3.us-west-2.amazonaws.com/aspose.files', '', $release->s3_path);
                     }else{
-                        $s3filename = str_replace('https://s3-us-west-2.amazonaws.com/aspose.files/', '', $release->s3_path);
+                        $s3filename = str_replace('https://s3-us-west-2.amazonaws.com/aspose.files', '', $release->s3_path);
                     }
                    
                     
