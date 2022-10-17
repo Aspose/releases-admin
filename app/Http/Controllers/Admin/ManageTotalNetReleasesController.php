@@ -68,7 +68,7 @@ class ManageTotalNetReleasesController extends Controller
        }
         
   
-       dd($netrelease);
+       //dd($netrelease);
       
         $progress =false;
        /*if(!empty($request->get('generate')) && $request->get('generate') == 'true'){
