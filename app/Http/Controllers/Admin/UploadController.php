@@ -986,9 +986,9 @@ class UploadController extends Controller
 
         $expiryInMinutes = 60;
         if(!$is_new){
-            $AWS_ACCESS_KEY_ID = 'AKIAJ3IWQHR2VPPUU4AA';
-            $AWS_SECRET_ACCESS_KEY = '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';
-            $AWS_DEFAULT_REGION = 'us-west-2';
+            $AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID');
+            $AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY');
+            $AWS_DEFAULT_REGION = env('AWS_DEFAULT_REGION');
            // $AWS_BUCKET = 'aspose.files';
             $AWS_BUCKET = env('AWS_BUCKET');
         }else{

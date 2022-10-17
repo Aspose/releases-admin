@@ -145,66 +145,7 @@ class ManageTotalNetReleasesController extends Controller
             ->with('file',$fileName);
     }
 
-    /*public function createzip($zipfolderpath)
-    {
-        $path = ( storage_path() . '/app/public'. $zipfolderpath);
-        $zipfilename = "new-zip". time();
-        $zip_file = $path.'/'.$zipfilename.'.zip';
-        $zip = new \ZipArchive();
-        $zip->open($zip_file, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path));
-        foreach ($files as $name => $file)
-        {
-            // We're skipping all subfolders
-            if (!$file->isDir()) {
-                if( !stristr($name, '.DS_Store')){
-                $filePath     = $file->getRealPath();
-                $actual_file_name = basename($file);
-                $zip->addFile($filePath, $actual_file_name);
-                }
-            }
-        }
-        $zip->close();
-
-        echo $zip_file;  // new created zip file path
-
-        $AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID');
-        $AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY');
-        $AWS_DEFAULT_REGION = env('AWS_DEFAULT_REGION');
-        $AWS_BUCKET = env('AWS_BUCKET');
-
-        $s3filepath = date('y/m/d').'/'.$zipfilename.'.zip';
-        
-        $filesorcepath = "'$zip_file'";
-        $s3filepath = "'$s3filepath'";
-        $bucket = "'$AWS_BUCKET'";
-        $s3Key = "'$AWS_ACCESS_KEY_ID'";
-        $s3Secret = "'$AWS_SECRET_ACCESS_KEY'";
-
-        echo $filesorcepath;
-        echo "<br>";
-        echo $s3filepath;
-        echo "<br>";
-        echo $bucket;
-        echo "<br>";
-        echo $s3Key;
-        echo "<br>";
-        echo $s3Secret;
-
-        $public_path = getcwd();
-        $bash_script_path = str_replace('/public', '/.scripts/', $public_path );
-        chdir($bash_script_path);
-
-        echo "<hr> -----------";
-       // $output = shell_exec('./uploadzip.sh '.$filesorcepath.' '.$s3filepath.' '.$bucket.' '.$s3Key.' '.$s3Secret.' ');
-       // print_r($output);
-        echo "-------------- <hr> ";
-        chdir($public_path);
-    }*/
-
-
-
-
+    
     public function downloadandcompress(Request $request){
         if(!empty($request->ids) && !empty($request->newzipname)){
             $newzipname = $request->newzipname;
@@ -320,10 +261,7 @@ class ManageTotalNetReleasesController extends Controller
         if(!empty($request->srcfile) ){
             $zipfolderpath_fullpath = $request->zipfolderpath_fullpath;
             if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
-                // $AWS_ACCESS_KEY_ID = "AKIATVR5O2PZLLT7UT6B";
-                // $AWS_SECRET_ACCESS_KEY = "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";
-                // $AWS_DEFAULT_REGION = "us-west-2";
-                // $AWS_BUCKET = "releases-qa.aspose.com";
+                
                 $AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID');
                 $AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY');
                 $AWS_DEFAULT_REGION = env('AWS_DEFAULT_REGION');
