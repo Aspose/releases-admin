@@ -85,16 +85,16 @@
     <div class="control-group">
         <span id="title-span" class="control-label">Title </span>
         <div class="controls">
-            <input readonly name="title" type="text" maxlength="100" id="title" value="{{ $release->filetitle }}" style="width:450px;" />
+            <input  name="filetitle" type="text" maxlength="100" id="filetitle" value="{{ $release->filetitle }}" style="width:450px;" />
             <span  style="color:Red;visibility:hidden;">* Required</span>
-            <p  style="color:Red;"> {{ $errors->first('title') }} </p>
+            <p  style="color:Red;"> {{ $errors->first('filetitle') }} </p>
         </div>
     </div>
 
     <div class="control-group">
         <span id="description-span" class="control-label">Short Description </span>
         <div class="controls">
-            <input readonly name="description" type="text" maxlength="500" id="description" value="{{ $release->description }}" style="width:450px;" />
+            <input  name="description" type="text" maxlength="500" id="description" value="{{ $release->description }}" style="width:450px;" />
             <p  style="color:Red;"> {{ $errors->first('description') }} </span>
         </div>
        
@@ -112,8 +112,8 @@
     <div class="control-group">
         <span id="releaseurl-span" class="control-label">Release Notes Url: (Public Wiki) </span>
         <div class="controls">
-            <input readonly name="releaseurl" type="text" maxlength="200" id="releaseurl" value="{{ $release->release_notes_url }}" style="width:450px;" />
-            <p  style="color:Red;"> {{ $errors->first('releaseurl') }} </span>
+            <input  name="release_notes_url" type="text" maxlength="200" id="release_notes_url" value="{{ $release->release_notes_url }}" style="width:450px;" />
+            <p  style="color:Red;"> {{ $errors->first('release_notes_url') }} </span>
         </div>
         
     </div>

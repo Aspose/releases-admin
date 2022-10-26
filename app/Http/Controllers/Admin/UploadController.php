@@ -215,9 +215,9 @@ class UploadController extends Controller
     {
         $edit_id = $request->edit_id;
         $release = Release::find($edit_id);
-        // $release->filetitle = trim($request->filetitle);
-        // $release->description = trim($request->description);
-        // $release->release_notes_url = trim($request->release_notes_url);
+           $release->filetitle = trim($request->filetitle);
+           $release->description = trim($request->description);
+           $release->release_notes_url = trim($request->release_notes_url);
            $release->date_added = trim($request->date_added);
            $release->s3_path = trim($request->s3_path);
            $release->filesize = trim($request->filesize);
