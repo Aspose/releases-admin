@@ -50,6 +50,7 @@
                                 <th>filename</th>
                                 <th>filetitle</th>
                                 <th>filesize</th>
+                                <th>Date Added</th>
 
                             </tr>
                         </thead>
@@ -64,6 +65,7 @@
                                 <td>{{ $single->filename }}</td>
                                 <td>{{ $single->filetitle }}</td>
                                 <td>{{ $single->filesize }}</td>
+                                <td>{{ $single->date_added }}</td>
                             </tr>
                             @empty
                             <tr>

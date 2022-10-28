@@ -63,6 +63,9 @@ class ManageTotalNetReleasesController extends Controller
         ->groupBy('product')
         ->orderBy('weight', 'desc')->get();*/
        // $quries = DB::getQueryLog();
+       }else if($family_name == 'cpp'){
+        $netrelease = DB::select( DB::raw("SELECT n.* FROM releases n INNER JOIN ( SELECT product, MAX(date_added) AS date_added FROM releases WHERE `product` LIKE '%/cpp/%' AND product != '/total/cpp/' AND filename LIKE '%zip%' GROUP BY product ) AS max USING (product, date_added)") );
+
        }else{
         dd('add new block and query');
        }
