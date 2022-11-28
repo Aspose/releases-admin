@@ -25,3 +25,4 @@ Homestead.json
 .scripts/*
 .scripts/deploy.sh
 /.scripts/*.sh
+service-account.json
