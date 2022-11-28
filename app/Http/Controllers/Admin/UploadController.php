@@ -161,8 +161,18 @@ class UploadController extends Controller
             if(!empty($upload_info)){
                 //echo "<pre>"; print_r($upload_info); echo "</pre>"; 
                 $mdfile =$this->generate_mdfile($request->all(), $upload_info);
-                //echo "<pre>"; print_r($mdfile); echo "</pre>"; exit;
-                $res = $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
+
+                $spreadsheetId = "";
+                $is_multilingual = env('MULTILINGUAL', false);
+                $spreadsheetId = env('SPREADSHEETID', '');
+                $admin_email = Auth::user()->email;
+                if( !empty($spreadsheetId) && $is_multilingual && $admin_email == "fahad.adeel@aspose.com"){
+                    $transalted_md_files = $this->AddReleaseToSpreadsheetAndTranslate($mdfile, $host);
+                    $res = $this->AddTranslatedFilesToRepo($transalted_md_files, $host );
+                }else{
+                    $res = $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
+                }
+
                 $this->addlogentry($mdfile['last_insert_update_id'], $res);
                 return redirect('/admin/ventures/file/manage-files/' . $reload_filter)->with('success','Published Successfully.');
             }else{
@@ -573,8 +583,74 @@ class UploadController extends Controller
             'last_insert_update_id' => $last_insert_update_id,
             'file_path'=> $f_product.$f_folder,
             'file_name' => $title_slug,
+            'sheet_title' => "Downloads ---" .$title_new_tag."-". $title_slug ,
+            'sheet_description' => $description,
+            'sheet_intro_text' => $description,
+            'sheet_folder_name' => $title,
+            'sheet_folder_link' => $folder_link,
             'data'=> $md_file_content
       );
+    }
+
+    public function AddTranslatedFilesToRepo($transalted_md_files, $host){
+        $last_key = count($transalted_md_files) -1;
+        $commit_files = "no";
+        $clear_folder = "no";
+        $output = "";
+        foreach($transalted_md_files as $key => $download_path){
+            if (file_exists($download_path)) {
+                if ($key == $last_key) { // last iternation
+                    $commit_files = "yes";
+                    $clear_folder = "no";
+                } else if ($key == 0) { //first iteration
+                    $commit_files = "no";
+                    $clear_folder = "yes";
+                }else{ // others
+                    $commit_files = "no";
+                    $clear_folder = "no";
+                }
+                $hugo_content_path = strstr($download_path, 'content/');
+                $initial_file_name_array = explode("/", $download_path); 
+                $initial_file_name_only = end($initial_file_name_array); 
+                $file_to_commit = $initial_file_name_only;
+                $release_parent_folder_path =  preg_replace('#\/[^/]*$#', '', $hugo_content_path);
+                //echo $download_path . " >> " . $hugo_content_path . " >> " . $release_parent_folder_path .  " >> " . $file_to_commit  . "<br>";
+
+                /* ===================== COMMIT FILE ============= */
+
+                    $local_clone_repo_path = env('LOCAL_REPO_CLONE_PATH', '');
+                    if(!empty($local_clone_repo_path)){
+
+                        $GIT_USERNAME = env('GIT_USERNAME', '');
+                        $GIT_TOKEN = env('GIT_TOKEN', '');
+                        $GIT_REPO = "";
+                        $GIT_REPO = env('GIT_REPO', '');
+                        
+                        if(!empty($GIT_USERNAME) && !empty($GIT_TOKEN) && !empty($GIT_REPO) ){
+                            
+                            $repo_url = "https://$GIT_USERNAME:$GIT_TOKEN@github.com/$GIT_REPO";
+                            $posted_by_email = Auth::user()->email ;
+                            $commit_msg = "'new Release added by $posted_by_email '";
+                            $download_path = "'$download_path'";
+                            $hugo_content_path = "'$hugo_content_path'";
+                            $file_to_commit = "'$file_to_commit'";
+                            if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
+                    
+                                $public_path = getcwd();
+                                $bash_script_path = str_replace('/public', '/.scripts/', $public_path );
+                                chdir($bash_script_path);
+                                $output .= shell_exec('./addmdfilemutilang.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' '.$commit_msg.'  '.$release_parent_folder_path.' '.$commit_files.' '.$clear_folder.' ');
+                                chdir($public_path);
+                        
+                            }else{ //prod/stage
+                                $output .= shell_exec('/var/www/scripts/addmdfilemutilang.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' '.$commit_msg.'  '.$release_parent_folder_path.' '.$commit_files.' '.$clear_folder.' ');
+                            }    
+                        }
+                    }
+                    /* ===================== /COMMIT FILE ============= */
+            }
+        }
+        return $output;
     }
 
     public function forceDownloadMdFile( $content, $filename, $file_path, $host) {
@@ -1319,6 +1395,468 @@ class UploadController extends Controller
         ]);
        }
     }
+
+
+
+    public function AddReleaseToSpreadsheetAndTranslate($mdfile, $host ){
+       
+        $translated_file_path = array();
+        $spreadsheetId = env('SPREADSHEETID', '1DmLTPtCbRb3GWpHlC2GkxGEpiaj4Wg_aTd_9EkAG-3o');
+        
+        // clear exsiing data in sheet
+        $this->clearsheet($spreadsheetId);
+
+        /*
+        * We need to get a Google_Client object first to handle auth and api calls, etc.
+        */
+        $configJson = base_path().'/service-account.json';
+        $client = new \Google_Client();
+        $client->setApplicationName('Releases Transaltion App');
+        $client->setScopes([\Google_Service_Sheets::SPREADSHEETS]);
+        $client->setAccessType('offline');
+        $client->setAuthConfig($configJson);
+        /*
+        * With the Google_Client we can get a Google_Service_Sheets service object to interact with sheets
+        */
+        $sheets = new \Google_Service_Sheets($client);
+
+
+        
+        $range = 'A1:M';
+        $rows = $sheets->spreadsheets_values->get($spreadsheetId, $range, ['majorDimension' => 'ROWS']);
+        $transalted_data = $rows['values'];
+
+        if(count($transalted_data)){
+            $Count = count($transalted_data);
+            $row = $Count + 1;
+    
+            $Final_Array_To_Csv = array();
+            
+            $intro_text = array( 
+                $mdfile['sheet_folder_link'], 
+                "intro_text", 
+                $mdfile['sheet_intro_text'], 
+                '=GOOGLETRANSLATE(C'.$row.',"en","de")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","el")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","es")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","fr")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","id")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","ja")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","pt")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","ru")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","tr")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","zh")',
+            );
+    
+            array_push($Final_Array_To_Csv, $intro_text);
+            $row = $row + 1; // next row
+    
+            $folder_name = array( 
+                $mdfile['sheet_folder_link'], 
+                "folder_name",  
+                $mdfile['sheet_folder_name'], 
+                '=GOOGLETRANSLATE(C'.$row.',"en","de")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","el")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","es")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","fr")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","id")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","ja")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","pt")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","ru")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","tr")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","zh")',
+            );
+    
+            array_push($Final_Array_To_Csv, $folder_name);
+            $row = $row + 1; // next row
+    
+            $title = array( 
+                $mdfile['sheet_folder_link'], 
+                "title",  
+                $mdfile['sheet_title'],  
+                '=GOOGLETRANSLATE(C'.$row.',"en","de")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","el")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","es")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","fr")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","id")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","ja")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","pt")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","ru")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","tr")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","zh")',
+            );
+    
+            array_push($Final_Array_To_Csv, $title);
+            $valueRange = new \Google_Service_Sheets_ValueRange();
+            $valueRange->setValues($Final_Array_To_Csv);
+            $range = 'Sheet1!A1:A';
+            $conf = ["valueInputOption" => "USER_ENTERED"];
+            $sheets->spreadsheets_values->append($spreadsheetId, $range, $valueRange, $conf);
+    
+            $translated_file_path = $this->ReadSheetData($mdfile, $spreadsheetId);
+        }
+        return $translated_file_path;
+
+    }
+
+    public function debuggingsheet(){
+        $host ="admindemo.groupdocs";
+        $transalted_md_files = $this->testingcommit();
+        $res = $this->AddTranslatedFilesToRepo($transalted_md_files, $host );
+        echo $res;
+    }
+
+
+    public function testingcommit(){
+        $translated_file_path = array();
+        $spreadsheetId = env('SPREADSHEETID', '1DmLTPtCbRb3GWpHlC2GkxGEpiaj4Wg_aTd_9EkAG-3o');
+        $this->clearsheet($spreadsheetId);
+        /*
+        * We need to get a Google_Client object first to handle auth and api calls, etc.
+        */
+        $configJson = base_path().'/service-account.json';
+        $client = new \Google_Client();
+        $client->setApplicationName('Releases Transaltion App');
+        $client->setScopes([\Google_Service_Sheets::SPREADSHEETS]);
+        $client->setAccessType('offline');
+        $client->setAuthConfig($configJson);
+        /*
+        * With the Google_Client we can get a Google_Service_Sheets service object to interact with sheets
+        */
+        $sheets = new \Google_Service_Sheets($client);
+
+
+        
+        $range = 'A1:M';
+        $rows = $sheets->spreadsheets_values->get($spreadsheetId, $range, ['majorDimension' => 'ROWS']);
+        $transalted_data = $rows['values'];
+
+$mdfile =  array(
+'sheet_title'=> 'Downloads ---New Releases-test-new-release',
+'sheet_description' => 'test new release Short Description',
+'sheet_intro_text' => 'test new release Short Description',
+'sheet_folder_name' => 'test new release',
+'sheet_folder_link' => '/classification/net/new-releases/test-new-release/',
+'data' => '---
+
+title: "Downloads ---New Releases-test-new-release-level1"
+description: " "
+keywords: ""
+page_type: single_release_page
+folder_link: "/total/net/new-releases/test-new-release-level1/"
+folder_name: "test new release level1"
+download_link: "/total/net/new-releases/test-new-release-level1/65e8c484ca1d819ba2e6888956bfd03c-9-1688"
+download_text: "Download"
+intro_text: "Short Description test new release level1"
+image_link: "/resources/img/zip-icon.png"
+download_count: " 15/11/2022 Downloads: 1  Views: 1 "
+file_size: "File Size: 127.91MB"
+parent_path: "total/net"
+section_parent_path: "total/net"
+
+tags: "test"
+release_notes_url: "test"
+weight: 14
+
+---
+
+{{<< Releases/ReleasesWapper >>}}
+    {{<< Releases/ReleasesHeading H2txt="test new release level1" imagelink="/resources/img/zip-icon.png">>}}
+    {{<< Releases/ReleasesButtons >>}}
+    {{<< Releases/ReleasesSingleButtons text="Download" link="/total/net/new-releases/test-new-release-level1/65e8c484ca1d819ba2e6888956bfd03c-9-1688" >>}}
+    {{<< Releases/ReleasesSingleButtons text="Support Forum" link="https://forum.aspose.com/c/total" >>}}
+    {{<< Releases/ReleasesButtons >>}}
+    {{<< Releases/ReleasesFileArea >>}}
+    {{<< Releases/ReleasesHeading h4txt="File Details">>}}
+    {{<< Releases/ReleasesDetailsUl >>}}
+        {{<< Common/li >>}} Downloads: {{<< /Common/li >>}}
+        {{<< Common/li class="downloadcount" id="dwn-update-65e8c484ca1d819ba2e6888956bfd03c-9-1688" >>}} 1 {{<< /Common/li >>}}
+        {{<< Common/li >>}} File Size: {{<< /Common/li >>}}
+        {{<< Common/li id="size-update-65e8c484ca1d819ba2e6888956bfd03c-9-1688" >>}} 127.91MB {{<< /Common/li >>}}
+
+        {{<< Common/li >>}} Date Added: {{<< /Common/li >>}}
+        {{<< Common/li id="added-update-65e8c484ca1d819ba2e6888956bfd03c-9-1688" >>}}15/11/2022 {{<< /Common/li >>}}
+    {{<< /Releases/ReleasesDetailsUl >>}}
+
+    {{<< Releases/ReleasesFileFeatures >>}}
+        <h4>Release Notes</h4><div><a href="test">test</a></div>
+    {{<< /Releases/ReleasesFileFeatures >>}}
+    {{<< Releases/ReleasesFileFeatures >>}}
+        <h4>Description</h4><div class="HTMLDescription">Short Description test new release level1</div>
+    {{<< /Releases/ReleasesFileFeatures >>}}
+    {{<< /Releases/ReleasesFileArea >>}}
+{{<< /Releases/ReleasesWapper >>}}'
+);
+        
+        if(count($transalted_data)){
+            $Count = count($transalted_data);
+            $row = $Count + 1;
+    
+            $Final_Array_To_Csv = array();
+            
+            $intro_text = array( 
+                $mdfile['sheet_folder_link'], 
+                "intro_text", 
+                $mdfile['sheet_intro_text'], 
+                '=GOOGLETRANSLATE(C'.$row.',"en","de")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","el")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","es")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","fr")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","id")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","ja")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","pt")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","ru")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","tr")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","zh")',
+            );
+    
+            array_push($Final_Array_To_Csv, $intro_text);
+            $row = $row + 1; // next row
+    
+            $folder_name = array( 
+                $mdfile['sheet_folder_link'], 
+                "folder_name",  
+                $mdfile['sheet_folder_name'], 
+                '=GOOGLETRANSLATE(C'.$row.',"en","de")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","el")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","es")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","fr")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","id")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","ja")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","pt")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","ru")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","tr")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","zh")',
+            );
+    
+            array_push($Final_Array_To_Csv, $folder_name);
+            $row = $row + 1; // next row
+    
+            $title = array( 
+                $mdfile['sheet_folder_link'], 
+                "title",  
+                $mdfile['sheet_title'],  
+                '=GOOGLETRANSLATE(C'.$row.',"en","de")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","el")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","es")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","fr")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","id")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","ja")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","pt")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","ru")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","tr")',
+                '=GOOGLETRANSLATE(C'.$row.',"en","zh")',
+            );
+    
+            array_push($Final_Array_To_Csv, $title);
+            $valueRange = new \Google_Service_Sheets_ValueRange();
+            $valueRange->setValues($Final_Array_To_Csv);
+            $range = 'Sheet1!A1:A';
+            $conf = ["valueInputOption" => "USER_ENTERED"];
+            $sheets->spreadsheets_values->append($spreadsheetId, $range, $valueRange, $conf);
+    
+            $translated_file_path = $this->ReadSheetData($mdfile, $spreadsheetId);
+        }
+        return $translated_file_path;
+    }
+
+
+    public function clearsheet($spreadsheetId){
+
+        /*
+        * We need to get a Google_Client object first to handle auth and api calls, etc.
+        */
+        $configJson = base_path().'/service-account.json';
+        $client = new \Google_Client();
+        $client->setApplicationName('Releases Transaltion App');
+        $client->setScopes([\Google_Service_Sheets::SPREADSHEETS]);
+        $client->setAccessType('offline');
+        $client->setAuthConfig($configJson);
+        /*
+        * With the Google_Client we can get a Google_Service_Sheets service object to interact with sheets
+        */
+        $sheets = new \Google_Service_Sheets($client);
+        $range_delete = 'A2:M'; 
+        $requestBody = new \Google_Service_Sheets_ClearValuesRequest();
+        $response = $sheets->spreadsheets_values->clear($spreadsheetId, $range_delete, $requestBody);
+
+    }
+
+    public function ReadSheetData($mdfile, $spreadsheetId){
+
+        $response = array();
+        $content_path = ( storage_path() . '/app/public/mdfiles/content');
+
+        $target_languages_array = array("de", "el", "en", "es", "fr", "id", "ja", "pt", "ru", "tr", "zh");
+        $source_lanaguage = "en";
+        /*
+        * We need to get a Google_Client object first to handle auth and api calls, etc.
+        */
+        $configJson = base_path().'/service-account.json';
+        $client = new \Google_Client();
+        $client->setApplicationName('Releases Transaltion App');
+        $client->setScopes([\Google_Service_Sheets::SPREADSHEETS]);
+        $client->setAccessType('offline');
+        $client->setAuthConfig($configJson);
+        /*
+        * With the Google_Client we can get a Google_Service_Sheets service object to interact with sheets
+        */
+        $sheets = new \Google_Service_Sheets($client);
+
+        $release_common_pre_translated_array = $this->parse_csv_file(base_path().'/csv/common.csv');
+        $final_release_common_pre_translated_array = array();
+        foreach($release_common_pre_translated_array as $key=>$single){
+            $final_release_common_pre_translated_array[$single['text']] = $single;
+        }
+
+        $range = 'A1:M';
+        $rows = $sheets->spreadsheets_values->get($spreadsheetId, $range, ['majorDimension' => 'ROWS']);
+        $transalted_data = $rows['values'];
+        $transalted_data_arranged = $this->arrange_sheet_data($transalted_data);
+   
+        if(!empty($transalted_data_arranged)){
+            foreach($target_languages_array as $target_lanaguage ){
+
+                foreach($transalted_data_arranged as $keyfilepath=>$translatedcontent){
+                
+                    $md_filepath = $keyfilepath;
+                    $actual_file_path = rtrim($md_filepath,"/");
+                    $actual_file_path = ltrim($actual_file_path,"/");
+                    $en_mdfile = $content_path . "/". $source_lanaguage ."/" . $actual_file_path. ".md";
+                    $en_mdfile = str_replace("//", '/', $en_mdfile);
+                    
+                    $segments = explode('/', trim(parse_url($actual_file_path, PHP_URL_PATH), '/'));
+                    $numSegments = count($segments);
+                    $filename = $segments[$numSegments - 1];
+                    $filepath = implode("/", $segments);
+                    $plorp = substr(strrchr($filepath,'/'), 1);
+                    $filepath = substr($filepath, 0, - strlen($plorp)); 
+
+                    $target_file_src = $content_path . "/". $target_lanaguage . '/' . $filepath . ''.  $filename. ".md"; 
+                    $target_file_src = str_replace("//", '/', $target_file_src);
+
+                            
+                    //if (!file_exists( $target_file_src )) {
+
+                        $contents = $mdfile['data'];
+                        if( $target_lanaguage != 'en'){ // transalation in case of english
+
+                            if( isset($translatedcontent['title']) && !empty($translatedcontent['title']['text'])  && strlen(trim($translatedcontent['title']['text']))  >=4 ){
+                                $title_text_translated = $translatedcontent['title'][$target_lanaguage];
+                                $pattern = '#^title:.*"(.*)"#m';
+                                $replacement = 'title: "'.$title_text_translated.'"';
+                                $contents =  preg_replace($pattern, $replacement, $contents);
+                            }
+
+                            if( isset($translatedcontent['intro_text']) && !empty($translatedcontent['intro_text']['text']) && strlen(trim($translatedcontent['intro_text']['text']) ) >=4){
+                                $intro_text_translated = $translatedcontent['intro_text'][$target_lanaguage];
+                                $pattern = '#^intro_text: "(.*)"$#mi';
+                                $replacement = 'intro_text: "'.$intro_text_translated.'"';
+                                $contents =  preg_replace($pattern, $replacement, $contents);
+                            }
+                        
+                            if( isset($translatedcontent['folder_name']) && !empty($translatedcontent['folder_name']['text']) && strlen(trim($translatedcontent['folder_name']['text']) ) >=4){
+                                $folder_name_text_translated = $translatedcontent['folder_name'][$target_lanaguage];
+                                $pattern = '#^folder_name: "(.*)"$#m';
+                                $replacement = 'folder_name: "'.$folder_name_text_translated.'"';
+                                $contents =  preg_replace($pattern, $replacement, $contents);
+
+                                $folder_name_text_translated = $translatedcontent['folder_name'][$target_lanaguage];
+                                $pattern = '#H2txt="(.*?)"#';
+                                $replacement = 'H2txt="'.$folder_name_text_translated.'"';
+                                $contents =  preg_replace($pattern, $replacement, $contents);
+                            }
+
+                            if( isset($translatedcontent['intro_text']) && !empty($translatedcontent['intro_text']['text']) && strlen(trim($translatedcontent['intro_text']['text']) ) >=4 ){
+                                $description_text_translated = $translatedcontent['intro_text'][$target_lanaguage];
+                                $pattern = '#<div class="HTMLDescription">(.*)</div>#';
+                                $replacement = '<div class="HTMLDescription">'.$description_text_translated.'</div>';
+                                $contents =  preg_replace($pattern, $replacement, $contents);
+                            }
+
+                            foreach($final_release_common_pre_translated_array as $keypattern=>$common){
+                                $translated_replacemnt = $common[$target_lanaguage];
+                                if( $keypattern == 'Description'){
+                                    $contents = preg_replace("#<h4>Description</h4>#",  "<h4>$translated_replacemnt</h4>" , $contents);
+                                } else if( $keypattern == 'File Size'){
+                                    $contents = preg_replace("#File Size: {{#",  "$translated_replacemnt: {{" , $contents);
+                                }else{
+                                    $contents = preg_replace("/$keypattern/",  $translated_replacemnt, $contents);
+                                }
+                            }
+                        }
+
+                        if (!file_exists( $content_path . "/". $target_lanaguage . '/' . $filepath )) { // folderm not exists
+                            mkdir($content_path . "/". $target_lanaguage . '/' . $filepath, 0755, true);
+                        }
+                        touch($target_file_src);
+                        file_put_contents($target_file_src, $contents);
+                        $response[] = $target_file_src;
+                    //}
+                }
+            }
+        }
+
+
+        return $response; // return paths of translated file
+    }
+
+    public function arrange_sheet_data($transalted_data){
+        $cols = array_shift( $transalted_data );
+        $new_offersvalues = array();
+        $new_offersvalues_final = array();
+        foreach( $transalted_data as $k=>$v )
+        {
+            $new_offersvalues[ $k ] = array();
+    
+            foreach( $v as $k2=>$v2 )
+            {
+                $new_offersvalues[ $k ][ $cols[ $k2 ] ] = $v2;
+            }
+    
+         unset( $transalted_data[ $k ] );
+        }
+    
+    
+        if(!empty($new_offersvalues)){
+          foreach($new_offersvalues as $target_lanaguage ){
+            $new_offersvalues_final[$target_lanaguage['path']][$target_lanaguage['lable']] = $target_lanaguage;
+          }
+        }
+        
+    
+        return $new_offersvalues_final;
+    }
+
+    public function parse_csv_file($csvfile) {
+        $csv = Array();
+        $rowcount = 0;
+        if (($handle = fopen($csvfile, "r")) !== FALSE) {
+            $max_line_length = defined('MAX_LINE_LENGTH') ? MAX_LINE_LENGTH : 10000;
+            $header = fgetcsv($handle, $max_line_length);
+            $header_colcount = count($header);
+            while (($row = fgetcsv($handle, $max_line_length)) !== FALSE) {
+                $row_colcount = count($row);
+                if ($row_colcount == $header_colcount) {
+                    $entry = array_combine($header, $row);
+                    $csv[] = $entry;
+                }
+                else {
+                    //error_log("csvreader: Invalid number of columns at line " . ($rowcount + 2) . " (row " . ($rowcount + 1) . "). Expected=$header_colcount Got=$row_colcount");
+                    return null;
+                }
+                $rowcount++;
+            }
+            //echo "Totally $rowcount rows found\n";
+            fclose($handle);
+        }
+        else {
+            //error_log("csvreader: Could not read CSV \"$csvfile\"");
+            return null;
+        }
+        return $csv;
+    }
+    
 }
 //Examples
 //New Releases
