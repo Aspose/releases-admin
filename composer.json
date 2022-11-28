@@ -8,6 +8,7 @@
         "php": ">=7.2.5",
         "facade/ignition": "^2.3.6",
         "fruitcake/laravel-cors": "^1.0",
+        "google/apiclient": "^2.12",
         "jumbojett/openid-connect-php": "^0.9.5",
         "laracasts/flash": "^3.1",
         "laravel/framework": "^8.0",
@@ -16,8 +17,8 @@
         "laravel/ui": "^3.0",
         "laravelcollective/html": "^6.0",
         "league/flysystem-aws-s3-v3": "^1.0",
-        "tapp/laravel-uppy-s3-multipart-upload": "^0.3.4",
-        "nunomaduro/collision": "^5.0"
+        "nunomaduro/collision": "^5.0",
+        "tapp/laravel-uppy-s3-multipart-upload": "^0.3.4"
     },
     "require-dev": {
         "filp/whoops": "~2.0",
