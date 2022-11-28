@@ -1502,8 +1502,10 @@ class UploadController extends Controller
     public function debuggingsheet(){
         $host ="admindemo.groupdocs";
         $transalted_md_files = $this->testingcommit();
-        $res = $this->AddTranslatedFilesToRepo($transalted_md_files, $host );
-        echo $res;
+        echo "file content added to sheet";
+        exit;
+        //$res = $this->AddTranslatedFilesToRepo($transalted_md_files, $host );
+        //echo $res;
     }
 
 
