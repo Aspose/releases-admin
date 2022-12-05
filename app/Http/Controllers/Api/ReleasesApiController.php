@@ -60,7 +60,7 @@ class ReleasesApiController extends Controller
                 $jsonresponse[$singlerelase->etag_id] = array(
                     'download_count' => $singlerelase->download_count,
                     'view_count' => $singlerelase->view_count,
-                    'date_added' => date('F d,Y', strtotime($singlerelase->date_added)),
+                    'date_added' => date('F d, Y', strtotime($singlerelase->date_added)),
                     //'posted_by' => $singlerelase->posted_by,
                     //'filesize' => $singlerelase->filesize,
                 );
