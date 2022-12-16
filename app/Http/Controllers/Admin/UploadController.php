@@ -634,6 +634,9 @@ class UploadController extends Controller
                             $download_path = "'$download_path'";
                             $hugo_content_path = "'$hugo_content_path'";
                             $file_to_commit = "'$file_to_commit'";
+                            $release_parent_folder_path = "'$release_parent_folder_path'";
+                            $commit_files = "'$commit_files'";
+                            $clear_folder = "'$clear_folder'";
                             if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
                     
                                 $public_path = getcwd();
