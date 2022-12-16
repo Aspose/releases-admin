@@ -596,7 +596,7 @@ class UploadController extends Controller
         $last_key = count($transalted_md_files) -1;
         $commit_files = "no";
         $clear_folder = "no";
-        $output = "";
+        $output = " l1 --- ";
         foreach($transalted_md_files as $key => $download_path){
             if (file_exists($download_path)) {
                 if ($key == $last_key) { // last iternation
@@ -643,7 +643,9 @@ class UploadController extends Controller
                                 chdir($public_path);
                         
                             }else{ //prod/stage
+                                $output .= " before file run";
                                 $output .= shell_exec('/var/www/scripts/addmdfilemutilang.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' '.$commit_msg.'  '.$release_parent_folder_path.' '.$commit_files.' '.$clear_folder.' ');
+                                $output .= " After file run";
                             }    
                         }
                     }
