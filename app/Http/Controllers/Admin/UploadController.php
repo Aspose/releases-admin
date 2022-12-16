@@ -639,13 +639,17 @@ class UploadController extends Controller
                                 $public_path = getcwd();
                                 $bash_script_path = str_replace('/public', '/.scripts/', $public_path );
                                 chdir($bash_script_path);
+                                //$output .= " ========= before file run ========= ";
+                                $output .= "  ======== addmdfilemutilang.sh $download_path $hugo_content_path $file_to_commit $local_clone_repo_path $repo_url $commit_msg $release_parent_folder_path $commit_files $clear_folder =====/===== ";
                                 $output .= shell_exec('./addmdfilemutilang.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' '.$commit_msg.'  '.$release_parent_folder_path.' '.$commit_files.' '.$clear_folder.' ');
+                                //$output .= " ========= After file run ========== ";
                                 chdir($public_path);
                         
                             }else{ //prod/stage
-                                $output .= " before file run";
+                                //$output .= " before file run";
+                                $output .= " ========= /var/www/scripts/addmdfilemutilang.sh $download_path $hugo_content_path $file_to_commit $local_clone_repo_path $repo_url $commit_msg $release_parent_folder_path $commit_files $clear_folder =====/===== ";
                                 $output .= shell_exec('/var/www/scripts/addmdfilemutilang.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' '.$commit_msg.'  '.$release_parent_folder_path.' '.$commit_files.' '.$clear_folder.' ');
-                                $output .= " After file run";
+                                //$output .= " After file run";
                             }    
                         }
                     }
