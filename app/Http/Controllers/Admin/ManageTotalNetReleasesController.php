@@ -30,6 +30,7 @@ class ManageTotalNetReleasesController extends Controller
     {
         
         $family_name = "net";
+        $new_zip_file_name = "";
         if(!empty($request->get('family'))){
             $family_name = $request->get('family');
 
@@ -42,8 +43,10 @@ class ManageTotalNetReleasesController extends Controller
        // array_map( 'unlink', array_filter((array) glob($zipfolderpath_fullpath."/*") ) );
 
        if($family_name == 'java'){
+            $new_zip_file_name = "Aspose.Total_for_Java";
             $netrelease = DB::select( DB::raw("SELECT n.* FROM releases n INNER JOIN ( SELECT product, MAX(date_added) AS date_added FROM releases WHERE `product` LIKE '%/java/%' AND product != '/total/java/' AND filename LIKE '%zip%' GROUP BY product ) AS max USING (product, date_added)") );
        }else if($family_name == 'net'){
+        $new_zip_file_name = "Aspose.Total_dll_only";
         $netrelease_ini = DB::select( DB::raw("SELECT n.* FROM releases n 
                     INNER JOIN ( SELECT product, MAX(date_added) 
                     AS date_added FROM releases WHERE `product` LIKE '%/net/%' AND product != '/total/net/' AND ( filetitle LIKE '%dll%'  OR filetitle LIKE '%DLL%'  OR folder_link LIKE '%dll%' ) GROUP BY product ) 
@@ -65,7 +68,7 @@ class ManageTotalNetReleasesController extends Controller
        // $quries = DB::getQueryLog();
        }else if($family_name == 'cpp'){
         $netrelease = DB::select( DB::raw("SELECT n.* FROM releases n INNER JOIN ( SELECT product, MAX(date_added) AS date_added FROM releases WHERE `product` LIKE '%/cpp/%' AND product != '/total/cpp/' AND filename LIKE '%zip%' GROUP BY product ) AS max USING (product, date_added)") );
-
+        $new_zip_file_name = "Aspose.Total_for_cpp";
        }else{
         dd('add new block and query');
        }
@@ -97,7 +100,7 @@ class ManageTotalNetReleasesController extends Controller
        }*/
        $family_name = ucfirst($family_name);
         $title = "Manage Total.$family_name Release";
-        return view('admin.totalnetrelease.index', compact('title', 'netrelease', 'progress' , 'zipfolderpath_fullpath', 'zipfolderpath'));
+        return view('admin.totalnetrelease.index', compact('title', 'netrelease', 'progress' , 'zipfolderpath_fullpath', 'zipfolderpath', 'new_zip_file_name'));
     }
 
 
