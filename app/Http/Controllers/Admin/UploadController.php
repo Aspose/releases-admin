@@ -166,7 +166,7 @@ class UploadController extends Controller
                 $is_multilingual = env('MULTILINGUAL', false);
                 $spreadsheetId = env('SPREADSHEETID', '');
                 $admin_email = Auth::user()->email;
-                if( !empty($spreadsheetId) && $is_multilingual && $admin_email == "fahad.adeel@aspose.com"){
+                if( !empty($spreadsheetId) && $is_multilingual ){
                     $transalted_md_files = $this->AddReleaseToSpreadsheetAndTranslate($mdfile, $host);
                     $res = $this->AddTranslatedFilesToRepo($transalted_md_files, $host );
                 }else{
@@ -1410,8 +1410,10 @@ class UploadController extends Controller
     public function AddReleaseToSpreadsheetAndTranslate($mdfile, $host ){
        
         $translated_file_path = array();
-        $spreadsheetId = env('SPREADSHEETID', '1DmLTPtCbRb3GWpHlC2GkxGEpiaj4Wg_aTd_9EkAG-3o');
-        
+        $spreadsheetId = env('SPREADSHEETID', '');
+        if(empty($spreadsheetId)){
+            dd("SPREADSHEETID missing in env");
+        }
         // clear exsiing data in sheet
         $this->clearsheet($spreadsheetId);
 
@@ -1520,7 +1522,7 @@ class UploadController extends Controller
 
     public function testingcommit(){
         $translated_file_path = array();
-        $spreadsheetId = env('SPREADSHEETID', '1DmLTPtCbRb3GWpHlC2GkxGEpiaj4Wg_aTd_9EkAG-3o');
+        $spreadsheetId = env('SPREADSHEETID', '');
         $this->clearsheet($spreadsheetId);
         /*
         * We need to get a Google_Client object first to handle auth and api calls, etc.
