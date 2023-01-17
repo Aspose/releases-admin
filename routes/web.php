@@ -34,12 +34,14 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth
     Route::get('/ventures/file/upload', 'UploadController@index');
     Route::get('/ventures/file/debuggingsheet', 'UploadController@debuggingsheet');
     Route::get('/ventures/file/edit/{id}', 'UploadController@edit');
+    Route::get('/ventures/file/translate/{id}', 'UploadController@adminreleasetranlsate');
     Route::post('/ventures/file/update', 'UploadController@update');
     Route::post('/ventures/file/updatemaual', 'UploadController@updatemaual');
     Route::get('/ventures/file/manage-files', 'UploadController@managefiles');
     Route::get('/ventures/file/viewlogs/{id}', 'UploadController@viewlogs');
     Route::any('/ventures/file/getchildnodes', ['as' => 'admin.getchildnodes', 'uses' => 'UploadController@getchildnodes']);
-
+    Route::any('/ventures/file/upload/release_exists_check_by_title', ['as' => 'admin.releaseexists', 'uses' => 'UploadController@release_exists_check_by_title']);
+    Route::any('/ventures/file/upload/onlytranslate', ['as' => 'admin.onlytranslate', 'uses' => 'UploadController@onlytranslate']);
     Route::delete('ventures/file/{id}', 'UploadController@destroy')->name('upload.destroy');
 
     //manual upload missing releases

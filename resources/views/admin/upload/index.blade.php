@@ -6,7 +6,7 @@
 </div>
 
 @include('flash::message')
-<form name="aspnetForm" method="post" enctype="multipart/form-data" action="/admin/ventures/file/upload" id="aspnetForm" class="form-horizontal">
+<form name="aspnetForm" method="post" onsubmit = "return validate(event.preventDefault())"  enctype="multipart/form-data" action="/admin/ventures/file/upload" id="aspnetForm" class="form-horizontal">
 
     <input name="_token" type="hidden" value="{{ csrf_token() }}" />
     <div class="control-group">
@@ -102,6 +102,36 @@
     </div>
 </form>
 <script>
+
+    function validate(){
+        let title = document.getElementById('title').value;
+        //alert(title);
+        if(title == ""){
+            //event.preventDefault();
+            alert( "Please  Enter Title and other Required Fields");
+            return false;
+        }else{
+            
+            $.ajax({
+                url: "{{ route('admin.releaseexists')}}",
+                type: 'POST',
+                data: {
+                    'title': title,
+                    "_token": "{{ csrf_token() }}",
+                },
+                success: function(response) {
+                    if (response === "yes") {
+                        alert( "Title \"" + title + "\" already Exist. Please Select Unique Title");
+                        document.getElementById('title').focus()
+                        return false;
+                    }else{
+                        document.getElementById('aspnetForm').submit();
+                    }
+                }
+		    });
+        }
+    }
+
     function getchildnodes(node, childtype){
         console.log(node.value);
         $.ajax({

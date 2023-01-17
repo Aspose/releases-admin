@@ -72,7 +72,7 @@
                     <th scope="col">Size</th>
                     <th scope="col">Date Uploaded</th>
                     <th scope="col">Author</th>
-                    <th scope="col">Tags</th>
+                    <th scope="col">Translate</th>
                     <th scope="col">&nbsp;</th>
                     <th scope="col">&nbsp;</th>
                     <th scope="col">&nbsp;</th>
@@ -87,21 +87,19 @@
                         <td>{{ $release->filesize }}</td>
                         <td><?php echo date('Y-m-d', strtotime($release->date_added)); ?></td>
                         <td>{{ $release->posted_by }}</td>
-                        <td>
-                                <!-- <?php if (str_starts_with($release->folder_link, '/')) { ?>
-                                    <a target="_blank" href="<?php echo $hugositeurl . '' . $release->folder_link ?>">View File</a>
-                                <?php }else{ ?>    
-                                    <a target="_blank" href="<?php echo $hugositeurl . '/' . $release->folder_link ?>">View File</a>
-                                <?php } ?>   -->
-
-                                {{ $release->tags }}
-                        </td>
+                        <td><a  style="border: 1px solid transparent; padding: 5px 15px; background: #efd6d6; color: orangered;" href="translate/{{ $release->id }}">Translate</a> </td>
                         <td>
                             <?php if(!empty($release->release_notes_url)){ ?>
                                 <a href="<?php echo $release->release_notes_url ?>">View Release Notes</a>
                             <?php } ?>
                         </td>
-                        <td><a href="edit/{{ $release->id }}">Edit</a> </td>
+                        <td>
+                            <a href="edit/{{ $release->id }}">Edit</a> 
+                            @if (Auth::user()->is_admin == 1)
+                                | <a target="_blank" href="edit/{{ $release->id }}/?action=manual">Update Db Entry</a> 
+                                | <a target="_blank" href="/admin/ventures/file/viewlogs/{{ $release->id }}">View Commit Logs</a> 
+                            @endif
+                        </td>
                         <td>
                             <?php $folder_link = ltrim($release->folder_link, '/'); ?>
                             <a  target="_blank" href="/{{ $folder_link }}{{ $release->etag_id }}">Download</a> | 

@@ -88,6 +88,12 @@
                         <li class="custom-padding"><small> Repo:  <?php echo env('GIT_REPO')?></small></li>
                         <li class="custom-padding"><small> Branch:  <?php echo env('GIT_BRANCH')?></small></li>
                         <li class="custom-padding"><small> Bucket:  <?php echo env('AWS_BUCKET')?></small></li>
+                        <hr>
+                        
+                        <li class="custom-padding"><small> Translation:</small></li>
+                        <li class="custom-padding"><small> MULTILINGUAL:  <?php echo env('MULTILINGUAL')?></small></li>
+                        <li class="custom-padding"><small> SPREADSHEETID:  <?php echo env('SPREADSHEETID')?></small></li>
+                        <li class="custom-padding"><small> SPREADSHEETIDMANUAL:  <?php echo env('SPREADSHEETIDMANUAL')?></small></li>
                         @endif
                     </ul>
 </div>
