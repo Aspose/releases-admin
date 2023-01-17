@@ -352,7 +352,7 @@ public function intro_text($linenum, $line, $check){
     $return_array = array();
     $is_check = false;
     $format = 'intro_text:';
-    $reg = '#^(intro_text:)(.*)#m'; 
+    $reg = '#^(intro_text:)(.*)#mi'; 
     $placehoder = "{{_INTRO_TEXT_}}";
     $meta_name = "intro_text";
 
