@@ -20,7 +20,7 @@ This document provides instruction for configuring releases.admin locally. It in
 - Clone the project repository to your local machine (https://github.com/Aspose/releases-admin.git)
 - Run "composer install" to install all dependencies
 - Create a new MySQL or MariaDB database for each domain
-- Import Sample Database from the link https://drive.google.com/file/d/1rl4gP3MedHup1o3HZxQ9CvdasnYL2REM/view?usp=sharing
+- Import Sample Database from the link https://drive.google.com/file/d/1dVGYScBWktWO8IsEFAEDQx9llS3GQEtc/view?usp=sharing
 - Download and place the sample .env file to root folder, make sure .env filename is .env.admindemo.aspose similar to your virtualhost. https://drive.google.com/file/d/1dGzzM27VjaIxqRCouC7FAZhgmhkOR70u/view?usp=sharing
 - Make sure to update local database credentials and Local releases-admin repo path in the environment file.
 - Download and place the .scripts folder on the root of the project, these are the bash script that commits file to the git. https://drive.google.com/file/d/1AZ9pfuUZRiXrknLK-x7VD3MDDhVzJeHy/view?usp=sharing
