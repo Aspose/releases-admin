@@ -26,3 +26,13 @@ This document provides instruction for configuring releases.admin locally. It in
 - Download and place the .scripts folder on the root of the project, these are the bash script that commits file to the git. https://drive.google.com/file/d/1AZ9pfuUZRiXrknLK-x7VD3MDDhVzJeHy/view?usp=sharing
 
 All done, project is ready and you can login and start using the releases-admin by the link http://admindemo.aspose
+
+# How To publish Aspose.Total for .NET, CPP, and JAVA:
+
+- Log in to https://releases.admin.aspose.com using a super admin account.
+- Navigate to "Manage Total.Net" and select the latest releases of Aspose products.
+- Click the "Generate Zip File" button to create a zip file of all Aspose products and upload it to an S3 bucket.
+- Once the upload is complete, copy the uploaded path to your clipboard.
+- Go to "View All Releases" and select the Aspose.Total release for the desired product and family.
+- Click "Update DB Entry" and paste in the new S3 URL, modify the date_added value, and click "Update."
+- Repeat the process for Aspose.Total for CPP and Aspose.Total for JAVA.
