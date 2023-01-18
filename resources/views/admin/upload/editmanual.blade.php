@@ -67,7 +67,7 @@
         <span id="folder-span" class="control-label">Folder </span>
         
         <div class="controls"> 
-            <input readonly name="folder" type="text" maxlength="500" id="folder" value="{{ $release->folder }}" style="width:750px;" />
+            <input name="folder" type="text" maxlength="500" id="folder" value="{{ $release->folder }}" style="width:750px;" />
         </div>
     </div>
 

@@ -563,7 +563,7 @@ class UploadController extends Controller
            $release->folder_link = trim($request->folder_link);
            $release->is_new = trim($request->is_new);
            $release->product = trim($request->product);
-        // $release->folder = trim($request->folder);
+           $release->folder = trim($request->folder);
         $release->weight = trim($request->weight);
         $release->save();
         return redirect('/admin/ventures/file/edit/'. $edit_id.'?action=manual')->with('success','Update s3 link.');
