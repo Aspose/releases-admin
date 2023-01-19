@@ -24,6 +24,7 @@ This document provides instruction for configuring releases.admin locally. It in
 - Download and place the sample .env file to root folder, make sure .env filename is .env.admindemo.aspose similar to your virtualhost. https://drive.google.com/file/d/1dGzzM27VjaIxqRCouC7FAZhgmhkOR70u/view?usp=sharing
 - Make sure to update local database credentials and Local releases-admin repo path in the environment file.
 - Download and place the .scripts folder on the root of the project, these are the bash script that commits file to the git. https://drive.google.com/file/d/1AZ9pfuUZRiXrknLK-x7VD3MDDhVzJeHy/view?usp=sharing
+- Run this command inside the root folder php artisan key:generate
 
 All done, project is ready and you can login and start using the releases-admin by the link http://admindemo.aspose
 
