@@ -28,7 +28,7 @@ class ManageTotalNetReleasesController extends Controller
      */
     public function index(Request $request)
     {
-        
+
         $family_name = "net";
         $new_zip_file_name = "";
         if(!empty($request->get('family'))){
@@ -46,11 +46,11 @@ class ManageTotalNetReleasesController extends Controller
             $new_zip_file_name = "Aspose.Total_for_Java";
             $netrelease = DB::select( DB::raw("SELECT n.* FROM releases n INNER JOIN ( SELECT product, MAX(date_added) AS date_added FROM releases WHERE `product` LIKE '%/java/%' AND product != '/total/java/' AND filename LIKE '%zip%' GROUP BY product ) AS max USING (product, date_added)") );
        }else if($family_name == 'net'){
-        $new_zip_file_name = "Aspose.Total_dll_only";
-        $netrelease_ini = DB::select( DB::raw("SELECT n.* FROM releases n 
-                    INNER JOIN ( SELECT product, MAX(date_added) 
-                    AS date_added FROM releases WHERE `product` LIKE '%/net/%' AND product != '/total/net/' AND ( filetitle LIKE '%dll%'  OR filetitle LIKE '%DLL%'  OR folder_link LIKE '%dll%' ) GROUP BY product ) 
-                    AS max USING (product, date_added)") 
+        $new_zip_file_name = env('new_total_zip_file_name');
+        $netrelease_ini = DB::select( DB::raw("SELECT n.* FROM releases n
+                    INNER JOIN ( SELECT product, MAX(date_added)
+                    AS date_added FROM releases WHERE `product` LIKE '%/net/%' AND product != '/total/net/' AND ( filetitle LIKE '%dll%'  OR filetitle LIKE '%DLL%'  OR folder_link LIKE '%dll%' ) GROUP BY product )
+                    AS max USING (product, date_added)")
         );
         foreach($netrelease_ini as $single){
             $netrelease[$single->product] = $single;
@@ -72,10 +72,10 @@ class ManageTotalNetReleasesController extends Controller
        }else{
         dd('add new block and query');
        }
-        
-  
+
+
        ///dd($netrelease);
-      
+
         $progress =false;
        /*if(!empty($request->get('generate')) && $request->get('generate') == 'true'){
             $progress = true;
@@ -89,10 +89,10 @@ class ManageTotalNetReleasesController extends Controller
             $local_file_name = $s3_file_info['basename'];
             echo"Remote file name: ".$s3filename;
             echo "<br>";
-            echo "Local file Name: " . $local_file_name; 
+            echo "Local file Name: " . $local_file_name;
             echo "<hr>";
             //Storage::disk('public')->put($zipfolderpath.'/'.$local_file_name , Storage::disk('s3')->get($s3filename));
-            
+
         }
         //$this->createzip($zipfolderpath);
         //Storage::disk('public')->put($zipfolderpath.'/amjadtest-001.txt', Storage::disk('s3')->get('2022/06/24/test-am-file.txt'));
@@ -119,7 +119,7 @@ class ManageTotalNetReleasesController extends Controller
     public function removefilesinpath(Request $request){
         if(!empty($request->get('path'))){
             $path = $request->post('path');
-           
+
             $existing_files_full_path = storage_path('app/public'.$path);
             $files = scandir($existing_files_full_path);
            // dd($files);
@@ -128,12 +128,12 @@ class ManageTotalNetReleasesController extends Controller
                     unlink($existing_files_full_path .'/'. $file);
                     echo $existing_files_full_path .'/'. $file .' Deleted <br>';
                 }
-                
+
             }
             return back()
             ->with('success','Files deleted.')
             ->with('file',"");
-            
+
         }else{
             dd('path missing');
         }
@@ -142,7 +142,7 @@ class ManageTotalNetReleasesController extends Controller
         $request->validate([
             'file' => 'required',
         ]);
-        $fileName = $request->file->getClientOriginalName();  
+        $fileName = $request->file->getClientOriginalName();
         $path = $request->path;
          $uploadpath = storage_path('app/public'.$path);
         $request->file->move($uploadpath, $fileName);
@@ -151,30 +151,30 @@ class ManageTotalNetReleasesController extends Controller
             ->with('file',$fileName);
     }
 
-    
+
     public function downloadandcompress(Request $request){
         if(!empty($request->ids) && !empty($request->newzipname)){
             $newzipname = $request->newzipname;
             $ids = $request->ids;
             //$zipfolderpath = "/zipfiles/" .date('y-m-d');
             //$zipfolderpath_fullpath = ( storage_path() . '/app/public'. $zipfolderpath);
-            
+
             $zipfolderpath = $request->zipfolderpath;
             $zipfolderpath_fullpath = $request->zipfolderpath_fullpath;
-            $s3_links = Release::select('is_new','s3_path')->whereIn('id', $ids)->get(); 
+            $s3_links = Release::select('is_new','s3_path')->whereIn('id', $ids)->get();
            // print_r($s3_links);
             $AWS_BUCKET = env('AWS_BUCKET');
             if($s3_links){
                 foreach($s3_links as $release){
-                    // download 
+                    // download
                     //echo $release->s3_path;
                     if($release->is_new){
                         $s3filename = str_replace('https://s3.us-west-2.amazonaws.com/'.$AWS_BUCKET.'/', '', $release->s3_path);
                     }else{
                         $s3filename = str_replace('https://s3-us-west-2.amazonaws.com/'.$AWS_BUCKET.'/', '', $release->s3_path);
                     }
-                   
-                    
+
+
                     $s3_file_info = pathinfo($release->s3_path);
                     $local_file_name = $s3_file_info['basename'];
                     $res = Storage::disk('public')->put($zipfolderpath.'/'.$local_file_name , Storage::disk('s3')->get($s3filename));
@@ -186,7 +186,7 @@ class ManageTotalNetReleasesController extends Controller
                 $json =  json_encode($final_array);
                 return $json;
             }
-             
+
         }
 
     }
@@ -226,7 +226,7 @@ class ManageTotalNetReleasesController extends Controller
             echo "srcfile or newzipname missing";
         }
     }
-    
+
 
     public function progressdownload(Request $request){
         $zipfolderpath = $request->zipfolderpath;
@@ -243,8 +243,8 @@ class ManageTotalNetReleasesController extends Controller
         return $json;
     }
 
-   
-    
+
+
 
     public function getDirContents($dir, $filter = '', &$results = array())
     {
@@ -268,7 +268,7 @@ class ManageTotalNetReleasesController extends Controller
         if(!empty($request->srcfile) ){
             $zipfolderpath_fullpath = $request->zipfolderpath_fullpath;
             if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
-                
+
                 $AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID');
                 $AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY');
                 $AWS_DEFAULT_REGION = env('AWS_DEFAULT_REGION');
@@ -285,9 +285,9 @@ class ManageTotalNetReleasesController extends Controller
 
             $s3filepath = date('y/m/d').'/'.$s3_new_file_name; // bucket file path
             $s3filepath_ini = $s3filepath;
-            
+
             $zip_file = $request->srcfile; // local src file full path
-            
+
             $filesorcepath = "'$zip_file'";
             $s3filepath = "'$s3filepath'";
             $bucket = "'$AWS_BUCKET'";
@@ -307,7 +307,7 @@ class ManageTotalNetReleasesController extends Controller
             }
 
 
-           
+
             //remove all files in folder prevent dupicate
            // array_map( 'unlink', array_filter((array) glob($zipfolderpath_fullpath."/*") ) );
 
