@@ -49,7 +49,7 @@ class UploadController extends Controller
 
     //translate release ajax
     public function onlytranslate(Request $request){
-        $sheetdatahelper = new PrepareSheetData(); 
+        $sheetdatahelper = new PrepareSheetData();
         $SpreadsheetId_Manual = env('SPREADSHEETIDMANUAL', '');
         $is_multilingual = env('MULTILINGUAL', false);
         if( !empty($SpreadsheetId_Manual) && $is_multilingual ){
@@ -73,7 +73,7 @@ class UploadController extends Controller
                 }else{
                     $message = "Failed To Write Sheet $added_to_sheet rows added";
                 }
-                
+
             }else{
                 $message = "release not found " . $id;
             }
@@ -86,7 +86,7 @@ class UploadController extends Controller
     }
 
     public function PrepareSheetcontentAndAddToSheet_Manual($sheetdatahelper, $content_path, $host, $filecontent, $release, $spreadsheetId){
-        
+
         $javahomepage = false;
         $filepath = $release->folder_link;
 
@@ -102,7 +102,7 @@ class UploadController extends Controller
 
         $src_file_path = $content_path . "/en/". $parent_folder_path ;
         $src_file_path = str_replace("//", '/', $src_file_path);
-        $new_file_to_trandslate = $src_file_path . ''.  $filename. ".md"; 
+        $new_file_to_trandslate = $src_file_path . ''.  $filename. ".md";
         $new_file_to_trandslate = str_replace("//", '/', $new_file_to_trandslate);
 
         if (!file_exists( $src_file_path )) { // folder not exists
@@ -130,7 +130,7 @@ class UploadController extends Controller
         $translated_file_path = array();
         // clear exsiing data in sheet
         $this->clearsheet_admin_manual_translate($spreadsheetId);
-        
+
         /*
         * We need to get a Google_Client object first to handle auth and api calls, etc.
         */
@@ -155,13 +155,13 @@ class UploadController extends Controller
             $Final_Array_To_Csv = array();
 
             foreach($mdfile as $pkey=>$line){
-    
-                $Final_Array_To_Csv[] = array( 
+
+                $Final_Array_To_Csv[] = array(
                     $folder_link,
-                    $line['place_holder'], 
-                    $line['type'], 
-                    $line['replacement_array'], 
-                    $line['text_to_translate'], 
+                    $line['place_holder'],
+                    $line['type'],
+                    $line['replacement_array'],
+                    $line['text_to_translate'],
                     '=GOOGLETRANSLATE(E'.$row_key.',"en","de")',
                     '=GOOGLETRANSLATE(E'.$row_key.',"en","el")',
                     '=GOOGLETRANSLATE(E'.$row_key.',"en","es")',
@@ -182,11 +182,11 @@ class UploadController extends Controller
             $range = 'Sheet1!A1:A';
             $conf = ["valueInputOption" => "USER_ENTERED"];
             $sheets->spreadsheets_values->append($spreadsheetId, $range, $valueRange, $conf);
-            
+
             $rows_count = count($Final_Array_To_Csv);
-           
+
         }
-       
+
         return $rows_count;
 
     }
@@ -239,9 +239,9 @@ class UploadController extends Controller
                         $filename = $segments[$numSegments - 1];
                         $filepath = implode("/", $segments);
                         $plorp = substr(strrchr($filepath,'/'), 1);
-                        $filepath = substr($filepath, 0, - strlen($plorp)); 
+                        $filepath = substr($filepath, 0, - strlen($plorp));
 
-                        $target_file_src = $content_path . "/". $target_lanaguage . '/' . $filepath . ''.  $filename. ".md"; 
+                        $target_file_src = $content_path . "/". $target_lanaguage . '/' . $filepath . ''.  $filename. ".md";
                         $target_file_src = str_replace("//", '/', $target_file_src);
 
                         if( $target_lanaguage != 'en'){ //no translation in case of english
@@ -265,7 +265,7 @@ class UploadController extends Controller
                                     $translated_md_file = preg_replace("/$keypattern/",  $translated_replacemnt, $translated_md_file);
                                  }
                             }
-                            
+
                             if (!file_exists( $content_path . "/". $target_lanaguage . '/' . $filepath )) { // folder not exists
                                 mkdir($content_path . "/". $target_lanaguage . '/' . $filepath, 0755, true);
                             }
@@ -273,11 +273,11 @@ class UploadController extends Controller
                                 touch($target_file_src);
                             }
                             file_put_contents($target_file_src, $translated_md_file);
-                        }  
+                        }
                         $response[] = $target_file_src;
 
                 }
-                 
+
             }
         }
         return $response; // return paths of translated file
@@ -290,23 +290,23 @@ class UploadController extends Controller
         foreach( $transalted_data as $k=>$v )
         {
             $new_offersvalues[ $k ] = array();
-    
+
             foreach( $v as $k2=>$v2 )
             {
                 $new_offersvalues[ $k ][ $cols[ $k2 ] ] = $v2;
             }
-    
+
          unset( $transalted_data[ $k ] );
         }
-    
-    
+
+
         if(!empty($new_offersvalues)){
           foreach($new_offersvalues as $target_lanaguage ){
             $new_offersvalues_final[$target_lanaguage['path']][$target_lanaguage['place_holder']] = $target_lanaguage;
           }
         }
-        
-    
+
+
         return $new_offersvalues_final;
     }
 
@@ -331,7 +331,7 @@ class UploadController extends Controller
         $DropDownContent = $this->GetDropDownContent();
         $family_url = $hugositeurl .''.$release->family.'/';
         $product_url = $hugositeurl .''.$release->product;
-        
+
         //dd($family_url);
         $familySelected = $this->searchSingle($DropDownContent, 'url', $family_url);
         if(empty($familySelected)){
@@ -339,7 +339,7 @@ class UploadController extends Controller
             $familySelected = $this->searchSingle($DropDownContent, 'url', $family_url);
         }
         $productSelected = $this->searchSingle($DropDownContent, 'url', $product_url);
-        
+
         //$folders = array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
 
 
@@ -352,7 +352,7 @@ class UploadController extends Controller
                 }
             }
         }
-       
+
         if(empty($folders)){
             $url = false;
             $folders = array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
@@ -361,10 +361,10 @@ class UploadController extends Controller
             $url = true;
             $selected_folder = $hugositeurl .''.$release->product.$release->folder.'/';
         }
-        
+
         return view('admin.upload.translate', compact('familySelected',  'productSelected', 'folders', 'selected_folder', 'release', 'title', 'show_translate_button'));
-        
-        
+
+
     }
 
     public function edit(Request $request, $id)
@@ -382,7 +382,7 @@ class UploadController extends Controller
         $DropDownContent = $this->GetDropDownContent();
         $family_url = $hugositeurl .''.$release->family.'/';
         $product_url = $hugositeurl .''.$release->product;
-        
+
         //dd($family_url);
         $familySelected = $this->searchSingle($DropDownContent, 'url', $family_url);
         if(empty($familySelected)){
@@ -390,7 +390,7 @@ class UploadController extends Controller
             $familySelected = $this->searchSingle($DropDownContent, 'url', $family_url);
         }
         $productSelected = $this->searchSingle($DropDownContent, 'url', $product_url);
-        
+
         //$folders = array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
 
 
@@ -403,7 +403,7 @@ class UploadController extends Controller
                 }
             }
         }
-       
+
         if(empty($folders)){
             $url = false;
             $folders = array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
@@ -412,17 +412,17 @@ class UploadController extends Controller
             $url = true;
             $selected_folder = $hugositeurl .''.$release->product.$release->folder.'/';
         }
-        
+
         if(isset($request->action) && $request->action == 'manual' ){
             return view('admin.upload.editmanual', compact('familySelected',  'productSelected', 'folders', 'selected_folder', 'release', 'title'));
         }else{
             return view('admin.upload.edit', compact('familySelected',  'productSelected', 'folders', 'selected_folder', 'release', 'title'));
         }
-        
-        
+
+
     }
 
-    
+
 
 
     public function GetDropDownContent(){
@@ -467,7 +467,7 @@ class UploadController extends Controller
 
             return $results;
         }
-    
+
     /**
      * Store a newly created resource in storage.
      *
@@ -478,16 +478,16 @@ class UploadController extends Controller
     {
         $host = $request->getHttpHost();
         if(!empty($request->all())){
-            
+
             $filter_family = $request->productfamily;
             $filter_product = $request->product;
             $filter_folder = $request->folder;
             $reload_filter = "?filter_productfamily=".$filter_family."&filter_product=".$filter_product."&filter_folder=".$filter_folder;
-            
+
             $upload_info = $this->UploadImageToS3($request->all(), 'new');
-            
+
             if(!empty($upload_info)){
-                //echo "<pre>"; print_r($upload_info); echo "</pre>"; 
+                //echo "<pre>"; print_r($upload_info); echo "</pre>";
                 $mdfile =$this->generate_mdfile($request->all(), $upload_info);
 
                 $spreadsheetId = "";
@@ -513,15 +513,15 @@ class UploadController extends Controller
     {
         $host = $request->getHttpHost();
         $edit_id = $request->edit_id;
-        
+
         if(!empty($request->all())){
-            
+
             if(!empty($request->file)){ // if file uploaded in edit page
                 $upload_info = $this->UploadImageToS3($request->all(), 'update');
             }else{
                 $upload_info = $this->DontUploadFileToS3($request->all());
             }
-            
+
             if(!empty($upload_info)){
                 $mdfile =$this->generate_mdfile($request->all(), $upload_info);
                 $res= $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
@@ -530,7 +530,7 @@ class UploadController extends Controller
             }else{
                 return redirect('/admin/ventures/file/edit/'. $edit_id)->with('success','Update Failed.');
             }
-            
+
         }
     }
 
@@ -582,9 +582,9 @@ class UploadController extends Controller
                         foreach($child as $single){
                             $final_array[$single['text']] = $single['url'];
                         }
-                        return $final_array;    
+                        return $final_array;
                     }else{
-                        
+
                         return array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
                     }
                 }else{ // fix for ocr folders
@@ -595,14 +595,17 @@ class UploadController extends Controller
                 if(!empty($child[0]['nodes'])){
                     $child =  $child[0]['nodes'];
                     foreach($child as $single){
-                        $final_array[$single['text']] = $single['url'];
+                      
+                        if(!str_contains($single['text'], 'Java')){ //folder and corporate get child from json
+                          $final_array[$single['text']] = $single['url'];
+                        }
                     }
-                    return $final_array;    
+                    return $final_array;
                 }else{
-                    return array();    
+                    return array();
                 }
             }
-            
+
         }
     }
 
@@ -617,18 +620,18 @@ class UploadController extends Controller
                 foreach($child as $single){
                     $final_array[$single['text']] = $single['url'];
                 }
-                return $final_array;    
+                return $final_array;
             }else{
                 if($childtype == 'folder'){
                     return array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
                 }
             }
-            
+
         }
     }
 
     public function generate_mdfile($data, $upload_info){
-        
+
        $posted_by_name = Auth::user()->name ;
         $productfamily  = $data['productfamily'];
         $product  = $data['product'];
@@ -638,19 +641,19 @@ class UploadController extends Controller
         $description = $data['description'];
         $releaseurl = $data['releaseurl'];
         $weight = 1;
-        
-        
+
+
 
         $productfamily_path = parse_url($productfamily, PHP_URL_PATH);
         $productfamily_path = rtrim($productfamily_path, '/');
 
-        
+
        $title_slug = $upload_info['title_slug'];
        $section_parent_path = $upload_info['section_parent_path'];
        $parent_path = $upload_info['parent_path'];
        $s3_path =  $upload_info['s3_path'];
        $fileSize = $upload_info['fileSize'];
-       
+
        $download_link = $upload_info['download_link'];
        $folder_link = $upload_info['folder_link'];
        $title_new_tag =  $upload_info['title_new_tag'];
@@ -660,7 +663,7 @@ class UploadController extends Controller
 
        $f_family =  $upload_info['family'];
        $f_product =  $upload_info['product'];
-       //$f_product = rtrim($f_product, '/'); 
+       //$f_product = rtrim($f_product, '/');
        $f_folder =  $upload_info['folder'];
 
        $actual_file_name =  $upload_info['actual_file_name'];
@@ -677,13 +680,13 @@ class UploadController extends Controller
         $download_count_intial = $upload_info['download_count'];
       }
 
-      
-      
-     
-     
+
+
+
+
      $f_family = rtrim($f_family, '/');
      $last_insert_update_id = 0;
-     
+
      if($upload_info['insert_release']){
 
         $MaxWeightCount = Release::where('product', $f_product)->where('folder',$f_folder )->max('weight');
@@ -736,7 +739,7 @@ class UploadController extends Controller
         $release->description = $description;
         $release->release_notes_url = $releaseurl;
         $release->tags = $tags;
-        
+
         if($upload_info['contains_file']){
             $release->filename = $actual_file_name;
             $release->filesize = $fileSize;
@@ -751,9 +754,9 @@ class UploadController extends Controller
         $down_date = date('j/n/Y', strtotime($release->date_added));
         $weight = $release->weight;
      }
-       
-        
-        
+
+
+
         $buttons = array(
             'Download' => $download_link,
             'Support Forum' => 'https://forum.aspose.com/c'.$productfamily_path.'',
@@ -762,7 +765,7 @@ class UploadController extends Controller
 
         // replace Etag with new Generated
         $download_link = str_replace($orignal_etag_id, $etag_id, $download_link);
-        
+
         $download_count_text = " $down_date Downloads: $Downloads_count  Views: $Views_count ";
 
         $md_file_content = "";
@@ -783,7 +786,7 @@ class UploadController extends Controller
 
         //$md_file_content .= "s3_path: \"$s3_path\"";
         //$md_file_content .= "\n";
-        
+
         $md_file_content .= "folder_name: \"$title\"";
         $md_file_content .= "\n";
 
@@ -795,20 +798,20 @@ class UploadController extends Controller
 
         $md_file_content .= "intro_text: \"$description\"";
         $md_file_content .= "\n";
-        
-    
+
+
         $md_file_content .= "image_link: \"$image_link\"";
         $md_file_content .= "\n";
-        
+
         $md_file_content .= "download_count: \"$download_count_text\"";
         $md_file_content .= "\n";
 
         $md_file_content .= "file_size: \"File Size: $fileSize\"";
         $md_file_content .= "\n";
-        
+
         $md_file_content .= "parent_path: \"$parent_path\"";
         $md_file_content .= "\n";
-        
+
         if(!empty($section_parent_path)){
             $md_file_content .= "section_parent_path: \"$section_parent_path\"";
             $md_file_content .= "\n";
@@ -938,8 +941,8 @@ class UploadController extends Controller
                     $clear_folder = "no";
                 }
                 $hugo_content_path = strstr($download_path, 'content/');
-                $initial_file_name_array = explode("/", $download_path); 
-                $initial_file_name_only = end($initial_file_name_array); 
+                $initial_file_name_array = explode("/", $download_path);
+                $initial_file_name_only = end($initial_file_name_array);
                 $file_to_commit = $initial_file_name_only;
                 $release_parent_folder_path =  preg_replace('#\/[^/]*$#', '', $hugo_content_path);
                 //echo $download_path . " >> " . $hugo_content_path . " >> " . $release_parent_folder_path .  " >> " . $file_to_commit  . "<br>";
@@ -953,9 +956,9 @@ class UploadController extends Controller
                         $GIT_TOKEN = env('GIT_TOKEN', '');
                         $GIT_REPO = "";
                         $GIT_REPO = env('GIT_REPO', '');
-                        
+
                         if(!empty($GIT_USERNAME) && !empty($GIT_TOKEN) && !empty($GIT_REPO) ){
-                            
+
                             $repo_url = "https://$GIT_USERNAME:$GIT_TOKEN@github.com/$GIT_REPO";
                             $posted_by_email = Auth::user()->email ;
                             $commit_msg = "'new Release added by $posted_by_email '";
@@ -966,7 +969,7 @@ class UploadController extends Controller
                             $commit_files = "'$commit_files'";
                             $clear_folder = "'$clear_folder'";
                             if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
-                    
+
                                 $public_path = getcwd();
                                 $bash_script_path = str_replace('/public', '/.scripts/', $public_path );
                                 chdir($bash_script_path);
@@ -975,13 +978,13 @@ class UploadController extends Controller
                                 $output .= shell_exec('./addmdfilemutilang.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' '.$commit_msg.'  '.$release_parent_folder_path.' '.$commit_files.' '.$clear_folder.' ');
                                 //$output .= " ========= After file run ========== ";
                                 chdir($public_path);
-                        
+
                             }else{ //prod/stage
                                 //$output .= " before file run";
                                 $output .= " ========= /var/www/scripts/addmdfilemutilang.sh $download_path $hugo_content_path $file_to_commit $local_clone_repo_path $repo_url $commit_msg $release_parent_folder_path $commit_files $clear_folder =====/===== ";
                                 $output .= shell_exec('/var/www/scripts/addmdfilemutilang.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' '.$commit_msg.'  '.$release_parent_folder_path.' '.$commit_files.' '.$clear_folder.' ');
                                 //$output .= " After file run";
-                            }    
+                            }
                         }
                     }
                     /* ===================== /COMMIT FILE ============= */
@@ -991,8 +994,8 @@ class UploadController extends Controller
     }
 
     public function forceDownloadMdFile( $content, $filename, $file_path, $host) {
-        
-        $file_to_commit = $filename.".md"; 
+
+        $file_to_commit = $filename.".md";
         $filename_info = $file_path.'/'.$file_to_commit;
         Storage::put('/public/mdfiles/content' . $filename_info, $content);
         $download_path = ( storage_path() . '/app/public/mdfiles/content'.$filename_info);
@@ -1003,13 +1006,13 @@ class UploadController extends Controller
         }else{
             $hugo_content_path = "content" . $file_path .'/';
         }
-        
+
         //echo $download_path; exit;
         if (file_exists($download_path)) {
-            
-            
-            
-           
+
+
+
+
             /* ===================== COMMIT FILE ============= */
             $local_clone_repo_path = env('LOCAL_REPO_CLONE_PATH', '');
             if(!empty($local_clone_repo_path)){
@@ -1023,39 +1026,39 @@ class UploadController extends Controller
                 }else if(in_array($host, array('admindemo.groupdocs', 'releases.admin.groupdocs.com'))){ //groupdocs.com
                     $GIT_REPO = env('GIT_REPO', '');
                 }*/
-                
+
                 $GIT_REPO = env('GIT_REPO', '');
-                
+
                 if(!empty($GIT_USERNAME) && !empty($GIT_TOKEN) && !empty($GIT_REPO) ){
-                    
+
                     $repo_url = "https://$GIT_USERNAME:$GIT_TOKEN@github.com/$GIT_REPO";
-                    //echo "<pre> local_clone_repo_path "; print_r($local_clone_repo_path);echo "</pre>"; 
-                    //echo "<pre> download_path "; print_r($download_path);echo "</pre>"; 
-                    //echo "<pre> hugo_content_path "; print_r($hugo_content_path);echo "</pre>"; 
-                    //echo "<pre> file_to_commit "; print_r($file_to_commit);echo "</pre>"; 
-                    //echo "<pre> REPO_URL "; print_r($repo_url);echo "</pre>"; 
+                    //echo "<pre> local_clone_repo_path "; print_r($local_clone_repo_path);echo "</pre>";
+                    //echo "<pre> download_path "; print_r($download_path);echo "</pre>";
+                    //echo "<pre> hugo_content_path "; print_r($hugo_content_path);echo "</pre>";
+                    //echo "<pre> file_to_commit "; print_r($file_to_commit);echo "</pre>";
+                    //echo "<pre> REPO_URL "; print_r($repo_url);echo "</pre>";
                     $posted_by_email = Auth::user()->email ;
                     $commit_msg = "'new Release added by $posted_by_email '";
                     $download_path = "'$download_path'";
                     $hugo_content_path = "'$hugo_content_path'";
                     $file_to_commit = "'$file_to_commit'";
                     if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
-            
+
                         $public_path = getcwd();
                         $bash_script_path = str_replace('/public', '/.scripts/', $public_path );
                         chdir($bash_script_path);
-                        //echo "<pre> public_path "; print_r($public_path);echo "</pre>"; 
-                        //echo "<pre> bash script path "; print_r($bash_script_path);echo "</pre>"; 
-                        //echo "<pre> shell script "; print_r('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');echo "</pre>"; 
+                        //echo "<pre> public_path "; print_r($public_path);echo "</pre>";
+                        //echo "<pre> bash script path "; print_r($bash_script_path);echo "</pre>";
+                        //echo "<pre> shell script "; print_r('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' ');echo "</pre>";
                         $output = shell_exec('./addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' '.$commit_msg.' ');
                         chdir($public_path);
-                   
+
                     }else{ //prod/stage
                         $output = shell_exec('/var/www/scripts/addmdfile.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' '.$commit_msg.' ');
                     }
-                    
+
                     //echo "<pre> file_to_commit "; print_r($output);echo "</pre>"; exit;
-                    
+
                 }
             }
             /* ===================== /COMMIT FILE ============= */
@@ -1077,7 +1080,7 @@ class UploadController extends Controller
             /* ===================== DELETE FILE ============= */
             return $output;
             exit;
-            
+
         } else {
             //echo('File not found.');
             return 'File not found.';
@@ -1086,7 +1089,7 @@ class UploadController extends Controller
     }
 
     public function UploadImageToS3($data, $action){
-        
+
         $insert_release = 1;
         if($action == 'update'){
             $release = Release::where('id', $data['edit_id'])->first();
@@ -1105,7 +1108,7 @@ class UploadController extends Controller
         $parent_path = "";
 
         if(strstr($folder_ini, '/')){
-            $folder = rtrim($folder_ini, '/'); 
+            $folder = rtrim($folder_ini, '/');
             //echo " 11111111111 ".$folder . " 11111111111 <BR>";
             //echo " 222222222222 ".$folder . " 222222222222 <BR>";
             $folder = substr(strrchr($folder, '/'), 1);
@@ -1122,42 +1125,42 @@ class UploadController extends Controller
             $parent_path = parse_url($product, PHP_URL_PATH);
             $parent_path = rtrim($parent_path, '/');
         }
-        
+
 
         $title = $data['title'];
         $productfamily_path = parse_url($productfamily, PHP_URL_PATH);
-        $productfamily_path = rtrim($productfamily_path, '/'); 
+        $productfamily_path = rtrim($productfamily_path, '/');
         if($action == 'update'){
             /* POSSIBLE FIX TO MAINTAIN INTIAL FAIL NAME (KEEP DOWNLOAD MD FILE NAME SAME) */
                 $initial_file_name = rtrim($release->folder_link, '/');
-                $initial_file_name_array = explode("/", $initial_file_name); 
-                $initial_file_name_only = end($initial_file_name_array); 
+                $initial_file_name_array = explode("/", $initial_file_name);
+                $initial_file_name_only = end($initial_file_name_array);
                 $title_slug = str_replace(' ', '-', strtolower($initial_file_name_only));
             /* /POSSIBLE FIX TO MAINTAIN INTIAL FAIL NAME  */
         }else{
             $title_slug = str_replace(' ', '-', strtolower($title));
         }
-        
-       
-       
+
+
+
        $special_case = array('all','examples', 'new-releases',  'resources' );
        $title_new_ = array('all'=>'all', 'examples'=>'Examples', 'new-releases'=>'New Releases',  'resources'=>'Resources');
        //echo $folder . ' ---------- folder ---  ';
        if(in_array($folder, $special_case)){
             $title_new_text = $title_new_[$folder];
         }else{
-            $folder = rtrim($folder, '/'); 
+            $folder = rtrim($folder, '/');
             $path = explode("/", $folder); // splitting the path
-            $last = end($path); 
+            $last = end($path);
             $title_new_text = ucfirst($last);
         }
-      
-       
-      
-       
 
-       //echo "<pre> section_parent_path: "; print_r($section_parent_path); echo "</pre>"; 
-       //echo "<pre> parent_path: "; print_r($parent_path); echo "</pre>"; 
+
+
+
+
+       //echo "<pre> section_parent_path: "; print_r($section_parent_path); echo "</pre>";
+       //echo "<pre> parent_path: "; print_r($parent_path); echo "</pre>";
        $folder_full_path = parse_url($folder, PHP_URL_PATH);
        $productfamily_full_path  = parse_url($productfamily, PHP_URL_PATH);
        $product_full_path = parse_url($product, PHP_URL_PATH);
@@ -1172,10 +1175,10 @@ class UploadController extends Controller
          $download_link = $folder_link;
        }
 
-       
+
        $ETag = Str::random(40);
        $fileSizeBytes = "99877450";
-       
+
        //$result = get_remote_file_info($filetoupload);
        $filetoupload = urldecode($filetoupload);
        $s3_file_headers = get_headers($filetoupload,1);
@@ -1224,7 +1227,7 @@ class UploadController extends Controller
             );
     }
 
-    
+
     public function DontUploadFileToS3($data){
         $release = Release::where('id', $data['edit_id'])->first();
 
@@ -1236,7 +1239,7 @@ class UploadController extends Controller
         $parent_path = "";
 
         if(strstr($folder_ini, '/')){
-            $folder = rtrim($folder_ini, '/'); 
+            $folder = rtrim($folder_ini, '/');
             $folder = substr(strrchr($folder, '/'), 1);
             $parent_path = parse_url($folder_ini, PHP_URL_PATH);
             $parent_path = rtrim($parent_path, '/');
@@ -1248,30 +1251,30 @@ class UploadController extends Controller
             $parent_path = parse_url($product, PHP_URL_PATH);
             $parent_path = rtrim($parent_path, '/');
         }
-        
+
 
         $title = $data['title'];
         $productfamily_path = parse_url($productfamily, PHP_URL_PATH);
-        $productfamily_path = rtrim($productfamily_path, '/'); 
-        
+        $productfamily_path = rtrim($productfamily_path, '/');
+
         /* POSSIBLE FIX TO MAINTAIN INTIAL FAIL NAME (KEEP DOWNLOAD MD FILE NAME SAME) */
         $initial_file_name = rtrim($release->folder_link, '/');
-        $initial_file_name_array = explode("/", $initial_file_name); 
-        $initial_file_name_only = end($initial_file_name_array); 
+        $initial_file_name_array = explode("/", $initial_file_name);
+        $initial_file_name_only = end($initial_file_name_array);
         $title_slug = str_replace(' ', '-', strtolower($initial_file_name_only));
         /* /POSSIBLE FIX TO MAINTAIN INTIAL FAIL NAME  */
-       
+
        $special_case = array('all','examples', 'new-releases',  'resources' );
        $title_new_ = array('all'=>'all', 'examples'=>'Examples', 'new-releases'=>'New Releases',  'resources'=>'Resources');
        if(in_array($folder, $special_case)){
             $title_new_text = $title_new_[$folder];
         }else{
-            $folder = rtrim($folder, '/'); 
+            $folder = rtrim($folder, '/');
             $path = explode("/", $folder); // splitting the path
-            $last = end($path); 
+            $last = end($path);
             $title_new_text = ucfirst($last);
         }
-      
+
        $folder_full_path = parse_url($folder, PHP_URL_PATH);
        $productfamily_full_path  = parse_url($productfamily, PHP_URL_PATH);
        $product_full_path = parse_url($product, PHP_URL_PATH);
@@ -1286,7 +1289,7 @@ class UploadController extends Controller
          $download_link = $folder_link;
        }
 
-       
+
 
 
         # rename file name to random name
@@ -1304,7 +1307,7 @@ class UploadController extends Controller
         } else if($ext == 'doc'){
             $image_link = "/resources/img/doc-icon.png";
         }
-        
+
         return array(
             's3_path' => $release->s3_path,
             'folder_link' => $release->folder_link,
@@ -1327,12 +1330,12 @@ class UploadController extends Controller
             'insert_release'=> 0,
             'contains_file' => 0
          );
-        
-        
+
+
 
     }
 
-    
+
 
     public function formatBytes($bytes, $precision = 2) {
         if ($bytes > pow(1024,3)) return round($bytes / pow(1024,3), $precision)."GB";
@@ -1345,13 +1348,13 @@ class UploadController extends Controller
         $ip_address = $request->ip();
         $referer = $request->headers->get('referer');
         if(!empty($tagid)){
-            
+
             if ( Release::where('etag_id', $tagid)->exists()) {
                 $Release = Release::where('etag_id', $tagid)->first();
                 $info = pathinfo($Release->s3_path);
                 $file_name = $info['basename'];
                 if($Release->s3_path != 's3_path' ){
-                    
+
                     $file_url = $Release->s3_path;
 
                    if($Release->is_new){
@@ -1367,23 +1370,23 @@ class UploadController extends Controller
                    if($signedurl){
                         //gecho  $signedurl;  exit;
                         $this->UpdateDownloadCount($Release->id);
-                        $this->DownloadHistoryEntry($Release, $ip_address, $referer); 
+                        $this->DownloadHistoryEntry($Release, $ip_address, $referer);
                         header('Content-Type: application/octet-stream');
-                        header("Content-Transfer-Encoding: Binary"); 
-                        header("Content-disposition: attachment; filename=\"".$file_name."\""); 
+                        header("Content-Transfer-Encoding: Binary");
+                        header("Content-disposition: attachment; filename=\"".$file_name."\"");
                         readfile($signedurl);
-                         
+
                    }else{
                         $this->UpdateDownloadCount($Release->id);
-                        $this->DownloadHistoryEntry($Release, $ip_address, $referer);  
+                        $this->DownloadHistoryEntry($Release, $ip_address, $referer);
                         header('Content-Type: application/octet-stream');
-                        header("Content-Transfer-Encoding: Binary"); 
-                        header("Content-disposition: attachment; filename=\"".$file_name."\""); 
+                        header("Content-Transfer-Encoding: Binary");
+                        header("Content-disposition: attachment; filename=\"".$file_name."\"");
                         readfile($file_url);
-                        
+
                    }
 
-                }else{ // 
+                }else{ //
                     $file_url = $Release->s3_path;
                     echo "Failed to Download Try Again....";
                 }
@@ -1410,8 +1413,8 @@ class UploadController extends Controller
             $AWS_DEFAULT_REGION = env('AWS_DEFAULT_REGION');
             $AWS_BUCKET = env('AWS_BUCKET');
         }
-        
-     
+
+
          try {
             $s3Client = new S3Client([
                 'version' => 'latest',
@@ -1420,10 +1423,10 @@ class UploadController extends Controller
                     'key'    => $AWS_ACCESS_KEY_ID,
                     'secret' => $AWS_SECRET_ACCESS_KEY ,
                 ],
-        
+
             ]);
              $cmd = $s3Client->getCommand('GetObject', ['Bucket' => $AWS_BUCKET, 'Key' => $key]);
-            
+
              $request = $s3Client->createPresignedRequest($cmd, '+' . $expiryInMinutes . ' minutes');
              return (string) $request->getUri();
          } catch (\Exception $e) {
@@ -1432,14 +1435,14 @@ class UploadController extends Controller
              return false;
          }
     }
-    
+
     public function UpdateDownloadCount($ID){
         $Release = Release::find($ID);
         $Release->download_count = $Release->download_count + 1;
         $Release->save();
     }
     public function DownloadHistoryEntry($Release, $ip_address, $referer){
-           
+
         if (Auth::check()) {
             $posted_by_name = Auth::user()->name ;
             $Email =  Auth::user()->email ;
@@ -1449,7 +1452,7 @@ class UploadController extends Controller
             $Email = NULL;
             $IsCustomer = 1;
         }
-        
+
         $Download = Download::create([
             'FileID' => $Release->id,
             'LOGID' => $Release->id,
@@ -1465,15 +1468,15 @@ class UploadController extends Controller
             'TimeStamp'=> date('Y-m-d H:i:s'),
 
         ]);
-        
+
     }
 
     public function managefiles(Request $request){
-        
+
         $filter_productfamily = $request->filter_productfamily;
         $filter_product = $request->filter_product;
         $filter_folder = $request->filter_folder;
-        
+
         $filter_productfamily = parse_url($filter_productfamily, PHP_URL_PATH);
         $filter_productfamily = rtrim($filter_productfamily, '/');
 
@@ -1484,16 +1487,16 @@ class UploadController extends Controller
          $filter_folder = parse_url($filter_folder, PHP_URL_PATH);
          $filter_folder = rtrim($filter_folder, '/');
          $filter_folder = explode('/', $filter_folder);
-         $filter_folder = end($filter_folder); 
-        
+         $filter_folder = end($filter_folder);
+
         //print_r($filter_productfamily . ' --- ' . $filter_product . ' ---- ' . $filter_folder);
-       
+
         ;
         $DropDownContent = $this->GetDropDownContent();
         $familySelected = "";
         $current_child_products = array();
-        
-        
+
+
         if(isset($request->filter_productfamily)){
             $familySelected = $request->filter_productfamily;
             $current_child_products = $this->getchildnodeslist($request->filter_productfamily);
@@ -1517,18 +1520,18 @@ class UploadController extends Controller
         $productSelected = $request->filter_product;
         $folderSelected = $request->filter_folder;
 
-        
-        // echo "<pre>"; print_r($familySelected); echo "</pre>"; 
-        // echo "<pre>"; print_r($productSelected); echo "</pre>"; 
-        // echo "<pre>"; print_r($folderSelected); echo "</pre>"; 
 
-        
-        
+        // echo "<pre>"; print_r($familySelected); echo "</pre>";
+        // echo "<pre>"; print_r($productSelected); echo "</pre>";
+        // echo "<pre>"; print_r($folderSelected); echo "</pre>";
+
+
+
         $title = "";
         //$releases = Release::get();
         $releases = NULL;
         //$releases = Release::where('family', 'like', $filter_productfamily)->where('product', 'like', $filter_product)->where('folder', 'like', $filter_folder)->orderBy('id', 'desc')->paginate(15);
-        
+
         if(isset($request->filter_folder)){
             $releases = DB::table('releases')
             ->where('family', 'like', '%' . $filter_productfamily . '%')
@@ -1549,7 +1552,7 @@ class UploadController extends Controller
         $DropDownContent = $this->GetDropDownContent();
         return view('admin.upload.manualreleaseupload', compact('DropDownContent', 'title'));
     }
-   
+
     public function manualreleaseupload(Request $request){
         $host = $request->getHttpHost();
         if(!empty($request->all())){
@@ -1572,7 +1575,7 @@ class UploadController extends Controller
     }
 
     public function UploadImageToS3MissingReleases($data, $action){
-        
+
         $insert_release = 1;
         if($action == 'update'){
             $release = Release::where('id', $data['edit_id'])->first();
@@ -1591,7 +1594,7 @@ class UploadController extends Controller
         $parent_path = "";
 
         if(strstr($folder_ini, '/')){
-            $folder = rtrim($folder_ini, '/'); 
+            $folder = rtrim($folder_ini, '/');
             //echo " 11111111111 ".$folder . " 11111111111 <BR>";
             //echo " 222222222222 ".$folder . " 222222222222 <BR>";
             $folder = substr(strrchr($folder, '/'), 1);
@@ -1608,42 +1611,42 @@ class UploadController extends Controller
             $parent_path = parse_url($product, PHP_URL_PATH);
             $parent_path = rtrim($parent_path, '/');
         }
-        
+
 
         $title = $data['title'];
         $productfamily_path = parse_url($productfamily, PHP_URL_PATH);
-        $productfamily_path = rtrim($productfamily_path, '/'); 
+        $productfamily_path = rtrim($productfamily_path, '/');
         if($action == 'update'){
             /* POSSIBLE FIX TO MAINTAIN INTIAL FAIL NAME (KEEP DOWNLOAD MD FILE NAME SAME) */
                 $initial_file_name = rtrim($release->folder_link, '/');
-                $initial_file_name_array = explode("/", $initial_file_name); 
-                $initial_file_name_only = end($initial_file_name_array); 
+                $initial_file_name_array = explode("/", $initial_file_name);
+                $initial_file_name_only = end($initial_file_name_array);
                 $title_slug = str_replace(' ', '-', strtolower($initial_file_name_only));
             /* /POSSIBLE FIX TO MAINTAIN INTIAL FAIL NAME  */
         }else{
             $title_slug = str_replace(' ', '-', strtolower($title));
         }
-        
-       
-       
+
+
+
        $special_case = array('all','examples', 'new-releases',  'resources' );
        $title_new_ = array('all'=>'all', 'examples'=>'Examples', 'new-releases'=>'New Releases',  'resources'=>'Resources');
        //echo $folder . ' ---------- folder ---  ';
        if(in_array($folder, $special_case)){
             $title_new_text = $title_new_[$folder];
         }else{
-            $folder = rtrim($folder, '/'); 
+            $folder = rtrim($folder, '/');
             $path = explode("/", $folder); // splitting the path
-            $last = end($path); 
+            $last = end($path);
             $title_new_text = ucfirst($last);
         }
-      
-       
-      
-       
 
-       //echo "<pre> section_parent_path: "; print_r($section_parent_path); echo "</pre>"; 
-       //echo "<pre> parent_path: "; print_r($parent_path); echo "</pre>"; 
+
+
+
+
+       //echo "<pre> section_parent_path: "; print_r($section_parent_path); echo "</pre>";
+       //echo "<pre> parent_path: "; print_r($parent_path); echo "</pre>";
        $folder_full_path = parse_url($folder, PHP_URL_PATH);
        $productfamily_full_path  = parse_url($productfamily, PHP_URL_PATH);
        $product_full_path = parse_url($product, PHP_URL_PATH);
@@ -1658,10 +1661,10 @@ class UploadController extends Controller
          $download_link = $folder_link;
        }
 
-       
+
        /*$ETag = Str::random(40);
        $fileSizeBytes = "99877450";
-       
+
        //$result = get_remote_file_info($filetoupload);
        $filetoupload = urldecode($filetoupload);
        $s3_file_headers = get_headers($filetoupload,1);
@@ -1736,7 +1739,7 @@ class UploadController extends Controller
 
 
     public function AddReleaseToSpreadsheetAndTranslate($mdfile, $host ){
-       
+
         $translated_file_path = array();
         $spreadsheetId = env('SPREADSHEETID', '');
         if(empty($spreadsheetId)){
@@ -1760,7 +1763,7 @@ class UploadController extends Controller
         $sheets = new \Google_Service_Sheets($client);
 
 
-        
+
         $range = 'A1:M';
         $rows = $sheets->spreadsheets_values->get($spreadsheetId, $range, ['majorDimension' => 'ROWS']);
         $transalted_data = $rows['values'];
@@ -1768,13 +1771,13 @@ class UploadController extends Controller
         if(count($transalted_data)){
             $Count = count($transalted_data);
             $row = $Count + 1;
-    
+
             $Final_Array_To_Csv = array();
-            
-            $intro_text = array( 
-                $mdfile['sheet_folder_link'], 
-                "intro_text", 
-                $mdfile['sheet_intro_text'], 
+
+            $intro_text = array(
+                $mdfile['sheet_folder_link'],
+                "intro_text",
+                $mdfile['sheet_intro_text'],
                 '=GOOGLETRANSLATE(C'.$row.',"en","de")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","el")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","es")',
@@ -1786,14 +1789,14 @@ class UploadController extends Controller
                 '=GOOGLETRANSLATE(C'.$row.',"en","tr")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","zh")',
             );
-    
+
             array_push($Final_Array_To_Csv, $intro_text);
             $row = $row + 1; // next row
-    
-            $folder_name = array( 
-                $mdfile['sheet_folder_link'], 
-                "folder_name",  
-                $mdfile['sheet_folder_name'], 
+
+            $folder_name = array(
+                $mdfile['sheet_folder_link'],
+                "folder_name",
+                $mdfile['sheet_folder_name'],
                 '=GOOGLETRANSLATE(C'.$row.',"en","de")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","el")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","es")',
@@ -1805,14 +1808,14 @@ class UploadController extends Controller
                 '=GOOGLETRANSLATE(C'.$row.',"en","tr")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","zh")',
             );
-    
+
             array_push($Final_Array_To_Csv, $folder_name);
             $row = $row + 1; // next row
-    
-            $title = array( 
-                $mdfile['sheet_folder_link'], 
-                "title",  
-                $mdfile['sheet_title'],  
+
+            $title = array(
+                $mdfile['sheet_folder_link'],
+                "title",
+                $mdfile['sheet_title'],
                 '=GOOGLETRANSLATE(C'.$row.',"en","de")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","el")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","es")',
@@ -1824,14 +1827,14 @@ class UploadController extends Controller
                 '=GOOGLETRANSLATE(C'.$row.',"en","tr")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","zh")',
             );
-    
+
             array_push($Final_Array_To_Csv, $title);
             $valueRange = new \Google_Service_Sheets_ValueRange();
             $valueRange->setValues($Final_Array_To_Csv);
             $range = 'Sheet1!A1:A';
             $conf = ["valueInputOption" => "USER_ENTERED"];
             $sheets->spreadsheets_values->append($spreadsheetId, $range, $valueRange, $conf);
-    
+
             $translated_file_path = $this->ReadSheetData($mdfile, $spreadsheetId);
         }
         return $translated_file_path;
@@ -1867,7 +1870,7 @@ class UploadController extends Controller
         $sheets = new \Google_Service_Sheets($client);
 
 
-        
+
         $range = 'A1:M';
         $rows = $sheets->spreadsheets_values->get($spreadsheetId, $range, ['majorDimension' => 'ROWS']);
         $transalted_data = $rows['values'];
@@ -1928,17 +1931,17 @@ weight: 14
     {{<< /Releases/ReleasesFileArea >>}}
 {{<< /Releases/ReleasesWapper >>}}'
 );
-        
+
         if(count($transalted_data)){
             $Count = count($transalted_data);
             $row = $Count + 1;
-    
+
             $Final_Array_To_Csv = array();
-            
-            $intro_text = array( 
-                $mdfile['sheet_folder_link'], 
-                "intro_text", 
-                $mdfile['sheet_intro_text'], 
+
+            $intro_text = array(
+                $mdfile['sheet_folder_link'],
+                "intro_text",
+                $mdfile['sheet_intro_text'],
                 '=GOOGLETRANSLATE(C'.$row.',"en","de")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","el")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","es")',
@@ -1950,14 +1953,14 @@ weight: 14
                 '=GOOGLETRANSLATE(C'.$row.',"en","tr")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","zh")',
             );
-    
+
             array_push($Final_Array_To_Csv, $intro_text);
             $row = $row + 1; // next row
-    
-            $folder_name = array( 
-                $mdfile['sheet_folder_link'], 
-                "folder_name",  
-                $mdfile['sheet_folder_name'], 
+
+            $folder_name = array(
+                $mdfile['sheet_folder_link'],
+                "folder_name",
+                $mdfile['sheet_folder_name'],
                 '=GOOGLETRANSLATE(C'.$row.',"en","de")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","el")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","es")',
@@ -1969,14 +1972,14 @@ weight: 14
                 '=GOOGLETRANSLATE(C'.$row.',"en","tr")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","zh")',
             );
-    
+
             array_push($Final_Array_To_Csv, $folder_name);
             $row = $row + 1; // next row
-    
-            $title = array( 
-                $mdfile['sheet_folder_link'], 
-                "title",  
-                $mdfile['sheet_title'],  
+
+            $title = array(
+                $mdfile['sheet_folder_link'],
+                "title",
+                $mdfile['sheet_title'],
                 '=GOOGLETRANSLATE(C'.$row.',"en","de")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","el")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","es")',
@@ -1988,14 +1991,14 @@ weight: 14
                 '=GOOGLETRANSLATE(C'.$row.',"en","tr")',
                 '=GOOGLETRANSLATE(C'.$row.',"en","zh")',
             );
-    
+
             array_push($Final_Array_To_Csv, $title);
             $valueRange = new \Google_Service_Sheets_ValueRange();
             $valueRange->setValues($Final_Array_To_Csv);
             $range = 'Sheet1!A1:A';
             $conf = ["valueInputOption" => "USER_ENTERED"];
             $sheets->spreadsheets_values->append($spreadsheetId, $range, $valueRange, $conf);
-    
+
             $translated_file_path = $this->ReadSheetData($mdfile, $spreadsheetId);
         }
         return $translated_file_path;
@@ -2016,7 +2019,7 @@ weight: 14
         * With the Google_Client we can get a Google_Service_Sheets service object to interact with sheets
         */
         $sheets = new \Google_Service_Sheets($client);
-        $range_delete = 'A2:O'; 
+        $range_delete = 'A2:O';
         $requestBody = new \Google_Service_Sheets_ClearValuesRequest();
         $response = $sheets->spreadsheets_values->clear($spreadsheetId, $range_delete, $requestBody);
 
@@ -2037,7 +2040,7 @@ weight: 14
         * With the Google_Client we can get a Google_Service_Sheets service object to interact with sheets
         */
         $sheets = new \Google_Service_Sheets($client);
-        $range_delete = 'A2:M'; 
+        $range_delete = 'A2:M';
         $requestBody = new \Google_Service_Sheets_ClearValuesRequest();
         $response = $sheets->spreadsheets_values->clear($spreadsheetId, $range_delete, $requestBody);
 
@@ -2074,29 +2077,29 @@ weight: 14
         $rows = $sheets->spreadsheets_values->get($spreadsheetId, $range, ['majorDimension' => 'ROWS']);
         $transalted_data = $rows['values'];
         $transalted_data_arranged = $this->arrange_sheet_data($transalted_data);
-   
+
         if(!empty($transalted_data_arranged)){
             foreach($target_languages_array as $target_lanaguage ){
 
                 foreach($transalted_data_arranged as $keyfilepath=>$translatedcontent){
-                
+
                     $md_filepath = $keyfilepath;
                     $actual_file_path = rtrim($md_filepath,"/");
                     $actual_file_path = ltrim($actual_file_path,"/");
                     $en_mdfile = $content_path . "/". $source_lanaguage ."/" . $actual_file_path. ".md";
                     $en_mdfile = str_replace("//", '/', $en_mdfile);
-                    
+
                     $segments = explode('/', trim(parse_url($actual_file_path, PHP_URL_PATH), '/'));
                     $numSegments = count($segments);
                     $filename = $segments[$numSegments - 1];
                     $filepath = implode("/", $segments);
                     $plorp = substr(strrchr($filepath,'/'), 1);
-                    $filepath = substr($filepath, 0, - strlen($plorp)); 
+                    $filepath = substr($filepath, 0, - strlen($plorp));
 
-                    $target_file_src = $content_path . "/". $target_lanaguage . '/' . $filepath . ''.  $filename. ".md"; 
+                    $target_file_src = $content_path . "/". $target_lanaguage . '/' . $filepath . ''.  $filename. ".md";
                     $target_file_src = str_replace("//", '/', $target_file_src);
 
-                            
+
                     //if (!file_exists( $target_file_src )) {
 
                         $contents = $mdfile['data'];
@@ -2115,7 +2118,7 @@ weight: 14
                                 $replacement = 'intro_text: "'.$intro_text_translated.'"';
                                 $contents =  preg_replace($pattern, $replacement, $contents);
                             }
-                        
+
                             if( isset($translatedcontent['folder_name']) && !empty($translatedcontent['folder_name']['text']) && strlen(trim($translatedcontent['folder_name']['text']) ) >=4){
                                 $folder_name_text_translated = $translatedcontent['folder_name'][$target_lanaguage];
                                 $pattern = '#^folder_name: "(.*)"$#m';
@@ -2169,23 +2172,23 @@ weight: 14
         foreach( $transalted_data as $k=>$v )
         {
             $new_offersvalues[ $k ] = array();
-    
+
             foreach( $v as $k2=>$v2 )
             {
                 $new_offersvalues[ $k ][ $cols[ $k2 ] ] = $v2;
             }
-    
+
          unset( $transalted_data[ $k ] );
         }
-    
-    
+
+
         if(!empty($new_offersvalues)){
           foreach($new_offersvalues as $target_lanaguage ){
             $new_offersvalues_final[$target_lanaguage['path']][$target_lanaguage['lable']] = $target_lanaguage;
           }
         }
-        
-    
+
+
         return $new_offersvalues_final;
     }
 
@@ -2217,7 +2220,7 @@ weight: 14
         }
         return $csv;
     }
-    
+
 }
 //Examples
 //New Releases
