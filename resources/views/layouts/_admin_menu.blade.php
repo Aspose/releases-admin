@@ -73,9 +73,11 @@
                         <li class="custom-padding">
                             <a id="ctl00_HyperLink5" class="dropdown-toggle" href="{{ url('admin/manage-total-net-release') }}">Manage Total.Net</a>
                         </li>
+                        <!--
                         <li class="custom-padding">
                             <a id="ctl00_HyperLink5" class="dropdown-toggle" href="{{ url('admin/manage-total-net-release?family=java') }}">Manage Total.Java</a>
                         </li>
+                      -->
                         <li class="custom-padding">
                             <a id="ctl00_HyperLink5" class="dropdown-toggle" href="{{ url('admin/manage-total-net-release?family=cpp') }}">Manage Total.C++</a>
                         </li>
@@ -89,7 +91,7 @@
                         <li class="custom-padding"><small> Branch:  <?php echo env('GIT_BRANCH')?></small></li>
                         <li class="custom-padding"><small> Bucket:  <?php echo env('AWS_BUCKET')?></small></li>
                         <hr>
-                        
+
                         <li class="custom-padding"><small> Translation:</small></li>
                         <li class="custom-padding"><small> MULTILINGUAL:  <?php echo env('MULTILINGUAL')?></small></li>
                         <li class="custom-padding"><small> SPREADSHEETID:  <?php echo env('SPREADSHEETID')?></small></li>
