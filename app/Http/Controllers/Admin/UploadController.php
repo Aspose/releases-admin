@@ -595,10 +595,15 @@ class UploadController extends Controller
                 if(!empty($child[0]['nodes'])){
                     $child =  $child[0]['nodes'];
                     foreach($child as $single){
-                      
+
                         if(!str_contains($single['text'], 'Java')){ //folder and corporate get child from json
                           $final_array[$single['text']] = $single['url'];
                         }
+
+                        if(str_contains($single['text'], 'via Java')){ //folder and corporate get child from json
+                          $final_array[$single['text']] = $single['url'];
+                        }
+
                     }
                     return $final_array;
                 }else{
