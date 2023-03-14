@@ -129,16 +129,16 @@ class ReleasesApiController extends Controller
         $final_array = array();
         foreach($spec_counts as $product=>$count){
            // echo "<pre>"; print_r($product . " === " . $count);echo "</pre>";
-           $product = rtrim($product, '/');
-           $product = ltrim($product, '/');
-           $product =  str_replace('corporate/', '', $product);
-           $product =  str_replace('/', '', $product);
+           //$product = rtrim($product, '/');
+           //$product = ltrim($product, '/');
+           //$product =  str_replace('corporate/', '', $product);
+           //$product =  str_replace('/', '', $product);
             $final_array[] = array(
                 'EntityName'=> $product,
                 'EntityCount'=> $count,
             );
         }
-        $final_array = array_slice($final_array, 0, 10);
+      //  $final_array = array_slice($final_array, 0, 10);
         $json =  json_encode($final_array);
         return $json;
     }
