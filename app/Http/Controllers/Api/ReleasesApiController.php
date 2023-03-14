@@ -134,7 +134,7 @@ class ReleasesApiController extends Controller
            //$product =  str_replace('corporate/', '', $product);
            //$product =  str_replace('/', '', $product);
             $final_array[] = array(
-                'EntityName'=> $product,
+                'EntityName'=> '$product',
                 'EntityCount'=> $count,
             );
         }
