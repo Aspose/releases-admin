@@ -19,11 +19,11 @@ class ReleasesApiController extends Controller
     public function updatecount(Request $request)
     {
         // $tags = Tag::paginate(10);
-        $path = 
+        $path =
         // return TagResource::collection($tags);
 
         //print_r($family . ' --- '. $product);
-        
+
         //print_r($family_product);
         $jsonresponse = array();
         if(isset($request->path)){
@@ -32,7 +32,7 @@ class ReleasesApiController extends Controller
                 $Release = Release::where('etag_id', '=', $etag_id)->get();
             }else{
                 $family_product = '/'. $request->path . '/';
-                
+
                 $regex = '|/corporate/success-stories/([a-z]+.[a-z]+)|';
                 preg_match_all($regex,$family_product,$res_succ,PREG_SET_ORDER);
 
@@ -51,7 +51,7 @@ class ReleasesApiController extends Controller
                     $family_product = str_replace('resources/', '', $family_product);
                     $Release = Release::where('product', '=', $family_product)->get();
                 }
-                
+
             }
             foreach($Release as $singlerelase){
                 $productfamily_path = ltrim($singlerelase->product, '/');
@@ -73,10 +73,10 @@ class ReleasesApiController extends Controller
 
     public function addviewcount(Request $request){
         $return = 0;
-        
+
         if(!empty($request->etag_id)){
            $etag_id = trim($request->etag_id);
-            if (Release::where('etag_id', $etag_id)->exists()) {  
+            if (Release::where('etag_id', $etag_id)->exists()) {
                $row = DB::table('releases')->where('etag_id', $etag_id)->first();
                if($row){
                 $Release = Release::find($row->id);
@@ -92,7 +92,7 @@ class ReleasesApiController extends Controller
     public function getcountbucket(){
         dd('nothing to do');
         exit;
-       
+
     }
 
     public function GetGeneralStatus(Request $request){
@@ -106,13 +106,39 @@ class ReleasesApiController extends Controller
          ->selectRaw('IsCustomer, count(*) as total')
         ->groupBy('IsCustomer')
          ->pluck('total','IsCustomer')->all();
-        
+
 
         $final_array = array(
             'TotalDownloads'=>$allcount,
             'DownloadByCustomers'=>$spec_counts[1],
             'DownloadByAsposeStaffMember'=>$spec_counts[0]
         );
+        $json =  json_encode($final_array);
+        return $json;
+    }
+
+    public function GetTotalDetailedReport(Request $request){
+//        $days = $request->date;
+//        $date = \Carbon\Carbon::today()->subDays($days);
+        $spec_counts = Download::where('FileID', '>=', 1)
+        ->orderBy('total', 'desc')
+        ->selectRaw('product, count(*) as total')
+       ->groupBy('product')
+        ->pluck('total','product')->all();
+
+        $final_array = array();
+        foreach($spec_counts as $product=>$count){
+           // echo "<pre>"; print_r($product . " === " . $count);echo "</pre>";
+           $product = rtrim($product, '/');
+           $product = ltrim($product, '/');
+           $product =  str_replace('corporate/', '', $product);
+           $product =  str_replace('/', '', $product);
+            $final_array[] = array(
+                'EntityName'=> $product,
+                'EntityCount'=> $count,
+            );
+        }
+        $final_array = array_slice($final_array, 0, 10);
         $json =  json_encode($final_array);
         return $json;
     }
@@ -125,12 +151,12 @@ class ReleasesApiController extends Controller
         ->selectRaw('product, count(*) as total')
        ->groupBy('product')
         ->pluck('total','product')->all();
-        
+
         $final_array = array();
         foreach($spec_counts as $product=>$count){
-           // echo "<pre>"; print_r($product . " === " . $count);echo "</pre>";  
-           $product = rtrim($product, '/'); 
-           $product = ltrim($product, '/'); 
+           // echo "<pre>"; print_r($product . " === " . $count);echo "</pre>";
+           $product = rtrim($product, '/');
+           $product = ltrim($product, '/');
            $product =  str_replace('corporate/', '', $product);
            $product =  str_replace('/', '', $product);
             $final_array[] = array(
@@ -150,11 +176,11 @@ class ReleasesApiController extends Controller
         ->selectRaw('family, count(*) as total')
        ->groupBy('family')
         ->pluck('total','family')->all();
-        
+
         $final_array = array();
         foreach($spec_counts as $product=>$count){
-           $product = rtrim($product, '/'); 
-           $product = ltrim($product, '/'); 
+           $product = rtrim($product, '/');
+           $product = ltrim($product, '/');
             $final_array[] = array(
                 'EntityName'=> $product,
                 'EntityCount'=> $count,
@@ -174,7 +200,7 @@ class ReleasesApiController extends Controller
         ->selectRaw('etag_id, count(*) as total')
        ->groupBy('etag_id')
         ->pluck('total','etag_id')->all();
-        
+
         $final_array = array();
      //print_r($spec_counts);
         $spec_counts = array_slice($spec_counts, 0, 10);
@@ -185,7 +211,7 @@ class ReleasesApiController extends Controller
                 'EntityCount'=> $count,
             );
         }
-        
+
         $json =  json_encode($final_array);
         return $json;
     }
