@@ -136,7 +136,7 @@ class ReleasesApiController extends Controller
            //$product =  str_replace('/', '', $product);
             $final_array[] = array(
                 'EntityName'=> $product,
-                'EntityCount'=> $count
+                'EntityCount'=> $count,
                 'EntityLastUpdate'=> date("Y-m-d",date($date))
             );
         }
