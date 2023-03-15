@@ -136,6 +136,7 @@ class ReleasesApiController extends Controller
             $final_array[] = array(
                 'EntityName'=> $product,
                 'EntityCount'=> $count,
+                'EntityLastUpdate'=> date("Y-m-d",time())
             );
         }
       //  $final_array = array_slice($final_array, 0, 10);
