@@ -117,6 +117,35 @@ class ReleasesApiController extends Controller
         return $json;
     }
 
+
+    public function GetTotalDetailedReportByDate(Request $request){
+            $date = $request->date;
+    //        $date = \Carbon\Carbon::today()->subDays($days);
+        $totalcount = Download::where('TimeStamp', '<=', date($date))->get();
+        ->orderBy('total', 'desc')
+        ->selectRaw('product, count(*) as total')
+       ->groupBy('product')
+        ->pluck('total','product')->all();
+
+        $final_array = array();
+        foreach($spec_counts as $product=>$count){
+           // echo "<pre>"; print_r($product . " === " . $count);echo "</pre>";
+           //$product = rtrim($product, '/');
+           //$product = ltrim($product, '/');
+           //$product =  str_replace('corporate/', '', $product);
+           //$product =  str_replace('/', '', $product);
+            $final_array[] = array(
+                'EntityName'=> $product,
+                'EntityCount'=> $count
+                'EntityLastUpdate'=> date("Y-m-d",date($date))
+            );
+        }
+      //  $final_array = array_slice($final_array, 0, 10);
+        $json =  json_encode($final_array);
+        return $json;
+    }
+
+
     public function GetTotalDetailedReport(Request $request){
 //        $days = $request->date;
 //        $date = \Carbon\Carbon::today()->subDays($days);

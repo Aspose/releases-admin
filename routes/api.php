@@ -12,6 +12,7 @@ Route::group(['middleware' => ['api'], 'namespace' => 'Api'], function () {
     Route::post('/GetGeneralStatus', 'ReleasesApiController@GetGeneralStatus');
     Route::post('/GetDetailedReport', 'ReleasesApiController@GetDetailedReport');
     Route::get('/GetTotalDetailedReport', 'ReleasesApiController@GetTotalDetailedReport');
+    Route::post('/GetTotalDetailedReportByDate', 'ReleasesApiController@GetTotalDetailedReportByDate');
     Route::post('/GetFamilyPIEChart', 'ReleasesApiController@GetFamilyPIEChart');
     Route::post('/GetPopularFiles', 'ReleasesApiController@GetPopularFiles');
 
