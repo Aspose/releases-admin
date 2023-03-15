@@ -121,7 +121,7 @@ class ReleasesApiController extends Controller
     public function GetTotalDetailedReportByDate(Request $request){
             $date = $request->date;
     //        $date = \Carbon\Carbon::today()->subDays($days);
-        $totalcount = Download::where('TimeStamp', '<=', date($date))
+        $spec_counts = Download::where('TimeStamp', '<=', date($date))
         ->orderBy('total', 'desc')
         ->selectRaw('product, count(*) as total')
        ->groupBy('product')
