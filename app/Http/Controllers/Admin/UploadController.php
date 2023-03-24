@@ -604,6 +604,10 @@ class UploadController extends Controller
                           $final_array[$single['text']] = $single['url'];
                         }
 
+                        if(str_contains($single['text'], 'JavaScript')){ //folder and corporate get child from json
+                          $final_array[$single['text']] = $single['url'];
+                        }
+
                     }
                     return $final_array;
                 }else{
