@@ -124,18 +124,8 @@ class ReleasesApiController extends Controller
             $startdate = $date." 00:00:00";
             $enddate = $date." 23:59:59";
 
-            $dSart = DateTime::createFromFormat(
-                'd-m-Y H:i:s',
-                $startdate,
-                new DateTimeZone('UTC'));
-
-            $dEnd = DateTime::createFromFormat(
-                'd-m-Y H:i:s',
-                $enddate,
-                new DateTimeZone('UTC'));
-
-        $spec_counts = Download::where('TimeStamp', '>=', $dSart)
-        ->where('TimeStamp', '<=', $dEnd)
+        $spec_counts = Download::where('TimeStamp', '>=', datetime($startdate))
+        ->where('TimeStamp', '<=', datetime($enddate))
         ->orderBy('total', 'desc')
         ->selectRaw('product, count(*) as total')
        ->groupBy('product')
