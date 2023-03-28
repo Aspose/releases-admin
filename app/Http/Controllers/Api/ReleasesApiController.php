@@ -121,8 +121,8 @@ class ReleasesApiController extends Controller
     public function GetTotalDetailedReportByDate(Request $request){
             $date = $request->date;
     //        $date = \Carbon\Carbon::today()->subDays($days);
-            $startdate = $date + ' 00:00:00';
-            $enddate = $date + ' 23:59:59';
+            $startdate = $date.' 00:00:00';
+            $enddate = $date.' 23:59:59';
 
             $dSart = DateTime::createFromFormat(
                 'd-m-Y H:i:s',
