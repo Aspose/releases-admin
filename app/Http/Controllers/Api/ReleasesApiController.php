@@ -127,12 +127,12 @@ class ReleasesApiController extends Controller
             $dSart = DateTime::createFromFormat(
                 'd-m-Y H:i:s',
                 $startdate,
-                new DateTimeZone('UTC')
+                new DateTimeZone('UTC'));
 
             $dEnd = DateTime::createFromFormat(
                 'd-m-Y H:i:s',
                 $enddate,
-                new DateTimeZone('UTC')
+                new DateTimeZone('UTC'));
 
         $spec_counts = Download::where('TimeStamp', '>=', $dSart)
         ->where('TimeStamp', '<=', $dEnd)
