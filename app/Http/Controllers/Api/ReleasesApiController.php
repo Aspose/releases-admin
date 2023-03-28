@@ -124,8 +124,8 @@ class ReleasesApiController extends Controller
             $startdate = $date." 00:00:00";
             $enddate = $date." 23:59:59";
 
-        $spec_counts = Download::where('TimeStamp', '>=', datetime($startdate))
-        ->where('TimeStamp', '<=', datetime($enddate))
+        $spec_counts = Download::where('TimeStamp', '>=', date($startdate))
+        ->where('TimeStamp', '<=', date($enddate))
         ->orderBy('total', 'desc')
         ->selectRaw('product, count(*) as total')
        ->groupBy('product')
