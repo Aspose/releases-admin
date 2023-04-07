@@ -15,5 +15,6 @@ Route::group(['middleware' => ['api'], 'namespace' => 'Api'], function () {
     Route::post('/GetTotalDetailedReportByDate', 'ReleasesApiController@GetTotalDetailedReportByDate');
     Route::post('/GetFamilyPIEChart', 'ReleasesApiController@GetFamilyPIEChart');
     Route::post('/GetPopularFiles', 'ReleasesApiController@GetPopularFiles');
+    Route::post('/addJavavDownloadHistoryEntry', 'ReleasesApiController@addJavavDownloadHistoryEntry');
 
 });

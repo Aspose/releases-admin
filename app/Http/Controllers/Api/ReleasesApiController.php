@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ReleasesApiController extends Controller
 {
+
     public function updatecount(Request $request)
     {
         // $tags = Tag::paginate(10);
@@ -88,6 +89,61 @@ class ReleasesApiController extends Controller
         }
         return $return;
     }
+
+
+
+    public function addJavavDownloadHistoryEntry(Request $request){
+
+
+      $someObject  = json_decode($request->json);
+      // print_r($request->isJson());
+
+        $jsonRequestArray = json_decode($request->getContent(), true);
+              // Dump all data of the Array
+       //echo $someArray[0]["name"]; // Access Array data
+
+       foreach($jsonRequestArray as $item) { //foreach element in $arr
+
+
+         Download::create([
+             'FileID' => trim($item['id']),
+             'LOGID' => trim($item['id']),
+             'family' => trim($item['family']),
+             'product' => trim($item['product']),
+             'folder' => trim($item['folder']),
+             'etag_id' => trim($item['version']),
+             'IsCustomer' => 1,
+             'IPAddress' => trim($item['ip']),
+             'UrlReferrer' => trim($item['referer']),
+             'UserName' => trim($item['ip']),
+             'TimeStamp' => date($item['createDate']) 
+         ]);
+
+       }
+
+/*
+        Download::create([
+            'FileID' => trim($request->id),
+            'LOGID' => trim($request->id),
+            'family' => trim($request->family),
+            'product' => trim($request->product),
+            'folder' => trim($request->folder),
+            'etag_id' => trim($request->version),
+            'IsCustomer' => 1,
+            'IPAddress' => trim($request->ip),
+            'UrlReferrer' => trim($request->referer),
+            'UserName' => trim($request->ip),
+            'TimeStamp' => date('Y-m-d H:i:s')
+        ]);
+*/
+
+  //  $jason =  json_encode($someObject);
+    return true;
+
+
+    }
+
+
 
     public function getcountbucket(){
         dd('nothing to do');
