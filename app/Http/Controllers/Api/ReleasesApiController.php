@@ -94,6 +94,12 @@ class ReleasesApiController extends Controller
 
     public function addJavavDownloadHistoryEntry(Request $request){
 
+      if (!($request->hasHeader('RELEASES_API_ACCESS_KEY'))) {
+        dd('api key is missing');
+        return;
+      }
+
+
 
       $someObject  = json_decode($request->json);
       // print_r($request->isJson());
@@ -116,7 +122,7 @@ class ReleasesApiController extends Controller
              'IPAddress' => trim($item['ip']),
              'UrlReferrer' => trim($item['referer']),
              'UserName' => trim($item['ip']),
-             'TimeStamp' => date($item['createDate']) 
+             'TimeStamp' => date($item['createDate'])
          ]);
 
        }
