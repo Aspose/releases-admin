@@ -94,7 +94,7 @@ class ReleasesApiController extends Controller
 
     public function addJavavDownloadHistoryEntry(Request $request){
 
-      if (!($request->hasHeader('releases_api_access_key'))) {
+      if (!($request->hasHeader('x-api-key'))) {
 
         // Same as getallheaders(), just with lowercase keys
       //  print_r(array_map($get_first, $request->headers->all()));
@@ -105,7 +105,7 @@ class ReleasesApiController extends Controller
 
       }
 
-      if (strcmp(env('RELEASES_API_ACCESS_KEY'), $request->header('releases_api_access_key')) !== 0) {
+      if (strcmp(env('RELEASES_API_ACCESS_KEY'), $request->header('x-api-key')) !== 0) {
 
         // Same as getallheaders(), just with lowercase keys
       //  print_r(array_map($get_first, $request->headers->all()));
