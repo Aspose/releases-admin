@@ -99,6 +99,8 @@ class ReleasesApiController extends Controller
         // Same as getallheaders(), just with lowercase keys
       //  print_r(array_map($get_first, $request->headers->all()));
 
+        print_r($request->header());
+
          return response()->json(['error' => 'Not authorized. No Key found'],403);
 
       }
