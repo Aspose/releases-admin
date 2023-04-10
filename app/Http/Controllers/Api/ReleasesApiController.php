@@ -96,12 +96,12 @@ class ReleasesApiController extends Controller
 
       if (!($request->hasHeader('RELEASES_API_ACCESS_KEY'))) {
 
-         return response()->json(['error' => 'Not authorized.'],403);
+         return response()->json(['error' => 'Not authorized. No Key found'],403);
 
       }
 
       if (strcmp(env('RELEASES_API_ACCESS_KEY'), $request->header('RELEASES_API_ACCESS_KEY')) !== 0) {
-           return response()->json(['error' => 'Not authorized.'],403);
+           return response()->json(['error' => 'Not authorized. Invalid Key.'],403);
       }
 
       $someObject  = json_decode($request->json);
