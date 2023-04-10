@@ -95,8 +95,9 @@ class ReleasesApiController extends Controller
     public function addJavavDownloadHistoryEntry(Request $request){
 
       if (!($request->hasHeader('RELEASES_API_ACCESS_KEY'))) {
-        dd('api key is missing');
-        return;
+
+         return response()->json(['error' => 'Not authorized.'],403);
+
       }
 
 
