@@ -94,10 +94,10 @@ class ReleasesApiController extends Controller
 
     public function addJavavDownloadHistoryEntry(Request $request){
 
-      if (!($request->hasHeader('RELEASES_API_ACCESS_KEY'))) {
+      if (!($request->hasHeader('releases_api_access_key'))) {
 
         // Same as getallheaders(), just with lowercase keys
-        print_r(array_map($get_first, $request->headers->all()));
+      //  print_r(array_map($get_first, $request->headers->all()));
 
          return response()->json(['error' => 'Not authorized. No Key found'],403);
 
