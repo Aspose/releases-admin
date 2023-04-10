@@ -100,7 +100,7 @@ class ReleasesApiController extends Controller
 
       }
 
-      if (env('RELEASES_API_ACCESS_KEY') != $request->header('RELEASES_API_ACCESS_KEY')) {
+      if (strcmp(env('RELEASES_API_ACCESS_KEY'), $request->header('RELEASES_API_ACCESS_KEY')) !== 0) {
            return response()->json(['error' => 'Not authorized.'],403);
       }
 
