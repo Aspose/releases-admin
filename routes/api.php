@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::group(['middleware' => ['api'], 'namespace' => 'Api'], function () {
+
+    Route::post('/oauth/token', 'AuthController@getAccessToken');
+
     Route::get('/updatecount', 'ReleasesApiController@updatecount');
     Route::post('/addviewcount', 'ReleasesApiController@addviewcount');
     Route::get('/getcountbucket', 'ReleasesApiController@getcountbucket');
@@ -18,3 +21,9 @@ Route::group(['middleware' => ['api'], 'namespace' => 'Api'], function () {
     Route::post('/addJavavDownloadHistoryEntry', 'ReleasesApiController@addJavavDownloadHistoryEntry');
 
 });
+
+Route::middleware('auth:api')->get('/user', function(Request $request) {
+    return $request->user();
+});
+
+Route::middleware('auth:api')->post('/product/release', 'Admin\\UploadController@uploadAPI');

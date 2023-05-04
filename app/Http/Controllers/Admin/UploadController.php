@@ -468,6 +468,89 @@ class UploadController extends Controller
             return $results;
         }
 
+
+        /**
+         * Store a newly created resource in storage.
+         *
+         * @param  \Illuminate\Http\Request  $request
+         * @return \Illuminate\Http\Response
+         */
+        public function uploadAPI(Request $request)
+        {
+
+
+              if(empty($request->productfamily) || empty($request->product) || empty($request->folder) || empty($request->file)
+              || empty($request->title) || empty($request->description) || empty($request->releaseurl) ||  empty($request->tags) ){
+                return response()->json(['error' => 'Bad Request -- missing required param.'], 400);}
+
+
+                $amazon_s3_settings = AmazonS3Setting::where('id', 1)->first();
+                $hugositeurl = $amazon_s3_settings->hugositeurl;
+
+                //dd($release->folder);
+                $DropDownContent = $this->GetDropDownContent();
+                $family_url = $hugositeurl .'/'.$request->productfamily.'/';
+                $product_url = $family_url .''.$request->product.'/';
+
+                //dd($family_url);
+                $familySelected = $this->searchSingle($DropDownContent, 'url', $family_url);
+                if(empty($familySelected)){
+                    return response()->json(['error' => 'Bad Request -- so such product family url :: '.$family_url.''], 400);
+                }
+
+                $productSelected = $this->searchSingle($DropDownContent, 'url', $product_url);
+                if(empty($productSelected)){
+                    return response()->json(['error' => 'Bad Request -- so such product url :: '.$product_url.''], 400);
+                }
+
+
+
+
+                $releaseFolders = $this->getchildnodeslist("folder");
+
+                if (!(in_array($request->folder, $releaseFolders))) {
+                  return response()->json(['error' => 'Bad Request -- so such release folder :: '.$request->folder.''], 400);
+                }
+
+
+            //print_r(array_map($get_first, $request->headers->all()));
+            //print_r($request);
+
+            $host = $request->getHttpHost();
+
+
+                $filter_family = $request->productfamily;
+                $filter_product = $request->product;
+                $filter_folder = $request->folder;
+                $reload_filter = "?filter_productfamily=".$filter_family."&filter_product=".$filter_product."&filter_folder=".$filter_folder;
+
+                $upload_info = $this->UploadImageToS3($request->all(), 'new');
+
+                if(!empty($upload_info)){
+                    //echo "<pre>"; print_r($upload_info); echo "</pre>";
+                    $mdfile =$this->generate_mdfile($request->all(), $upload_info);
+
+                    $spreadsheetId = "";
+                    $is_multilingual = env('MULTILINGUAL', false);
+                    $spreadsheetId = env('SPREADSHEETID', '');
+                    $admin_email = Auth::user()->email;
+                    if( !empty($spreadsheetId) && $is_multilingual ){
+                        $transalted_md_files = $this->AddReleaseToSpreadsheetAndTranslate($mdfile, $host);
+                        $res = $this->AddTranslatedFilesToRepo($transalted_md_files, $host );
+                    }else{
+                        $res = $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
+                    }
+
+                    $this->addlogentry($mdfile['last_insert_update_id'], $res);
+                  return response()->json(['success' => 'Published Successfully..'], 200);
+
+                }else{
+                    return response()->json(['error' => 'Published Failed.'], 500);
+                }
+
+
+        }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -476,6 +559,7 @@ class UploadController extends Controller
      */
     public function upload(UploadsRequest $request)
     {
+
         $host = $request->getHttpHost();
         if(!empty($request->all())){
 
