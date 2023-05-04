@@ -489,8 +489,8 @@ class UploadController extends Controller
 
                 //dd($release->folder);
                 $DropDownContent = $this->GetDropDownContent();
-                $family_url = $hugositeurl .'/'.$request->productfamily.'/';
-                $product_url = $family_url .''.$request->product.'/';
+                $family_url =$request->productfamily;
+                $product_url = $request->product;
 
                 //dd($family_url);
                 $familySelected = $this->searchSingle($DropDownContent, 'url', $family_url);
