@@ -355,7 +355,8 @@ class UploadController extends Controller
 
         if(empty($folders)){
             $url = false;
-            $folders = array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+            //$folders = array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+            $folders = array('New Releases'=> 'new-releases' );
             $selected_folder = $release->folder;
         }else{
             $url = true;
@@ -406,7 +407,8 @@ class UploadController extends Controller
 
         if(empty($folders)){
             $url = false;
-            $folders = array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+            //$folders = array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+            $folders = array('New Releases'=> 'new-releases' );
             $selected_folder = $release->folder;
         }else{
             $url = true;
@@ -669,10 +671,12 @@ class UploadController extends Controller
                         return $final_array;
                     }else{
 
-                        return array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+                        //return array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+                        return array('New Releases'=> 'new-releases' );
                     }
                 }else{ // fix for ocr folders
-                    return array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+                    //return array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+                    return array('New Releases'=> 'new-releases' );
                 }
 
             }else{
@@ -716,7 +720,8 @@ class UploadController extends Controller
                 return $final_array;
             }else{
                 if($childtype == 'folder'){
-                    return array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+                    //return array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+                    return array('New Releases'=> 'new-releases' );
                 }
             }
 
@@ -1604,7 +1609,8 @@ class UploadController extends Controller
         //echo "<pre>"; print_r($request->filter_product); echo "</pre>";
         //echo "<pre>"; print_r($folders); echo "</pre>";
         if(empty($folders)){
-            $folders = array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+            //$folders = array('Examples'=> 'examples', 'New Releases'=> 'new-releases', 'Resources'=> 'resources' );
+            $folders = array( 'New Releases'=> 'new-releases' );
         }
         //dd($current_child_products);
         //$productSelected = $request->filter_product;
