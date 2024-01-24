@@ -112,9 +112,11 @@
             return false;
         }
 
-        if(title.indexOf(',') !== -1){
+        if( title.indexOf(',') !== -1
+        || title.indexOf('/') !== -1
+      ){
             //event.preventDefault();
-            alert( "Comma Not Allowed in Title");
+            alert( "Comma or slash Not Allowed in Title");
             return false;
         }
 
