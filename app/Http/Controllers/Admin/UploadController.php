@@ -398,6 +398,10 @@ class UploadController extends Controller
 
         if(!empty($product_url)){
             $folders = $this->getchildnodeslist($product_url);
+            //print_r($folders);
+            //Remove Release Notes from DropDown Menu
+            $folders = array();
+
             if(!empty($folders)){
                 if(count($folders) == 1){
                     $folders['New Releases'] = 'new-releases';
