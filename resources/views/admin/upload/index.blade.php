@@ -63,7 +63,7 @@
             <input name="description" type="text" maxlength="500" id="description" value="{{ Request::old('description') }}" style="width:450px;" />
             <p  style="color:Red;"> {{ $errors->first('description') }} </span>
         </div>
-       
+
     </div>
 
     <div class="control-group">
@@ -72,7 +72,7 @@
             <input name="tags" type="text" maxlength="500" id="tags" value="{{ Request::old('tags') }}" style="width:450px;" />
             <p  style="color:Red;"> {{ $errors->first('tags') }} </span>
         </div>
-       
+
     </div>
 
 
@@ -82,7 +82,7 @@
             <input name="releaseurl" type="text" maxlength="200" id="releaseurl" value="{{ Request::old('releaseurl') }}" style="width:450px;" />
             <p  style="color:Red;"> {{ $errors->first('releaseurl') }} </span>
         </div>
-        
+
     </div>
 
     <div class="control-group">
@@ -108,10 +108,28 @@
         //alert(title);
         if(title == ""){
             //event.preventDefault();
-            alert( "Please  Enter Title and other Required Fields");
+            alert( "Please Enter Title and other Required Fields");
             return false;
-        }else{
-            
+        }
+
+        if(title.indexOf(',') !== -1){
+            //event.preventDefault();
+            alert( "Comma Not Allowed in Title");
+            return false;
+        }
+
+
+        if("" == document.getElementById('productfamily').value
+          || "" == document.getElementById('product').value
+          || "" == document.getElementById('folder').value
+            ){
+            //event.preventDefault();
+            alert( "Please Enter productfamily and other Required Fields");
+            return false;
+          }
+
+      //  else{
+
             $.ajax({
                 url: "{{ route('admin.releaseexists')}}",
                 type: 'POST',
@@ -129,7 +147,7 @@
                     }
                 }
 		    });
-        }
+        //}
     }
 
     function getchildnodes(node, childtype){
@@ -144,12 +162,12 @@
 			},
 			success: function(response) {
 				//if (response == 1) {
-                  var $select = $('#' + childtype); 
-                  $select.find('option').remove();  
-                  
+                  var $select = $('#' + childtype);
+                  $select.find('option').remove();
+
                   var listitems = '';
                   if(childtype != 'folder'){
-                      
+
                   }
                   listitems += "<option value=''> </option>";
                     $.each(response, function(key, value){
