@@ -66,7 +66,7 @@ class UploadController extends Controller
                     sleep(10); // wait 10 sec // translate using api
                     $md_content_arranged = $this->ReadSheetData_ManualTranslation($sheetdatahelper, $content_path, $release->folder_link, $SpreadsheetId_Manual);
                     if(!empty($md_content_arranged ) && count($md_content_arranged)){
-                        $res = $this->AddTranslatedFilesToRepo($md_content_arranged, $host );
+                        $res = $this->AddTranslatedFilesToRepo($md_content_arranged, $host, 'onlytranslate' );
                         $this->addlogentry($release->id, $res);
                         $message = "Content Translated and Updating Repo Updated";
                     }
@@ -542,7 +542,7 @@ class UploadController extends Controller
                     $admin_email = Auth::user()->email;
                     if( !empty($spreadsheetId) && $is_multilingual ){
                         $transalted_md_files = $this->AddReleaseToSpreadsheetAndTranslate($mdfile, $host);
-                        $res = $this->AddTranslatedFilesToRepo($transalted_md_files, $host );
+                        $res = $this->AddTranslatedFilesToRepo($transalted_md_files, $host, 'uploadAPI' );
                     }else{
                         $res = $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
                     }
@@ -586,7 +586,7 @@ class UploadController extends Controller
                 $admin_email = Auth::user()->email;
                 if( !empty($spreadsheetId) && $is_multilingual ){
                     $transalted_md_files = $this->AddReleaseToSpreadsheetAndTranslate($mdfile, $host);
-                    $res = $this->AddTranslatedFilesToRepo($transalted_md_files, $host );
+                    $res = $this->AddTranslatedFilesToRepo($transalted_md_files, $host, 'upload' );
                 }else{
                     $res = $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
                 }
@@ -614,7 +614,19 @@ class UploadController extends Controller
 
             if(!empty($upload_info)){
                 $mdfile =$this->generate_mdfile($request->all(), $upload_info);
-                $res= $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
+
+
+                $spreadsheetId = "";
+                $is_multilingual = env('MULTILINGUAL', false);
+                $spreadsheetId = env('SPREADSHEETID', '');
+                $admin_email = Auth::user()->email;
+                if( !empty($spreadsheetId) && $is_multilingual ){
+                    $transalted_md_files = $this->AddReleaseToSpreadsheetAndTranslate($mdfile, $host);
+                    $res = $this->AddTranslatedFilesToRepo($transalted_md_files, $host, 'update' );
+                }else{
+                    $res = $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
+                }
+                //$res= $this->forceDownloadMdFile($mdfile['data'], $mdfile['file_name'], $mdfile['file_path'], $host );
                 $this->addlogentry($mdfile['last_insert_update_id'], $res);
                 return redirect('/admin/ventures/file/edit/' . $mdfile['last_insert_update_id'])->with('success','Update Successfully.' .$res);
             }else{
@@ -1025,7 +1037,10 @@ class UploadController extends Controller
       );
     }
 
-    public function AddTranslatedFilesToRepo($transalted_md_files, $host){
+    public function AddTranslatedFilesToRepo($transalted_md_files, $host, $actionType){
+
+
+
         $last_key = count($transalted_md_files) -1;
         $commit_files = "no";
         $clear_folder = "no";
@@ -1064,26 +1079,43 @@ class UploadController extends Controller
                             $repo_url = "https://$GIT_USERNAME:$GIT_TOKEN@github.com/$GIT_REPO";
                             $posted_by_email = Auth::user()->email ;
                             $commit_msg = "'new Release added by $posted_by_email '";
+
+                            if($actionType == 'update'){
+                              $commit_msg = "'new Release updated by $posted_by_email '";
+                            }
+
+                            if($actionType == 'onlytranslate'){
+                              $commit_msg = "'new Release onlytranslated by $posted_by_email '";
+                            }
+
+                            if($actionType == 'uploadAPI'){
+                              $commit_msg = "'new Release added through uploadAPI by $posted_by_email '";
+                            }
+
+                            if($actionType == 'addnewFamily'){
+                              $commit_msg = "'new Product Family added through addnew by $posted_by_email '";
+                            }
+
                             $download_path = "'$download_path'";
                             $hugo_content_path = "'$hugo_content_path'";
                             $file_to_commit = "'$file_to_commit'";
                             $release_parent_folder_path = "'$release_parent_folder_path'";
                             $commit_files = "'$commit_files'";
                             $clear_folder = "'$clear_folder'";
-                            if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
+                            if(in_array($host, array('admindemo.aspose:8080', 'admindemo.groupdocs'))){  //local
 
                                 $public_path = getcwd();
                                 $bash_script_path = str_replace('/public', '/.scripts/', $public_path );
                                 chdir($bash_script_path);
                                 //$output .= " ========= before file run ========= ";
-                                $output .= "  ======== addmdfilemutilang.sh $download_path $hugo_content_path $file_to_commit $local_clone_repo_path $repo_url $commit_msg $release_parent_folder_path $commit_files $clear_folder =====/===== ";
-                                $output .= shell_exec('./addmdfilemutilang.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' '.$commit_msg.'  '.$release_parent_folder_path.' '.$commit_files.' '.$clear_folder.' ');
+                                $output .= "  ========($actionType) addmdfilemutilanglocal.sh $download_path $hugo_content_path $file_to_commit $local_clone_repo_path $repo_url $commit_msg $release_parent_folder_path $commit_files $clear_folder =====/===== ";
+                                $output .= shell_exec('./addmdfilemutilanglocal.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' '.$commit_msg.'  '.$release_parent_folder_path.' '.$commit_files.' '.$clear_folder.' ');
                                 //$output .= " ========= After file run ========== ";
                                 chdir($public_path);
 
                             }else{ //prod/stage
                                 //$output .= " before file run";
-                                $output .= " ========= /var/www/scripts/addmdfilemutilang.sh $download_path $hugo_content_path $file_to_commit $local_clone_repo_path $repo_url $commit_msg $release_parent_folder_path $commit_files $clear_folder =====/===== ";
+                                $output .= "========($actionType) /var/www/scripts/addmdfilemutilang.sh $download_path $hugo_content_path $file_to_commit $local_clone_repo_path $repo_url $commit_msg $release_parent_folder_path $commit_files $clear_folder =====/===== ";
                                 $output .= shell_exec('/var/www/scripts/addmdfilemutilang.sh '.$download_path.' '.$hugo_content_path.' '.$file_to_commit.' '.$local_clone_repo_path.' '.$repo_url.' '.$commit_msg.'  '.$release_parent_folder_path.' '.$commit_files.' '.$clear_folder.' ');
                                 //$output .= " After file run";
                             }
@@ -1109,7 +1141,7 @@ class UploadController extends Controller
             $hugo_content_path = "content" . $file_path .'/';
         }
 
-        //echo $download_path; exit;
+        //echo $MULTILINGUAL; exit;
         if (file_exists($download_path)) {
 
 
@@ -1117,6 +1149,7 @@ class UploadController extends Controller
 
             /* ===================== COMMIT FILE ============= */
             $local_clone_repo_path = env('LOCAL_REPO_CLONE_PATH', '');
+
             if(!empty($local_clone_repo_path)){
 
                 $GIT_USERNAME = env('GIT_USERNAME', '');
@@ -1131,9 +1164,12 @@ class UploadController extends Controller
 
                 $GIT_REPO = env('GIT_REPO', '');
 
+
+
                 if(!empty($GIT_USERNAME) && !empty($GIT_TOKEN) && !empty($GIT_REPO) ){
 
                     $repo_url = "https://$GIT_USERNAME:$GIT_TOKEN@github.com/$GIT_REPO";
+
                     //echo "<pre> local_clone_repo_path "; print_r($local_clone_repo_path);echo "</pre>";
                     //echo "<pre> download_path "; print_r($download_path);echo "</pre>";
                     //echo "<pre> hugo_content_path "; print_r($hugo_content_path);echo "</pre>";
@@ -1144,10 +1180,17 @@ class UploadController extends Controller
                     $download_path = "'$download_path'";
                     $hugo_content_path = "'$hugo_content_path'";
                     $file_to_commit = "'$file_to_commit'";
-                    if(in_array($host, array('admindemo.aspose', 'admindemo.groupdocs'))){  //local
+
+
+
+                    if(in_array($host, array('admindemo.aspose:8080', 'admindemo.groupdocs'))){  //local
+
 
                         $public_path = getcwd();
                         $bash_script_path = str_replace('/public', '/.scripts/', $public_path );
+
+                        //echo $bash_script_path; exit;
+
                         chdir($bash_script_path);
                         //echo "<pre> public_path "; print_r($public_path);echo "</pre>";
                         //echo "<pre> bash script path "; print_r($bash_script_path);echo "</pre>";
