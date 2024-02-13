@@ -860,6 +860,8 @@ class UploadController extends Controller
             $release->s3_path = $s3_path;
             $etag_id = $etag_id.'-'.$last_insert_update_id;
             $release->etag_id = $etag_id;
+            //FIXED Edit upload new release 
+            $release->is_new = 1;
         }
         $release->save();
 
