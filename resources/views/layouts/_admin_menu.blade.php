@@ -59,6 +59,10 @@
                         <li class="custom-padding">
                             <a id="ctl00_HyperLink2" class="dropdown-toggle" href="{{ url('admin/ventures/file/manage-files') }}">View All Releases/Files </a>
                         </li>
+                        <li class="custom-padding">
+                        <a id="ctl00_lnkComplianceUpload" class="dropdown-toggle" href="{{ url('admin/ventures/file/compliance') }}">Upload Compliance Reports</a>
+                        </li>
+
                         @if (Auth::user()->is_admin == 1 || Auth::user()->is_admin == 2)
                          <li class="nav-header"><i class="icon-wrench"></i>System Administration</li>
                         <!-- <li class="custom-padding">
