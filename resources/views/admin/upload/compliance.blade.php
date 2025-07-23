@@ -86,12 +86,13 @@
         </div>
     </div>
 
+
     {{-- Section Checkboxes (initially disabled) --}}
     <div class="control-group">
         <div class="controls" id="section-checkboxes">
             <label class="checkbox-inline">
                 <input type="checkbox" name="sections[]" value="license" style="vertical-align: middle;">
-                Show EULA &amp; Third-Party License Disclosure (if available)
+                Add EULA &amp; Third-Party License (if available) to the Compliance Report page
             </label>
             <p class="text-danger">{{ $errors->first('sections') }}</p>
         </div>
@@ -346,7 +347,7 @@
                         .show();
                     $('#uploadBtn').prop('disabled', true);
                 }
-                // If third-party license is missing (when required), show the exact filename/path
+                // If third-party license PDF is missing (when required), show the exact filename/path
                 else if (!res.licenseExists) {
                     $('#compliance-check-error')
                         .html(
