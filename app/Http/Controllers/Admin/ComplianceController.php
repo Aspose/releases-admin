@@ -745,6 +745,24 @@ class ComplianceController extends Controller
             }
         }
 
+        // --- Badge rendering based on security file presence ---
+        $hasCWE = !empty($fileGroups['cwe']);
+        $hasOWASP = !empty($fileGroups['owasp']);
+        $hasSecurity = $hasCWE || $hasOWASP;
+
+        $securityBadges = "";
+        if ($hasCWE || $hasOWASP) {
+            // Show Security Rating if at least one of the two is present
+            $securityBadges .= "![Security Rating](https://img.shields.io/badge/Security%20Rating-A-brightgreen?style=flat-square&logo=verizon)\n";
+            if ($hasCWE) {
+                $securityBadges .= "![CWE Top 25](https://img.shields.io/badge/CWE%20Top%2025-2024-blue?style=flat-square&logo=checkmarx)\n";
+            }
+            if ($hasOWASP) {
+                $securityBadges .= "![OWASP Top 10](https://img.shields.io/badge/OWASP%20Top%2010-2021-blue?style=flat-square&logo=openaccess)\n";
+            }
+        }
+
+
         // --- Venture, metadata, forum slug ---
         $venturePrefix = $this->getVenturePrefix();
         $ventureDisplay = ucfirst($venturePrefix);
@@ -758,6 +776,54 @@ class ComplianceController extends Controller
         $slug = strtolower(str_replace(['.', '/', ' '], '-', "{$venturePrefix}-{$productSlug}-for-{$platform}-{$version}-compliance-reports"));
         $forumSlug = $this->getForumSlugFromUrl("{$productSlug}/{$platform}");
         $forumLink = "https://forum.{$venturePrefix}.com/c/{$forumSlug}/";
+
+        /**
+         * === CREATE SINGLE ZIP FILE FOR ALL SBOMS ===
+         */
+        if (!empty($fileGroups['sbom'])) {
+            $zipFilename = "{$venturePrefix}-{$productSlug}-{$platform}-{$version}_all_sboms.zip";
+            $tmpDir = storage_path("app/temp");
+            $tmpZipPath = "{$tmpDir}/{$zipFilename}";
+
+            // Create /temp dir if not exists
+            if (!file_exists($tmpDir)) {
+                mkdir($tmpDir, 0777, true);
+            }
+
+            // Initialize and create ZIP
+            $zip = new \ZipArchive();
+            if ($zip->open($tmpZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+                foreach ($fileGroups['sbom'] as $platformVer => $types) {
+                    if ($platformVer === 'zip') continue;
+                    foreach ($types as $sbomType => $exts) {
+                        foreach ($exts as $ext => $filename) {
+                            $localPath = "{$tmpDir}/{$filename}";
+                            file_put_contents($localPath, Storage::get($folder . $filename));
+                            $zip->addFile($localPath, $filename);
+                        }
+                    }
+                }
+                $zip->close();
+                Storage::putFileAs($folder, new \Illuminate\Http\File($tmpZipPath), $zipFilename);
+                $fileGroups['sbom']['zip'][] = $zipFilename;
+
+                // Delete the final ZIP file from temp folder after upload
+                unlink($tmpZipPath);
+
+                // Clean up only SBOM files created in this ZIP batch (preserving other files in /temp/)
+                foreach ($fileGroups['sbom'] as $platformVer => $types) {
+                    if ($platformVer === 'zip') continue;
+                    foreach ($types as $sbomType => $exts) {
+                        foreach ($exts as $ext => $filename) {
+                            $tempFile = "{$tmpDir}/{$filename}";
+                            if (file_exists($tempFile)) {
+                                unlink($tempFile);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         /**
          * === LICENSE SECTION ===
@@ -785,20 +851,36 @@ class ComplianceController extends Controller
         $sbomTable = "";
         if (!empty($fileGroups['sbom'])) {
             $sbomTable .= "### Software Bill of Materials (SBOM)\n\n";
-            $hasZip = !empty($fileGroups['sbom']['zip']);
 
-            // Header
-            $sbomTable .= "| Platform | CycloneDX JSON | CycloneDX XML | SPDX JSON | SPDX XML";
-            $sbomTable .= $hasZip ? " | Download All (ZIP)" : "";
-            $sbomTable .= " |\n";
+            // Display ZIP download link separately above the table along with last updated timestamp
+            if (!empty($fileGroups['sbom']['zip'])) {
+                $zipFile = $fileGroups['sbom']['zip'][0];
 
-            $sbomTable .= "|----------|----------------|---------------|-----------|----------";
-            $sbomTable .= $hasZip ? "|---------------------" : "";
-            $sbomTable .= "|\n";
+                // Get the last modified timestamp of the ZIP file from S3 in UTC
+                try {
+                    $meta = Storage::lastModified($folder . $zipFile);
+                    $zipTimestamp = \Carbon\Carbon::createFromTimestamp($meta)
+                        ->setTimezone('UTC')
+                        ->format('F j, Y, g:i A') . ' UTC';
+                } catch (\Exception $e) {
+                    $zipTimestamp = null;
+                }
 
-            // Rows
+                // Display ZIP link with timestamp (safe ASCII hyphen)
+                $timestampNote = $zipTimestamp ? " - *Last updated: {$zipTimestamp}*" : "";
+                $zipTimestampUnix = Storage::lastModified($folder . $zipFile); // for ?t=...
+                $sbomTable .= "- {{< compliance-file relpath=\"{$relBase}{$zipFile}?t={$zipTimestampUnix}\" text=\"Download All SBOMs (ZIP)\" download=\"true\" >}}{$timestampNote}\n\n";
+            }
+
+
+
+            // Table header (no ZIP column)
+            $sbomTable .= "| Platform | CycloneDX JSON | CycloneDX XML | SPDX JSON | SPDX XML |\n";
+            $sbomTable .= "|----------|----------------|---------------|-----------|----------|\n";
+
+            // Table rows for each platform
             foreach ($fileGroups['sbom'] as $platformVer => $types) {
-                if ($platformVer === 'zip') continue;
+                if ($platformVer === 'zip') continue; // Skip ZIP placeholder
                 $displayPlatform = $this->getReadablePlatformName($platformVer);
 
                 $cycloneJson = isset($types['cyclonedx']['json']) ? "{{< compliance-file relpath=\"{$relBase}{$types['cyclonedx']['json']}\" text=\"View JSON\" >}}" : "-";
@@ -806,23 +888,12 @@ class ComplianceController extends Controller
                 $spdxJson    = isset($types['spdx']['json'])      ? "{{< compliance-file relpath=\"{$relBase}{$types['spdx']['json']}\" text=\"View JSON\" >}}" : "-";
                 $spdxXml     = isset($types['spdx']['xml'])       ? "{{< compliance-file relpath=\"{$relBase}{$types['spdx']['xml']}\" text=\"View XML\" >}}" : "-";
 
-                $zipCol = "-";
-                if ($hasZip) {
-                    foreach ($fileGroups['sbom']['zip'] as $zip) {
-                        if (Str::contains($zip, $platformVer)) {
-                            $zipCol = "{{< compliance-file relpath=\"{$relBase}{$zip}\" text=\"Download All\" download=\"true\" >}}";
-                            break;
-                        }
-                    }
-                }
-
-                $sbomTable .= "| {$displayPlatform} | {$cycloneJson} | {$cycloneXml} | {$spdxJson} | {$spdxXml}";
-                $sbomTable .= $hasZip ? " | {$zipCol}" : "";
-                $sbomTable .= " |\n";
+                $sbomTable .= "| {$displayPlatform} | {$cycloneJson} | {$cycloneXml} | {$spdxJson} | {$spdxXml} |\n";
             }
 
             $sbomTable .= "\n";
         }
+
 
         /**
          * === SECURITY SECTION ===
@@ -868,8 +939,10 @@ class ComplianceController extends Controller
                 '{{ .SECURITY_SECTION }}'  => $securityTable,
                 '{{ .LICENSE_SECTION }}'   => $licenseTable,
                 '{{ .SecurityGrade }}'     => 'A',
-                '{{ .DownloadsBadgeUrl }}' => '', // Future use
+                '{{ .DownloadsBadgeUrl }}' => '',
+                '{{ .SECURITY_BADGES }}'   => $securityBadges, // ✅ new injection
             ];
+
             $md = strtr($template, $vars);
         }
 
