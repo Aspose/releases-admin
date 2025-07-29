@@ -852,7 +852,7 @@ class ComplianceController extends Controller
         if (!empty($fileGroups['sbom'])) {
             $sbomTable .= "### Software Bill of Materials (SBOM)\n\n";
 
-            // Display ZIP download link separately above the table along with last updated timestamp
+            // Display ZIP download link separately above the table along with last updated timestamp and size
             if (!empty($fileGroups['sbom']['zip'])) {
                 $zipFile = $fileGroups['sbom']['zip'][0];
 
@@ -866,13 +866,26 @@ class ComplianceController extends Controller
                     $zipTimestamp = null;
                 }
 
-                // Display ZIP link with timestamp (safe ASCII hyphen)
+                // Get the file size in bytes and convert intelligently
+                try {
+                    $sizeBytes = Storage::size($folder . $zipFile);
+                    if ($sizeBytes >= 1048576) { // ≥ 1 MB
+                        $zipSize = round($sizeBytes / 1048576, 1) . " MB";
+                    } else {
+                        $zipSize = round($sizeBytes / 1024, 1) . " KB";
+                    }
+                } catch (\Exception $e) {
+                    $zipSize = null;
+                }
+
+                // Build notes for display
+                $sizeNote = $zipSize ? " - {$zipSize}" : "";
                 $timestampNote = $zipTimestamp ? " - *Last updated: {$zipTimestamp}*" : "";
-                $zipTimestampUnix = Storage::lastModified($folder . $zipFile); // for ?t=...
-                $sbomTable .= "- {{< compliance-file relpath=\"{$relBase}{$zipFile}?t={$zipTimestampUnix}\" text=\"Download All SBOMs (ZIP)\" download=\"true\" >}}{$timestampNote}\n\n";
+
+                // Add cache-busting query param (?t=unix timestamp)
+                $zipTimestampUnix = Storage::lastModified($folder . $zipFile);
+                $sbomTable .= "- {{< compliance-file relpath=\"{$relBase}{$zipFile}?t={$zipTimestampUnix}\" text=\"Download All SBOMs (ZIP)\" download=\"true\" >}}{$sizeNote}{$timestampNote}\n\n";
             }
-
-
 
             // Table header (no ZIP column)
             $sbomTable .= "| Platform | CycloneDX JSON | CycloneDX XML | SPDX JSON | SPDX XML |\n";
@@ -893,7 +906,6 @@ class ComplianceController extends Controller
 
             $sbomTable .= "\n";
         }
-
 
         /**
          * === SECURITY SECTION ===

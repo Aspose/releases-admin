@@ -67,7 +67,8 @@
             </div>
         </div>
         <hr />
-        <footer class="well">&copy; Containerize.Releases Backend - 2022 </footer>
+        <!--<footer class="well">&copy; Containerize.Releases Backend - 2022 </footer>-->
+        <footer class="well">&copy; Containerize.Releases Backend - {{ date('Y') }}</footer>
     </div>
     <!-- Scripts -->
     <script src="{{ env('APP_URL') }}/js/app.js"></script>
