@@ -745,14 +745,31 @@ class ComplianceController extends Controller
             }
         }
 
-        // --- Badge rendering based on security file presence ---
+        // --- Badge rendering based on file presence ---
+
+        // Check if SBOM files exist
+        $hasSBOM = !empty($fileGroups['sbom']);
+
+        // Check if Security files exist
         $hasCWE = !empty($fileGroups['cwe']);
         $hasOWASP = !empty($fileGroups['owasp']);
         $hasSecurity = $hasCWE || $hasOWASP;
 
+        // Initialize SBOM badge string
+        $sbomBadge = "";
+
+        // Initialize Security badges string
         $securityBadges = "";
-        if ($hasCWE || $hasOWASP) {
-            // Show Security Rating if at least one of the two is present
+
+        // --- SBOM badge ---
+        if ($hasSBOM) {
+            // Show SBOM Available badge only if at least one SBOM artifact is uploaded
+            $sbomBadge .= "![SBOM Available](https://img.shields.io/badge/SBOM-Available-brightgreen?style=flat-square&logo=dependabot)\n";
+        }
+
+        // --- Security badges ---
+        if ($hasSecurity) {
+            // Always show Security Rating if either CWE or OWASP exists
             $securityBadges .= "![Security Rating](https://img.shields.io/badge/Security%20Rating-A-brightgreen?style=flat-square&logo=verizon)\n";
             if ($hasCWE) {
                 $securityBadges .= "![CWE Top 25](https://img.shields.io/badge/CWE%20Top%2025-2024-blue?style=flat-square&logo=checkmarx)\n";
@@ -761,6 +778,9 @@ class ComplianceController extends Controller
                 $securityBadges .= "![OWASP Top 10](https://img.shields.io/badge/OWASP%20Top%2010-2021-blue?style=flat-square&logo=openaccess)\n";
             }
         }
+
+        // Later, when rendering in the markdown/frontmatter, we can combine them like:
+        $allBadges = $sbomBadge . $securityBadges;
 
 
         // --- Venture, metadata, forum slug ---
@@ -952,7 +972,7 @@ class ComplianceController extends Controller
                 '{{ .LICENSE_SECTION }}'   => $licenseTable,
                 '{{ .SecurityGrade }}'     => 'A',
                 '{{ .DownloadsBadgeUrl }}' => '',
-                '{{ .SECURITY_BADGES }}'   => $securityBadges, // ✅ new injection
+                '{{ .SECURITY_BADGES }}'   => $allBadges, // includes SBOM + Security badges
             ];
 
             $md = strtr($template, $vars);
