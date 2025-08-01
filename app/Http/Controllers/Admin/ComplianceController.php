@@ -12,6 +12,11 @@ use Illuminate\Support\Str;
 /**
  * ComplianceController handles compliance upload, navigation file management,
  * and integrates optimal UX for generating missing _index.md files.
+ * 
+ * ENHANCEMENTS:
+ * - Enforced SBOM filename validation with platformVersion and SBOM type
+ * - Parsed SBOMs grouped by type (CycloneDX/SPDX) and platformVersion
+ * - Generated collapsible Hugo markdown for SBOM sections
  */
 class ComplianceController extends Controller
 {
@@ -184,22 +189,45 @@ class ComplianceController extends Controller
             return redirect()->back()->with('error', 'No files received');
         }
 
-        // 15. Validate each uploaded filename against expected product and version
+        /**
+         * === ENHANCEMENT ===
+         * 15. Validate each uploaded filename against new SBOM naming format:
+         * {product}-{version}-{platformVersion}_sbom-{type}.{json|xml}
+         * 
+         * Example: aspose-pdf-25.6.1-net6.0_sbom-CycloneDX.json
+         */
+        $platformPattern = '(netstandard[0-9]+\.[0-9]+|net[0-9]+(\.[0-9]+)?|netframework[0-9]+\.[0-9]+|java[0-9]+|nodejs[0-9]+|python[0-9]+\.[0-9]+|cpp[0-9]+)';
+        $sbomPattern = "/^{$expectedProductIdentifier}-{$version}-{$platformPattern}_sbom-(CycloneDX|SPDX)\.(json|xml)$/i";
+
         foreach ($request->file('files') as $file) {
             $fileName = strtolower($file->getClientOriginalName());
 
-            // File must match both expected slug and version (dot or dash format)
-            if (
-                !Str::contains($fileName, $expectedProductIdentifier) ||
-                (!Str::contains($fileName, $version) && !Str::contains($fileName, str_replace('.', '-', $version)))
-            ) {
-                $expectedSlug = "{$productFamilySlug}-{$platformSlug}";
-                $exampleFileName = "{$venturePrefix}-{$expectedSlug}-{$version}_cwe-top-25-2024.htm";
+            // === ENHANCEMENT: If file is an SBOM, enforce new strict naming
+            if (Str::contains($fileName, 'sbom')) {
+                $platformPattern = '(netstandard[0-9]+\.[0-9]+|net[0-9]+(\.[0-9]+)?|netframework[0-9]+\.[0-9]+|java[0-9]+|nodejs[0-9]+|python[0-9]+\.[0-9]+|cpp[0-9]+)';
+                $sbomPattern = "/^{$expectedProductIdentifier}-{$version}-{$platformPattern}_sbom-(CycloneDX|SPDX)\.(json|xml)$/i";
 
-                return redirect()->back()
-                    ->with('error', "All uploaded files must match the selected product slug [{$expectedSlug}] and version [{$version}]. File '{$file->getClientOriginalName()}' does not match. Example of a valid filename: '{$exampleFileName}'. Please check your files and try again.");
+                if (!preg_match($sbomPattern, $fileName)) {
+                    $exampleFileName = "{$expectedProductIdentifier}-{$version}-net6.0_sbom-CycloneDX.json";
+                    return redirect()->back()
+                        ->with('error', "Invalid SBOM filename '{$fileName}'. Expected format: {product}-{version}-{platformVersion}_sbom-{type}.{json|xml}. Example: '{$exampleFileName}'. Please check your SBOM files and try again.");
+                }
+            }
+            // === LEGACY: For other security artifacts, keep existing validation
+            else {
+                if (
+                    !Str::contains($fileName, $expectedProductIdentifier) ||
+                    (!Str::contains($fileName, $version) && !Str::contains($fileName, str_replace('.', '-', $version)))
+                ) {
+                    $expectedSlug = "{$productFamilySlug}-{$platformSlug}";
+                    $exampleFileName = "{$venturePrefix}-{$expectedSlug}-{$version}_cwe-top-25-2024.htm";
+
+                    return redirect()->back()
+                        ->with('error', "All uploaded files must match the selected product slug [{$expectedSlug}] and version [{$version}]. File '{$file->getClientOriginalName()}' does not match. Example: '{$exampleFileName}'. Please check your files and try again.");
+                }
             }
         }
+
 
         // 16. Upload files to S3 with user attribution as metadata
         $uploadedFiles = [];
@@ -321,12 +349,6 @@ class ComplianceController extends Controller
 
         return $slug;
     }
-
-
-
-
-
-
 
     /**
      * Normalize a product name for compliance file naming convention.
@@ -634,158 +656,329 @@ class ComplianceController extends Controller
     }
 
 
+    /**
+     * Returns a readable display name for a given platform version.
+     *
+     * @param string $key E.g. 'net7.0', 'java8', 'netframework4.8', 'cpp17'
+     * @return string Human-friendly label, e.g. '.NET 7.0'
+     */
+    private function getReadablePlatformName(string $key): string
+    {
+        if (preg_match('/^netframework([0-9\.]+)$/', $key, $m)) {
+            return '.NET Framework ' . $m[1];
+        }
+        if (preg_match('/^netstandard([0-9\.]+)$/', $key, $m)) {
+            return '.NET Standard ' . $m[1];
+        }
+        if (preg_match('/^net([0-9\.]+)$/', $key, $m)) {
+            return '.NET ' . $m[1];
+        }
+        if (preg_match('/^java([0-9]+)/', $key, $m)) {
+            return 'Java ' . $m[1];
+        }
+        if (preg_match('/^python([0-9\.]+)/', $key, $m)) {
+            return 'Python ' . $m[1];
+        }
+        if (preg_match('/^nodejs([0-9]+)/', $key, $m)) {
+            return 'Node.js ' . $m[1];
+        }
+        if (preg_match('/^cpp([0-9]+)/', $key, $m)) {
+            return 'C++ ' . $m[1];
+        }
+        return ucfirst($key); // fallback
+    }
 
     /**
      * Generates a compliance markdown (.md) page for Hugo based on uploaded files.
-     * Supports multi-venture setup by resolving venture prefix dynamically.
+     * Converts EULA section to bullet links, removes downloads (except ZIP), and conditionally hides empty sections and badges.
      *
-     * @param string $product E.g. 'words/net'
-     * @param string $version E.g. '25.6'
-     * @param string $year E.g. '2025'
-     * @param array $sections Checkbox input from UI (e.g. ['license'])
+     * @param string $product        E.g. 'words/net'
+     * @param string $version        E.g. '25.6'
+     * @param string $year           E.g. '2025'
+     * @param array $sections        Checkbox input from UI (e.g. ['license'])
      * @param string|null $uploaderEmail Optional uploader email for attribution
      */
     private function saveComplianceMarkdown($product, $version, $year, $sections = [], $uploaderEmail = null)
     {
-        // --- Extract slugs from product path ---
+        // --- Extract productSlug and platform from input path ---
         [$productSlug, $platform] = explode('/', $product);
 
-        // --- Ensure navigation _index.md files exist ---
+        // --- Ensure Hugo _index.md files exist for navigation ---
         $this->ensureComplianceIndexes($productSlug, $platform, $year, $uploaderEmail);
 
-        // --- Build base paths for markdown and S3 access ---
+        // --- Determine S3 folder structure and relative base URL ---
         $folder = "compliance-reports/{$productSlug}/{$platform}/{$year}/{$version}/";
-        $files = Storage::files($folder);
         $relBase = "/" . $folder;
+        $files = Storage::files($folder); // Get all uploaded file paths
 
-        // --- Categorize uploaded files by function ---
+        // --- Initialize file groups ---
         $fileGroups = ['sbom' => [], 'cwe' => [], 'owasp' => [], 'license' => []];
+
+        // --- Categorize uploaded files by type ---
         foreach ($files as $filePath) {
             $file = basename($filePath);
             $l = strtolower($file);
-
-            // Skip any markdown files (e.g. already existing .md)
-            if (Str::endsWith($l, '.md')) continue;
-
+            if (Str::endsWith($l, '.md')) continue; // Skip any markdown files
             $ext = pathinfo($file, PATHINFO_EXTENSION);
 
-            // Categorize based on naming patterns
-            if (Str::contains($l, 'sbom')) {
-                $fileGroups['sbom'][$ext] = $file;
-            } elseif (Str::contains($l, 'cwe-top-25')) {
+            // --- SBOM detection based on strict naming convention ---
+            if (preg_match('/-(netstandard[0-9]+\.[0-9]+|netframework[0-9]+\.[0-9]+|net[0-9]+(\.[0-9]+)?|java[0-9]+|nodejs[0-9]+|python[0-9]+\.[0-9]+|cpp[0-9]+)_sbom-(cyclonedx|spdx)\.(json|xml)$/i', $l, $matches)) {
+                $platformVersion = strtolower($matches[1]);
+                $sbomType = strtolower($matches[3]);
+                $fileGroups['sbom'][$platformVersion][$sbomType][$ext] = $file;
+            } elseif (Str::endsWith($l, '_sbom-all.zip')) {
+                $fileGroups['sbom']['zip'][] = $file;
+            }
+            // --- Security coverage: CWE ---
+            elseif (Str::contains($l, 'cwe-top-25')) {
                 if (in_array($ext, ['html', 'htm'])) $fileGroups['cwe']['html'] = $file;
                 elseif ($ext === 'pdf') $fileGroups['cwe']['pdf'] = $file;
-            } elseif (Str::contains($l, 'owasp-top-10')) {
+            }
+            // --- Security coverage: OWASP ---
+            elseif (Str::contains($l, 'owasp-top-10')) {
                 if (in_array($ext, ['html', 'htm'])) $fileGroups['owasp']['html'] = $file;
                 elseif ($ext === 'pdf') $fileGroups['owasp']['pdf'] = $file;
-            } elseif (Str::contains($l, 'license')) {
+            }
+            // --- License disclosure ---
+            elseif (Str::contains($l, 'license')) {
                 $fileGroups['license'][$ext] = $file;
             }
         }
 
-        // --- Resolve venture from Hugo site URL ---
-        $venturePrefix = $this->getVenturePrefix();
+        // --- Badge rendering based on file presence ---
 
-        // --- Find matching release for metadata like weight ---
+        // Check if SBOM files exist
+        $hasSBOM = !empty($fileGroups['sbom']);
+
+        // Check if Security files exist
+        $hasCWE = !empty($fileGroups['cwe']);
+        $hasOWASP = !empty($fileGroups['owasp']);
+        $hasSecurity = $hasCWE || $hasOWASP;
+
+        // Initialize SBOM badge string
+        $sbomBadge = "";
+
+        // Initialize Security badges string
+        $securityBadges = "";
+
+        // --- SBOM badge ---
+        if ($hasSBOM) {
+            // Show SBOM Available badge only if at least one SBOM artifact is uploaded
+            $sbomBadge .= "![SBOM Available](https://img.shields.io/badge/SBOM-Available-brightgreen?style=flat-square&logo=dependabot)\n";
+        }
+
+        // --- Security badges ---
+        if ($hasSecurity) {
+            // Always show Security Rating if either CWE or OWASP exists
+            $securityBadges .= "![Security Rating](https://img.shields.io/badge/Security%20Rating-A-brightgreen?style=flat-square&logo=verizon)\n";
+            if ($hasCWE) {
+                $securityBadges .= "![CWE Top 25](https://img.shields.io/badge/CWE%20Top%2025-2024-blue?style=flat-square&logo=checkmarx)\n";
+            }
+            if ($hasOWASP) {
+                $securityBadges .= "![OWASP Top 10](https://img.shields.io/badge/OWASP%20Top%2010-2021-blue?style=flat-square&logo=openaccess)\n";
+            }
+        }
+
+        // Later, when rendering in the markdown/frontmatter, we can combine them like:
+        $allBadges = $sbomBadge . $securityBadges;
+
+
+        // --- Venture, metadata, forum slug ---
+        $venturePrefix = $this->getVenturePrefix();
+        $ventureDisplay = ucfirst($venturePrefix);
         $release = \App\Models\Release::where('product', $productSlug)
             ->where('folder', 'new-releases')
             ->where('folder_link', 'like', "%{$platform}%")
             ->where('folder_link', 'like', "%{$version}%")
             ->orderBy('id', 'desc')->first();
-
         $weight = $release ? $release->weight : 999;
-        $title = $this->getProductTitleFromUrl("{$productSlug}/{$platform}") . " {$version}";
-
-        // --- Generate markdown filename (unique per venture) ---
+        $productTitle = $this->getProductTitleFromUrl("{$productSlug}/{$platform}");
         $slug = strtolower(str_replace(['.', '/', ' '], '-', "{$venturePrefix}-{$productSlug}-for-{$platform}-{$version}-compliance-reports"));
-
-        // --- Forum link adjusted per venture ---
         $forumSlug = $this->getForumSlugFromUrl("{$productSlug}/{$platform}");
         $forumLink = "https://forum.{$venturePrefix}.com/c/{$forumSlug}/";
 
-        // === SBOM SECTION ===
-        $sbomSection = "";
+        /**
+         * === CREATE SINGLE ZIP FILE FOR ALL SBOMS ===
+         */
         if (!empty($fileGroups['sbom'])) {
-            $sbomSection = "### Software Bill of Materials (SBOM)\n\n";
-            if (isset($fileGroups['sbom']['json'])) {
-                $sbomSection .= '- 🧾 {{< compliance-file relpath="' . $relBase . $fileGroups['sbom']['json'] . '" text="SBOM JSON" >}}' . "\n";
+            $zipFilename = "{$venturePrefix}-{$productSlug}-{$platform}-{$version}_all_sboms.zip";
+            $tmpDir = storage_path("app/temp");
+            $tmpZipPath = "{$tmpDir}/{$zipFilename}";
+
+            // Create /temp dir if not exists
+            if (!file_exists($tmpDir)) {
+                mkdir($tmpDir, 0777, true);
             }
-            if (isset($fileGroups['sbom']['xml'])) {
-                $sbomSection .= '- 📦 {{< compliance-file relpath="' . $relBase . $fileGroups['sbom']['xml'] . '" text="SBOM XML" >}}' . "\n";
+
+            // Initialize and create ZIP
+            $zip = new \ZipArchive();
+            if ($zip->open($tmpZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+                foreach ($fileGroups['sbom'] as $platformVer => $types) {
+                    if ($platformVer === 'zip') continue;
+                    foreach ($types as $sbomType => $exts) {
+                        foreach ($exts as $ext => $filename) {
+                            $localPath = "{$tmpDir}/{$filename}";
+                            file_put_contents($localPath, Storage::get($folder . $filename));
+                            $zip->addFile($localPath, $filename);
+                        }
+                    }
+                }
+                $zip->close();
+                Storage::putFileAs($folder, new \Illuminate\Http\File($tmpZipPath), $zipFilename);
+                $fileGroups['sbom']['zip'][] = $zipFilename;
+
+                // Delete the final ZIP file from temp folder after upload
+                unlink($tmpZipPath);
+
+                // Clean up only SBOM files created in this ZIP batch (preserving other files in /temp/)
+                foreach ($fileGroups['sbom'] as $platformVer => $types) {
+                    if ($platformVer === 'zip') continue;
+                    foreach ($types as $sbomType => $exts) {
+                        foreach ($exts as $ext => $filename) {
+                            $tempFile = "{$tmpDir}/{$filename}";
+                            if (file_exists($tempFile)) {
+                                unlink($tempFile);
+                            }
+                        }
+                    }
+                }
             }
-            $sbomSection .= "\n";
         }
 
-        // === CWE & OWASP SECTION ===
-        $securitySection = '';
+        /**
+         * === LICENSE SECTION ===
+         * Show only if files exist or 'license' checkbox was selected
+         */
+        $licenseTable = "";
+        if (!empty($fileGroups['license']) || in_array('license', $sections)) {
+            $licenseTable .= "### EULA & Third-Party Licenses\n\n";
+            $eulaUrl = "https://files.conholdate.app/viewer/view/4Y8UNm7laVFjMAd0r/{$venturePrefix}_end-user-license-agreement_2024-05-16.pdf";
+            $licenseTable .= "- <a href=\"{$eulaUrl}\" target=\"_blank\" rel=\"noopener\">{$ventureDisplay} End User License Agreement</a>\n";
+
+            $licensePath = "compliance-reports/third-party-licenses/{$platform}/";
+            $licenseFilename = "third-party-licenses-{$venturePrefix}-{$productSlug}-{$platform}.pdf";
+            if (Storage::exists($licensePath . $licenseFilename)) {
+                $relLicense = "/{$licensePath}{$licenseFilename}";
+                $licenseTable .= "- {{< compliance-file relpath=\"{$relLicense}\" text=\"{$productTitle} Third-Party License\" >}}\n";
+            }
+            $licenseTable .= "\n";
+        }
+
+        /**
+         * === SBOM SECTION ===
+         * Show only if valid SBOMs exist
+         */
+        $sbomTable = "";
+        if (!empty($fileGroups['sbom'])) {
+            $sbomTable .= "### Software Bill of Materials (SBOM)\n\n";
+
+            // Display ZIP download link separately above the table along with last updated timestamp and size
+            if (!empty($fileGroups['sbom']['zip'])) {
+                $zipFile = $fileGroups['sbom']['zip'][0];
+
+                // Get the last modified timestamp of the ZIP file from S3 in UTC
+                try {
+                    $meta = Storage::lastModified($folder . $zipFile);
+                    $zipTimestamp = \Carbon\Carbon::createFromTimestamp($meta)
+                        ->setTimezone('UTC')
+                        ->format('F j, Y, g:i A') . ' UTC';
+                } catch (\Exception $e) {
+                    $zipTimestamp = null;
+                }
+
+                // Get the file size in bytes and convert intelligently
+                try {
+                    $sizeBytes = Storage::size($folder . $zipFile);
+                    if ($sizeBytes >= 1048576) { // ≥ 1 MB
+                        $zipSize = round($sizeBytes / 1048576, 1) . " MB";
+                    } else {
+                        $zipSize = round($sizeBytes / 1024, 1) . " KB";
+                    }
+                } catch (\Exception $e) {
+                    $zipSize = null;
+                }
+
+                // Build notes for display
+                $sizeNote = $zipSize ? " - {$zipSize}" : "";
+                $timestampNote = $zipTimestamp ? " - *Last updated: {$zipTimestamp}*" : "";
+
+                // Add cache-busting query param (?t=unix timestamp)
+                $zipTimestampUnix = Storage::lastModified($folder . $zipFile);
+                $sbomTable .= "- {{< compliance-file relpath=\"{$relBase}{$zipFile}?t={$zipTimestampUnix}\" text=\"Download All SBOMs (ZIP)\" download=\"true\" >}}{$sizeNote}{$timestampNote}\n\n";
+            }
+
+            // Table header (no ZIP column)
+            $sbomTable .= "| Platform | CycloneDX JSON | CycloneDX XML | SPDX JSON | SPDX XML |\n";
+            $sbomTable .= "|----------|----------------|---------------|-----------|----------|\n";
+
+            // Table rows for each platform
+            foreach ($fileGroups['sbom'] as $platformVer => $types) {
+                if ($platformVer === 'zip') continue; // Skip ZIP placeholder
+                $displayPlatform = $this->getReadablePlatformName($platformVer);
+
+                $cycloneJson = isset($types['cyclonedx']['json']) ? "{{< compliance-file relpath=\"{$relBase}{$types['cyclonedx']['json']}\" text=\"View JSON\" >}}" : "-";
+                $cycloneXml  = isset($types['cyclonedx']['xml'])  ? "{{< compliance-file relpath=\"{$relBase}{$types['cyclonedx']['xml']}\" text=\"View XML\" >}}" : "-";
+                $spdxJson    = isset($types['spdx']['json'])      ? "{{< compliance-file relpath=\"{$relBase}{$types['spdx']['json']}\" text=\"View JSON\" >}}" : "-";
+                $spdxXml     = isset($types['spdx']['xml'])       ? "{{< compliance-file relpath=\"{$relBase}{$types['spdx']['xml']}\" text=\"View XML\" >}}" : "-";
+
+                $sbomTable .= "| {$displayPlatform} | {$cycloneJson} | {$cycloneXml} | {$spdxJson} | {$spdxXml} |\n";
+            }
+
+            $sbomTable .= "\n";
+        }
+
+        /**
+         * === SECURITY SECTION ===
+         * Show only if any CWE or OWASP file was uploaded
+         */
+        $securityTable = "";
         if (!empty($fileGroups['cwe']) || !empty($fileGroups['owasp'])) {
-            $securitySection .= "### Security Weakness Coverage Reports (CWE & OWASP)\n";
+            $securityTable .= "### Security Weakness Coverage (CWE & OWASP)\n\n";
+            $securityTable .= "| Report | HTML | PDF |\n";
+            $securityTable .= "|--------|------|-----|\n";
 
             if (!empty($fileGroups['cwe'])) {
-                $securitySection .= "- **CWE Top 25 (2024)**:\n";
-                if (isset($fileGroups['cwe']['html']))
-                    $securitySection .= "  - 🌐 {{< compliance-file relpath=\"" . $relBase . $fileGroups['cwe']['html'] . "\" text=\"HTML\" >}}\n";
-                if (isset($fileGroups['cwe']['pdf']))
-                    $securitySection .= "  - 📄 {{< compliance-file relpath=\"" . $relBase . $fileGroups['cwe']['pdf'] . "\" text=\"PDF\" >}}\n";
+                $cweHtml = isset($fileGroups['cwe']['html']) ? "{{< compliance-file relpath=\"{$relBase}{$fileGroups['cwe']['html']}\" text=\"View HTML\" >}}" : "-";
+                $cwePdf  = isset($fileGroups['cwe']['pdf'])  ? "{{< compliance-file relpath=\"{$relBase}{$fileGroups['cwe']['pdf']}\" text=\"View PDF\" >}}" : "-";
+                $securityTable .= "| CWE Top 25 (2024) | {$cweHtml} | {$cwePdf} |\n";
             }
 
             if (!empty($fileGroups['owasp'])) {
-                $securitySection .= "- **OWASP Top 10 (2017/2021)**:\n";
-                if (isset($fileGroups['owasp']['html']))
-                    $securitySection .= "  - 🌐 {{< compliance-file relpath=\"" . $relBase . $fileGroups['owasp']['html'] . "\" text=\"HTML\" >}}\n";
-                if (isset($fileGroups['owasp']['pdf']))
-                    $securitySection .= "  - 📄 {{< compliance-file relpath=\"" . $relBase . $fileGroups['owasp']['pdf'] . "\" text=\"PDF\" >}}\n";
+                $owaspHtml = isset($fileGroups['owasp']['html']) ? "{{< compliance-file relpath=\"{$relBase}{$fileGroups['owasp']['html']}\" text=\"View HTML\" >}}" : "-";
+                $owaspPdf  = isset($fileGroups['owasp']['pdf'])  ? "{{< compliance-file relpath=\"{$relBase}{$fileGroups['owasp']['pdf']}\" text=\"View PDF\" >}}" : "-";
+                $securityTable .= "| OWASP Top 10 (2021) | {$owaspHtml} | {$owaspPdf} |\n";
             }
 
-            $securitySection .= "\n";
+            $securityTable .= "\n";
         }
 
-        // === LICENSE SECTION (Optional) ===
-        $licenseSection = '';
-        if (in_array('license', $sections)) {
-            $licenseSection .= "### EULA & Third-Party License Disclosure\n\n";
-
-            // Hardcoded EULA link per venture
-            $eulaUrl = "https://files.conholdate.app/viewer/view/4Y8UNm7laVFjMAd0r/aspose_end-user-license-agreement_2024-05-16.pdf";
-            $licenseSection .= "- [{$venturePrefix} End User License Agreement (EULA)]({$eulaUrl})\n";
-
-            // Dynamically resolved license PDF path
-            $licenseFolder = "compliance-reports/third-party-licenses/{$platform}/";
-            $expectedLicenseFile = "third-party-licenses-{$venturePrefix}-{$productSlug}-{$platform}.pdf";
-
-            if (Storage::exists($licenseFolder . $expectedLicenseFile)) {
-                $relLicensePath = "/{$licenseFolder}{$expectedLicenseFile}";
-                $productTitle = $this->getProductTitleFromUrl("{$productSlug}/{$platform}");
-                $licenseSection .= "- {{< compliance-file relpath=\"{$relLicensePath}\" text=\"{$productTitle} – Third-Party Licenses\" >}}\n";
-            }
-
-            $licenseSection .= "\n";
-        }
-
-        // === Load venture-specific template ===
+        /**
+         * === Inject values into Hugo template ===
+         */
         $templateKey = "compliance-reports/compliance-reports-templates/{$venturePrefix}-{$platform}-compliance-template.md";
-
         if (!Storage::exists($templateKey)) {
             $md = "# Compliance report template not found for platform '{$platform}'!";
         } else {
             $template = Storage::get($templateKey);
             $vars = [
-                '{{ .Slug }}'             => $slug,
-                '{{ .ProductTitle }}'     => $this->getProductTitleFromUrl("{$productSlug}/{$platform}"),
-                '{{ .Version }}'          => $version,
-                '{{ .Weight }}'           => $weight,
-                '{{ .UploaderEmail }}'    => $uploaderEmail ?? '',
-                '{{ .ForumUrl }}'         => $forumLink,
-                '{{ .SBOM_SECTION }}'     => $sbomSection,
-                '{{ .SECURITY_SECTION }}' => $securitySection,
-                '{{ .LICENSE_SECTION }}'  => $licenseSection,
-                '{{ .SecurityGrade }}'    => 'A',
+                '{{ .Slug }}'              => $slug,
+                '{{ .ProductTitle }}'      => $productTitle,
+                '{{ .Version }}'           => $version,
+                '{{ .Weight }}'            => $weight,
+                '{{ .UploaderEmail }}'     => $uploaderEmail ?? '',
+                '{{ .ForumUrl }}'          => $forumLink,
+                '{{ .SBOM_SECTION }}'      => $sbomTable,
+                '{{ .SECURITY_SECTION }}'  => $securityTable,
+                '{{ .LICENSE_SECTION }}'   => $licenseTable,
+                '{{ .SecurityGrade }}'     => 'A',
                 '{{ .DownloadsBadgeUrl }}' => '',
+                '{{ .SECURITY_BADGES }}'   => $allBadges, // includes SBOM + Security badges
             ];
+
             $md = strtr($template, $vars);
         }
 
-        // --- Final write to S3 ---
+        // --- Final markdown file write to S3 ---
         $filename = "{$slug}.md";
         Storage::put($folder . $filename, $md);
     }
