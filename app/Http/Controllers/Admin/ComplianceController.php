@@ -158,16 +158,17 @@ class ComplianceController extends Controller
 
         // 10. Ensure navigation _index.md files exist or create them if folders are missing
         $missingIndexes = [];
-        $familyExists = Storage::exists($familyFolder);
-        $yearExists   = Storage::exists($yearFolder);
+            
+        $familyExists = Storage::disk('s3')->exists($familyFolder);
++       $yearExists   = Storage::disk('s3')->exists($yearFolder);
 
         if (!$familyExists || !$yearExists) {
             // Auto-create _index.md files if missing
             $this->ensureComplianceIndexes($productFamilySlug, $platformSlug, $year, Auth::user()->email ?? null);
         } else {
             // Otherwise, record any missing _index.md files and block upload
-            if (!Storage::exists($familyIndexPath)) $missingIndexes[] = $familyIndexPath;
-            if (!Storage::exists($yearIndexPath))   $missingIndexes[] = $yearIndexPath;
+            if (!Storage::disk('s3')->exists($familyIndexPath)) $missingIndexes[] = $familyIndexPath;
+            if (!Storage::disk('s3')->exists($yearIndexPath))   $missingIndexes[] = $yearIndexPath;
         }
 
         // 11. Prevent upload if navigation files are missing
@@ -446,7 +447,7 @@ class ComplianceController extends Controller
         // 6. Build expected template file path based on venture and platform
         // Example: compliance-reports/compliance-reports-templates/groupdocs-cloud-java-compliance-template.md
         $templateKey = "compliance-reports/compliance-reports-templates/{$venturePrefix}-{$platform}-compliance-template.md";
-        $templateExists = Storage::exists($templateKey);
+        $templateExists = Storage::disk('s3')->exists($templateKey);
 
         // 7. Conditionally build license file path (only if "license" checkbox selected)
         $licenseKey = null;
@@ -454,7 +455,7 @@ class ComplianceController extends Controller
         if (in_array('license', $sections)) {
             // Example: compliance-reports/third-party-licenses/java/third-party-licenses-groupdocs-cloud-words-java.pdf
             $licenseKey = "compliance-reports/third-party-licenses/{$platform}/third-party-licenses-{$venturePrefix}-{$productFamilySlug}-{$platform}.pdf";
-            $licenseExists = Storage::exists($licenseKey);
+            $licenseExists = Storage::disk('s3')->exists($licenseKey);
         }
 
         // 8. Return final result to frontend including file paths and statuses
@@ -570,7 +571,7 @@ class ComplianceController extends Controller
 
         // --- Product family-level _index.md ---
         $familyIndexPath = $familyPath . '_index.md';
-        if (!Storage::exists($familyIndexPath)) {
+        if (!Storage::disk('s3')->exists($familyIndexPath)) {
             // Start YAML front matter block
             $content = "---\n";
             $content .= "id: \"compliance-reports\"\n";
@@ -591,12 +592,12 @@ class ComplianceController extends Controller
             // End YAML block and add newline
             $content .= "---\n\n";
             // Write the file to S3/local storage
-            Storage::put($familyIndexPath, $content);
+            Storage::disk('s3')->put($familyIndexPath, $content);
         }
 
         // --- Year-level _index.md ---
         $yearIndexPath = $yearPath . '_index.md';
-        if (!Storage::exists($yearIndexPath)) {
+        if (!Storage::disk('s3')->exists($yearIndexPath)) {
             // Start YAML front matter block
             $content = "---\n";
             $content .= "id: \"compliance-reports-{$year}\"\n";
@@ -616,7 +617,7 @@ class ComplianceController extends Controller
             }
             // End YAML block and add newline
             $content .= "---\n\n";
-            Storage::put($yearIndexPath, $content);
+            Storage::disk('s3')->put($yearIndexPath, $content);
         }
     }
 
@@ -643,10 +644,10 @@ class ComplianceController extends Controller
      */
     private function loadAndPopulateTemplateFromS3($templateKey, $vars = [])
     {
-        if (!Storage::exists($templateKey)) {
+        if (!Storage::disk('s3')->exists($templateKey)) {
             return '';
         }
-        $template = Storage::get($templateKey);
+        $template = Storage::disk('s3')->get($templateKey);
 
         // Simple variable replacement, e.g. {{product}}, {{version}}, etc.
         foreach ($vars as $key => $value) {
@@ -709,7 +710,7 @@ class ComplianceController extends Controller
         // --- Determine S3 folder structure and relative base URL ---
         $folder = "compliance-reports/{$productSlug}/{$platform}/{$year}/{$version}/";
         $relBase = "/" . $folder;
-        $files = Storage::files($folder); // Get all uploaded file paths
+        $files = Storage::disk('s3')->files($folder); // Get all uploaded file paths
 
         // --- Initialize file groups ---
         $fileGroups = ['sbom' => [], 'cwe' => [], 'owasp' => [], 'license' => []];
@@ -818,13 +819,13 @@ class ComplianceController extends Controller
                     foreach ($types as $sbomType => $exts) {
                         foreach ($exts as $ext => $filename) {
                             $localPath = "{$tmpDir}/{$filename}";
-                            file_put_contents($localPath, Storage::get($folder . $filename));
+                            file_put_contents($localPath, Storage::disk('s3')->get($folder . $filename));
                             $zip->addFile($localPath, $filename);
                         }
                     }
                 }
                 $zip->close();
-                Storage::putFileAs($folder, new \Illuminate\Http\File($tmpZipPath), $zipFilename);
+                Storage::disk('s3')->putFileAs($folder, new \Illuminate\Http\File($tmpZipPath), $zipFilename);
                 $fileGroups['sbom']['zip'][] = $zipFilename;
 
                 // Delete the final ZIP file from temp folder after upload
@@ -857,7 +858,7 @@ class ComplianceController extends Controller
 
             $licensePath = "compliance-reports/third-party-licenses/{$platform}/";
             $licenseFilename = "third-party-licenses-{$venturePrefix}-{$productSlug}-{$platform}.pdf";
-            if (Storage::exists($licensePath . $licenseFilename)) {
+            if (Storage::disk('s3')->exists($licensePath . $licenseFilename)) {
                 $relLicense = "/{$licensePath}{$licenseFilename}";
                 $licenseTable .= "- {{< compliance-file relpath=\"{$relLicense}\" text=\"{$productTitle} Third-Party License\" >}}\n";
             }
@@ -878,7 +879,7 @@ class ComplianceController extends Controller
 
                 // Get the last modified timestamp of the ZIP file from S3 in UTC
                 try {
-                    $meta = Storage::lastModified($folder . $zipFile);
+                    $meta = Storage::disk('s3')->lastModified($folder . $zipFile);
                     $zipTimestamp = \Carbon\Carbon::createFromTimestamp($meta)
                         ->setTimezone('UTC')
                         ->format('F j, Y, g:i A') . ' UTC';
@@ -888,7 +889,7 @@ class ComplianceController extends Controller
 
                 // Get the file size in bytes and convert intelligently
                 try {
-                    $sizeBytes = Storage::size($folder . $zipFile);
+                    $sizeBytes = Storage::disk('s3')->size($folder . $zipFile);
                     if ($sizeBytes >= 1048576) { // ≥ 1 MB
                         $zipSize = round($sizeBytes / 1048576, 1) . " MB";
                     } else {
@@ -903,7 +904,7 @@ class ComplianceController extends Controller
                 $timestampNote = $zipTimestamp ? " - *Last updated: {$zipTimestamp}*" : "";
 
                 // Add cache-busting query param (?t=unix timestamp)
-                $zipTimestampUnix = Storage::lastModified($folder . $zipFile);
+                $zipTimestampUnix = Storage::disk('s3')->lastModified($folder . $zipFile);
                 $sbomTable .= "- {{< compliance-file relpath=\"{$relBase}{$zipFile}?t={$zipTimestampUnix}\" text=\"Download All SBOMs (ZIP)\" download=\"true\" >}}{$sizeNote}{$timestampNote}\n\n";
             }
 
@@ -956,10 +957,10 @@ class ComplianceController extends Controller
          * === Inject values into Hugo template ===
          */
         $templateKey = "compliance-reports/compliance-reports-templates/{$venturePrefix}-{$platform}-compliance-template.md";
-        if (!Storage::exists($templateKey)) {
+        if (!Storage::disk('s3')->exists($templateKey)) {
             $md = "# Compliance report template not found for platform '{$platform}'!";
         } else {
-            $template = Storage::get($templateKey);
+            $template = Storage::disk('s3')->get($templateKey);
             $vars = [
                 '{{ .Slug }}'              => $slug,
                 '{{ .ProductTitle }}'      => $productTitle,
@@ -980,6 +981,6 @@ class ComplianceController extends Controller
 
         // --- Final markdown file write to S3 ---
         $filename = "{$slug}.md";
-        Storage::put($folder . $filename, $md);
+        Storage::disk('s3')->put($folder . $filename, $md);
     }
 }
