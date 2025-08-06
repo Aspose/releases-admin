@@ -2,6 +2,11 @@
 
 return [
 
+    // NOTE: This file is for local development overrides only.
+    // Laravel does NOT load this file automatically unless explicitly required.
+    // Default: uses config/filesystems.php
+
+
     /*
     |--------------------------------------------------------------------------
     | Default Filesystem Disk
@@ -13,7 +18,8 @@ return [
     |
     */
 
-    'default' => 'local',
+    // 'default' => 'local',
+    'default' => env('FILESYSTEM_DISK', 's3'),
 
     /*
     |--------------------------------------------------------------------------
@@ -51,7 +57,7 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
         ],
 
@@ -61,6 +67,10 @@ return [
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
+
+            'options' => env('APP_ENV') === 'local' ? [
+                'verify' => 'D:/dev/releases-admin-local/certs/cacert.pem', // ✅ Full path!
+            ] : [],
         ],
 
     ],
