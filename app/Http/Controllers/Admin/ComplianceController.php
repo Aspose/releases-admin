@@ -158,9 +158,9 @@ class ComplianceController extends Controller
 
         // 10. Ensure navigation _index.md files exist or create them if folders are missing
         $missingIndexes = [];
-            
+
         $familyExists = Storage::disk('s3')->exists($familyFolder);
-+       $yearExists   = Storage::disk('s3')->exists($yearFolder);
+        +$yearExists   = Storage::disk('s3')->exists($yearFolder);
 
         if (!$familyExists || !$yearExists) {
             // Auto-create _index.md files if missing
@@ -853,9 +853,29 @@ class ComplianceController extends Controller
         $licenseTable = "";
         if (!empty($fileGroups['license']) || in_array('license', $sections)) {
             $licenseTable .= "### EULA & Third-Party Licenses\n\n";
-            $eulaUrl = "https://files.conholdate.app/viewer/view/4Y8UNm7laVFjMAd0r/{$venturePrefix}_end-user-license-agreement_2024-05-16.pdf";
-            $licenseTable .= "- <a href=\"{$eulaUrl}\" target=\"_blank\" rel=\"noopener\">{$ventureDisplay} End User License Agreement</a>\n";
+            // Map venture prefixes to their public EULA URLs
+            $eulaUrls = [
+                'aspose'           => 'https://about.aspose.com/legal/eula/',
+                'aspose-cloud'     => 'https://about.aspose.cloud/legal/eula/',
+                'aspose-app'       => 'https://about.aspose.app/legal/eula/',
+                'aspose-net'       => 'https://about.aspose.net/legal/eula/',
+                'aspose-org'       => 'https://about.aspose.org/legal/eula/',
 
+                'groupdocs'        => 'https://about.groupdocs.com/legal/eula/',
+                'groupdocs-cloud'  => 'https://about.groupdocs.cloud/legal/eula/',
+                'groupdocs-app'    => 'https://about.groupdocs.app/legal/eula/',
+
+                'conholdate'       => 'https://about.conholdate.com/legal/eula/',
+                'conholdate-cloud' => 'https://about.conholdate.cloud/legal/eula/',
+            ];
+
+            // Resolve correct EULA URL for this venture
+            $eulaUrl = $eulaUrls[$venturePrefix] ?? 'https://about.aspose.com/legal/eula/';
+
+            // Add EULA bullet
+            $licenseTable .= "- <a href=\"{$eulaUrl}\" target=\"_blank\" rel=\"noopener\">{$ventureDisplay} End User License Agreement</a>\n";
+    
+            // Add third-party license if exists
             $licensePath = "compliance-reports/third-party-licenses/{$platform}/";
             $licenseFilename = "third-party-licenses-{$venturePrefix}-{$productSlug}-{$platform}.pdf";
             if (Storage::disk('s3')->exists($licensePath . $licenseFilename)) {
