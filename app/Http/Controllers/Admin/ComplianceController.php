@@ -221,7 +221,10 @@ class ComplianceController extends Controller
                     (!Str::contains($fileName, $version) && !Str::contains($fileName, str_replace('.', '-', $version)))
                 ) {
                     $expectedSlug = "{$productFamilySlug}-{$platformSlug}";
-                    $exampleFileName = "{$venturePrefix}-{$expectedSlug}-{$version}_cwe-top-25-2024.htm";
+                    // Sample filename shown to the operator when validation fails. The year is
+                    // illustrative only, nothing parses it, but keep it on the current edition
+                    // so the example does not teach a stale one.
+                    $exampleFileName = "{$venturePrefix}-{$expectedSlug}-{$version}_cwe-top-25-2025.htm";
 
                     return redirect()->back()
                         ->with('error', "All uploaded files must match the selected product slug [{$expectedSlug}] and version [{$version}]. File '{$file->getClientOriginalName()}' does not match. Example: '{$exampleFileName}'. Please check your files and try again.");
@@ -731,14 +734,37 @@ class ComplianceController extends Controller
                 $fileGroups['sbom']['zip'][] = $file;
             }
             // --- Security coverage: CWE ---
+            // The edition year (2024, 2025, ...) is read out of the filename, because this
+            // method never opens the report files. It works from the S3 folder listing taken
+            // above, so the filename is the only signal available when the page is generated.
+            //
+            // Files are keyed by that year, not by report type alone. A version folder can
+            // hold more than one edition of the same report, for example a 2024 report kept
+            // alongside its 2025 replacement during a standards transition. Keying by type
+            // alone made the last file seen overwrite every earlier one, so the page linked
+            // only one edition and the others were uploaded but reachable from nowhere.
+            //
+            // Accepted limitation: a filename carrying the wrong year produces a wrong label.
+            // Some already-published reports put the release year in this position instead of
+            // the edition year. Those are tracked for renaming; the generator is not made to
+            // open and parse report content to compensate for a naming error.
+            //
+            // 'unknown' does not occur against current filenames, every published report
+            // carries a four digit year here. It exists so a malformed name still renders a
+            // row with a working link rather than disappearing from the page.
             elseif (Str::contains($l, 'cwe-top-25')) {
-                if (in_array($ext, ['html', 'htm'])) $fileGroups['cwe']['html'] = $file;
-                elseif ($ext === 'pdf') $fileGroups['cwe']['pdf'] = $file;
+                preg_match('/cwe-top-25-(\d{4})/', $l, $ym);
+                $ry = $ym[1] ?? 'unknown';
+                if (in_array($ext, ['html', 'htm'])) $fileGroups['cwe'][$ry]['html'] = $file;
+                elseif ($ext === 'pdf') $fileGroups['cwe'][$ry]['pdf'] = $file;
             }
             // --- Security coverage: OWASP ---
+            // Same grouping rule as CWE above: keyed by the edition year from the filename.
             elseif (Str::contains($l, 'owasp-top-10')) {
-                if (in_array($ext, ['html', 'htm'])) $fileGroups['owasp']['html'] = $file;
-                elseif ($ext === 'pdf') $fileGroups['owasp']['pdf'] = $file;
+                preg_match('/owasp-top-10-(\d{4})/', $l, $ym);
+                $ry = $ym[1] ?? 'unknown';
+                if (in_array($ext, ['html', 'htm'])) $fileGroups['owasp'][$ry]['html'] = $file;
+                elseif ($ext === 'pdf') $fileGroups['owasp'][$ry]['pdf'] = $file;
             }
             // --- License disclosure ---
             elseif (Str::contains($l, 'license')) {
@@ -773,10 +799,26 @@ class ComplianceController extends Controller
             // Always show Security Rating if either CWE or OWASP exists
             $securityBadges .= "![Security Rating](https://img.shields.io/badge/Security%20Rating-A-brightgreen?style=flat-square&logo=verizon)\n";
             if ($hasCWE) {
-                $securityBadges .= "![CWE Top 25](https://img.shields.io/badge/CWE%20Top%2025-2024-blue?style=flat-square&logo=checkmarx)\n";
+                // One badge per report type, showing the newest edition only.
+                //
+                // The badge bar is a summary; the table further down lists every edition with
+                // its links. Emitting a badge per edition would repeat what the row beneath it
+                // already says, and with two editions of both standards the bar reaches five
+                // badges, wraps to a second line, and grows again with every future edition.
+                //
+                // Keys are four digit year strings, so rsort puts the newest first.
+                $cweBadgeYears = array_keys($fileGroups['cwe']);
+                rsort($cweBadgeYears);
+                // 'Available' keeps the badge renderable if a filename had no readable year.
+                $cweBadgeYear = $cweBadgeYears[0] === 'unknown' ? 'Available' : $cweBadgeYears[0];
+                $securityBadges .= "![CWE Top 25](https://img.shields.io/badge/CWE%20Top%2025-{$cweBadgeYear}-blue?style=flat-square&logo=checkmarx)\n";
             }
             if ($hasOWASP) {
-                $securityBadges .= "![OWASP Top 10](https://img.shields.io/badge/OWASP%20Top%2010-2021-blue?style=flat-square&logo=openaccess)\n";
+                // Same rule as the CWE badge above: newest edition only.
+                $owaspBadgeYears = array_keys($fileGroups['owasp']);
+                rsort($owaspBadgeYears);
+                $owaspBadgeYear = $owaspBadgeYears[0] === 'unknown' ? 'Available' : $owaspBadgeYears[0];
+                $securityBadges .= "![OWASP Top 10](https://img.shields.io/badge/OWASP%20Top%2010-{$owaspBadgeYear}-blue?style=flat-square&logo=openaccess)\n";
             }
         }
 
@@ -959,15 +1001,35 @@ class ComplianceController extends Controller
             $securityTable .= "|--------|------|-----|\n";
 
             if (!empty($fileGroups['cwe'])) {
-                $cweHtml = isset($fileGroups['cwe']['html']) ? "{{< compliance-file relpath=\"{$relBase}{$fileGroups['cwe']['html']}\" text=\"View HTML\" >}}" : "-";
-                $cwePdf  = isset($fileGroups['cwe']['pdf'])  ? "{{< compliance-file relpath=\"{$relBase}{$fileGroups['cwe']['pdf']}\" text=\"View PDF\" >}}" : "-";
-                $securityTable .= "| CWE Top 25 (2024) | {$cweHtml} | {$cwePdf} |\n";
+                // One row per edition, newest first. A folder holding a current report and
+                // the superseded one it replaced links both, instead of showing one and
+                // leaving the other unreachable. Keys are four digit years, so rsort orders
+                // them correctly.
+                $cweYears = array_keys($fileGroups['cwe']);
+                rsort($cweYears);
+                foreach ($cweYears as $cy) {
+                    $cweGroup = $fileGroups['cwe'][$cy];
+                    $cweHtml = isset($cweGroup['html']) ? "{{< compliance-file relpath=\"{$relBase}{$cweGroup['html']}\" text=\"View HTML\" >}}" : "-";
+                    $cwePdf  = isset($cweGroup['pdf'])  ? "{{< compliance-file relpath=\"{$relBase}{$cweGroup['pdf']}\" text=\"View PDF\" >}}" : "-";
+                    // The printed year must always match the year in the file this row links
+                    // to. Dropping the year entirely is the honest fallback when the filename
+                    // does not state one, rather than guessing an edition.
+                    $cweLabel = $cy === 'unknown' ? "CWE Top 25" : "CWE Top 25 ({$cy})";
+                    $securityTable .= "| {$cweLabel} | {$cweHtml} | {$cwePdf} |\n";
+                }
             }
 
             if (!empty($fileGroups['owasp'])) {
-                $owaspHtml = isset($fileGroups['owasp']['html']) ? "{{< compliance-file relpath=\"{$relBase}{$fileGroups['owasp']['html']}\" text=\"View HTML\" >}}" : "-";
-                $owaspPdf  = isset($fileGroups['owasp']['pdf'])  ? "{{< compliance-file relpath=\"{$relBase}{$fileGroups['owasp']['pdf']}\" text=\"View PDF\" >}}" : "-";
-                $securityTable .= "| OWASP Top 10 (2021) | {$owaspHtml} | {$owaspPdf} |\n";
+                // Same rule as the CWE rows above: one row per edition, newest first.
+                $owaspYears = array_keys($fileGroups['owasp']);
+                rsort($owaspYears);
+                foreach ($owaspYears as $oy) {
+                    $owaspGroup = $fileGroups['owasp'][$oy];
+                    $owaspHtml = isset($owaspGroup['html']) ? "{{< compliance-file relpath=\"{$relBase}{$owaspGroup['html']}\" text=\"View HTML\" >}}" : "-";
+                    $owaspPdf  = isset($owaspGroup['pdf'])  ? "{{< compliance-file relpath=\"{$relBase}{$owaspGroup['pdf']}\" text=\"View PDF\" >}}" : "-";
+                    $owaspLabel = $oy === 'unknown' ? "OWASP Top 10" : "OWASP Top 10 ({$oy})";
+                    $securityTable .= "| {$owaspLabel} | {$owaspHtml} | {$owaspPdf} |\n";
+                }
             }
 
             $securityTable .= "\n";
