@@ -222,6 +222,83 @@ class ReleasesApiController extends Controller
         return $json;
     }
 
+    // --- Daily downloads for one UTC day, for one product or for all of them ---
+    // GET /api/GetProductDownloadsByDate?date=YYYY-MM-DD&product=/words/java/
+    //
+    // GetTotalDetailedReportByDate above returns RUNNING totals (every download up to
+    // the end of the date), so a daily figure needs two of its calls, and each call
+    // counts the whole downloads table. This method counts only the rows of one day.
+    // It is fast because of the idx_downloads_timestamp_product index on
+    // downloads (TimeStamp, product). Without that index it still answers correctly,
+    // but it reads the whole table on every call.
+    //
+    // The entries keep the EntityName / EntityCount / EntityLastUpdate shape of the
+    // older report endpoints, so existing report scripts can parse them the same way.
+    public function GetProductDownloadsByDate(Request $request){
+
+        // 1. date is required and must be a real calendar date written as YYYY-MM-DD.
+        //    Validated by hand: $request->validate() answers a failure with a 302
+        //    redirect unless the caller sends "Accept: application/json", which report
+        //    scripts usually do not.
+        $date = $request->query('date');
+        if (!is_string($date)) {
+            return response()->json(['error' => 'date is required, format YYYY-MM-DD'], 400);
+        }
+        $day = \DateTime::createFromFormat('!Y-m-d', $date, new \DateTimeZone('UTC'));
+        // createFromFormat() quietly rolls impossible dates forward (2026-02-30 becomes
+        // 2026-03-02), so the parsed date must print back exactly as it was sent.
+        if ($day === false || $day->format('Y-m-d') !== $date) {
+            return response()->json(['error' => 'date must be a real date, format YYYY-MM-DD'], 400);
+        }
+
+        // 2. product is optional. An empty product= arrives here as null (the global
+        //    ConvertEmptyStringsToNull middleware) and means "all products". When given,
+        //    it must match downloads.product exactly, which is the string the older
+        //    endpoints return as EntityName, for example /words/java/.
+        $product = $request->query('product');
+        if ($product !== null && (!is_string($product) || mb_strlen($product) > 255)) {
+            return response()->json(['error' => 'product must be a single value of at most 255 characters'], 400);
+        }
+        // A product that is not valid UTF-8 (for example %FF in the URL) cannot match
+        // any stored name, and it would be echoed back as EntityName below, where
+        // json_encode() fails: the caller would get a server error instead of a 400.
+        if ($product !== null && !mb_check_encoding($product, 'UTF-8')) {
+            return response()->json(['error' => 'product must be valid UTF-8'], 400);
+        }
+
+        // 3. One UTC day as a half-open range: from 00:00:00 up to, but not including,
+        //    00:00:00 of the next day. TimeStamp is stored in UTC, the app timezone.
+        //    A plain range on TimeStamp is what lets MySQL use the index.
+        $start = $day->format('Y-m-d') . ' 00:00:00';
+        $end = (clone $day)->modify('+1 day')->format('Y-m-d') . ' 00:00:00';
+
+        $query = Download::where('TimeStamp', '>=', $start)
+            ->where('TimeStamp', '<', $end);
+        if ($product !== null) {
+            $query->where('product', '=', $product);
+        }
+        $spec_counts = $query->selectRaw('product, count(*) as total')
+            ->groupBy('product')
+            ->orderBy('total', 'desc')
+            ->pluck('total', 'product')->all();
+
+        // 4. A named product with no downloads that day still gets one entry with 0,
+        //    so the caller can tell "no downloads" apart from "no answer".
+        if ($product !== null && empty($spec_counts)) {
+            $spec_counts = array($product => 0);
+        }
+
+        $final_array = array();
+        foreach ($spec_counts as $name => $count) {
+            $final_array[] = array(
+                'EntityName' => $name,
+                'EntityCount' => (int) $count,
+                'EntityLastUpdate' => $date,
+            );
+        }
+        return response()->json($final_array);
+    }
+
 
     public function GetTotalDetailedReport(Request $request){
 //        $days = $request->date;
