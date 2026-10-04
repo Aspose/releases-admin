@@ -17,6 +17,10 @@ Route::group(['middleware' => ['api'], 'namespace' => 'Api'], function () {
     Route::post('/GetDetailedReport', 'ReleasesApiController@GetDetailedReport');
     Route::get('/GetTotalDetailedReport', 'ReleasesApiController@GetTotalDetailedReport');
     Route::post('/GetTotalDetailedReportByDate', 'ReleasesApiController@GetTotalDetailedReportByDate');
+    // Downloads on one UTC day, for one product or for all of them (see
+    // ReleasesApiController::GetProductDownloadsByDate). Fast only because of the
+    // idx_downloads_timestamp_product index on the downloads table.
+    Route::get('/GetProductDownloadsByDate', 'ReleasesApiController@GetProductDownloadsByDate');
     Route::post('/GetFamilyPIEChart', 'ReleasesApiController@GetFamilyPIEChart');
     Route::post('/GetPopularFiles', 'ReleasesApiController@GetPopularFiles');
     Route::post('/addJavavDownloadHistoryEntry', 'ReleasesApiController@addJavavDownloadHistoryEntry');
