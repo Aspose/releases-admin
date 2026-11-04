@@ -1,7 +1,6 @@
 <?php
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\ComplianceController;
 
 
 Route::group(['middleware' => ['api'], 'namespace' => 'Api'], function () {
@@ -32,7 +31,3 @@ Route::middleware('auth:api')->get('/user', function(Request $request) {
 });
 
 Route::middleware('auth:api')->post('/product/release', 'Admin\\UploadController@uploadAPI');
-
-Route::post('/upload-compliance', [ComplianceController::class, 'uploadComplianceAPI']);
-
-Route::post('/api/compliance/upload', [ComplianceController::class, 'uploadComplianceRestAPI']);

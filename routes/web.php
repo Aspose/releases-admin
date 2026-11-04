@@ -28,14 +28,8 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth
     Route::delete('ventures/file/{id}', 'UploadController@destroy')->name('upload.destroy');
     Route::get('/ventures/file/debuggingsheet', 'UploadController@debuggingsheet');
 
-    // Compliance Upload Form + API
+    // Compliance reports: publishing moved to the Tech Compliance Group's service; this page only shows where to publish now
     Route::get('/ventures/file/compliance', 'ComplianceController@showForm');
-    Route::post('/ventures/file/upload-compliance', 'ComplianceController@uploadComplianceAPI');
-    Route::post('/ventures/file/generate-indexes', 'ComplianceController@ajaxGenerateIndexes');
-    Route::post('/admin/ventures/file/getchildnodesforcompliance', 'ComplianceController@getchildnodesforcompliance')
-        ->name('admin.getchildnodesforcompliance');
-    Route::post('/ventures/file/ajax-check-compliance-requirements', 'ComplianceController@ajaxCheckComplianceRequirements')
-        ->name('admin.compliance.ajax-check-requirements');
 
 
     // Manual Upload for Missing Releases
