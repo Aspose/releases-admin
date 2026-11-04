@@ -62,7 +62,7 @@
 
                         <li class="nav-header"><i class="icon-wrench"></i>Compliance Adminstration</li>
                         <li class="custom-padding">
-                        <a id="ctl00_lnkComplianceUpload" class="dropdown-toggle" href="{{ url('admin/ventures/file/compliance') }}">Upload Compliance Reports</a>
+                        <a id="ctl00_lnkComplianceUpload" class="dropdown-toggle" href="{{ url('admin/ventures/file/compliance') }}">Compliance Reports (moved)</a>
                         </li>
 
                         @if (Auth::user()->is_admin == 1 || Auth::user()->is_admin == 2)
